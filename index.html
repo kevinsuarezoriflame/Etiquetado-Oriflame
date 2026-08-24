@@ -136,11 +136,22 @@
   <div class="modalCard">
     <div class="modalHead"><h2>📦 Maestro de productos</h2><button id="closeProductModal" class="btn ghost">✕ Cerrar</button></div>
     <div class="uploadBox">
-      <div style="font-size:32px">📤</div>
-      <strong>Actualizar maestro desde Excel</strong>
-      <input id="productFile" type="file" accept=".xlsx,.xls" />
-      <div style="margin-top:10px"><button id="importProducts" class="btn blue">⬆️ Cargar productos</button></div>
+      <div style="font-size:32px">📋</div>
+      <strong>Pegar maestro de productos</strong>
+      <div class="small" style="margin:6px 0 10px">Copia desde Excel las columnas <b>Código Producto</b> y <b>Descripción</b> y pégalas aquí.</div>
+      <textarea id="productPaste" placeholder="Código Producto\tDescripción\n12760\tTender Care Natural Multi-purpose Balm" style="width:100%;min-height:180px;resize:vertical;padding:12px;border:1px solid var(--border);border-radius:12px;font:inherit"></textarea>
+      <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:10px">
+        <button id="importPastedProducts" class="btn blue">📥 Guardar datos pegados</button>
+        <button id="clearProductPaste" class="btn ghost">🧹 Limpiar</button>
+      </div>
     </div>
+    <details style="margin-top:12px">
+      <summary style="cursor:pointer;font-weight:700">📄 Opción alternativa: cargar Excel</summary>
+      <div class="uploadBox" style="margin-top:10px">
+        <input id="productFile" type="file" accept=".xlsx,.xls" />
+        <div style="margin-top:10px"><button id="importProducts" class="btn ghost">⬆️ Cargar Excel</button></div>
+      </div>
+    </details>
     <div id="importMsg"></div>
   </div>
 </div>
@@ -458,6 +469,89 @@
     try{const snap=await getDocs(query(collection(db,'registros_etiquetado'),orderBy('creado_en','desc'),limit(100)));$("recordsBody").innerHTML=snap.empty?'<tr><td colspan="7">Sin registros</td></tr>':snap.docs.map(d=>{const x=d.data();return `<tr><td>${x.fecha_local||''}</td><td>${x.operario||''}</td><td>${x.codigo||''}</td><td>${Number(x.unidades||0).toLocaleString('es-EC')}</td><td>${Math.round((x.tiempo_neto_ms||0)/60000)}</td><td><b>${Number(x.productividad_u_h||0).toLocaleString('es-EC')}</b></td><td>${x.meta_u_h?Number(x.meta_u_h).toLocaleString('es-EC'):'—'}</td></tr>`}).join('');}catch(e){$("recordsBody").innerHTML=`<tr><td colspan="7">${e.message}</td></tr>`}
   }
 
+
+  async function saveProductRows(validRows, skipped=0, sourceLabel='datos pegados') {
+    if(!validRows.length) throw new Error('No encontré productos válidos para guardar.');
+    const msg=$("importMsg");
+    let processed=0;
+    for(let i=0;i<validRows.length;i+=400){
+      const chunk=validRows.slice(i,i+400);
+      const batch=writeBatch(db);
+      chunk.forEach(({code,descripcion})=>{
+        batch.set(doc(db,'productos',code),{
+          codigo:code,descripcion,categoria:categorize(descripcion),activo:true,
+          actualizado_local:localISO(),actualizado_en:serverTimestamp()
+        },{merge:true});
+      });
+      await batch.commit();
+      processed+=chunk.length;
+      const pct=Math.round((processed/validRows.length)*100);
+      msg.innerHTML=`<div class="message warn">⬆️ Guardando en Firebase: <b>${processed.toLocaleString('es-EC')} / ${validRows.length.toLocaleString('es-EC')}</b> (${pct}%)</div>`;
+      await new Promise(r=>setTimeout(r,0));
+    }
+    const sample=validRows[0];
+    const verify=await getDoc(doc(db,'productos',sample.code));
+    if(!verify.exists()) throw new Error('Finalicé el proceso, pero no pude verificar los datos en Firebase.');
+    if(activeOpId){
+      const active=openOps.get(activeOpId);
+      if(active?.code){
+        const refreshed=await getDoc(doc(db,'productos',active.code));
+        if(refreshed.exists()) active.product=refreshed.data();
+        renderWorkspace();
+      }
+    }
+    msg.innerHTML=`<div class="message ok">✅ <b>Carga exitosa</b><br>${processed.toLocaleString('es-EC')} productos guardados desde ${sourceLabel}${skipped?` · ${skipped.toLocaleString('es-EC')} filas omitidas`:''}.<br><span class="small">Verificado: ${sample.code} — ${verify.data().descripcion||'sin descripción'}</span></div>`;
+    toast(`✅ Maestro actualizado: ${processed.toLocaleString('es-EC')} productos`);
+    await loadDashboard();
+  }
+
+  $("clearProductPaste").onclick=()=>{ $("productPaste").value=''; $("importMsg").innerHTML=''; };
+
+  $("importPastedProducts").onclick=async()=>{
+    const raw=$("productPaste").value.trim();
+    if(!raw)return toast('⚠️ Pega primero la data de productos');
+    const btn=$("importPastedProducts");
+    btn.disabled=true; btn.textContent='⏳ Procesando…';
+    try{
+      $("importMsg").innerHTML='<div class="message warn">📋 Leyendo datos pegados…</div>';
+      const lines=raw.split(/\r?\n/).filter(x=>x.trim());
+      if(!lines.length)throw new Error('No encontré filas.');
+      const splitLine=(line)=>{
+        if(line.includes('\t')) return line.split('\t');
+        if(line.includes(';')) return line.split(';');
+        return line.split(',');
+      };
+      let start=0;
+      let first=splitLine(lines[0]).map(x=>norm(x));
+      const normH=v=>String(v||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
+      const looksHeader=first.some(x=>['codigo producto','código producto','codigo','código','product code'].includes(normH(x))) || first.some(x=>['descripcion','descripción','description'].includes(normH(x)));
+      let codeIdx=0, descIdx=1;
+      if(looksHeader){
+        const hs=first.map(normH);
+        codeIdx=hs.findIndex(x=>['codigo producto','codigo','product code','item code'].includes(x));
+        descIdx=hs.findIndex(x=>['descripcion','description','nombre producto','product description'].includes(x));
+        if(codeIdx<0||descIdx<0) throw new Error('Necesito las columnas Código Producto y Descripción.');
+        start=1;
+      }
+      const map=new Map(); let skipped=0;
+      for(let i=start;i<lines.length;i++){
+        const cols=splitLine(lines[i]);
+        const code=norm(cols[codeIdx]);
+        const descripcion=norm(cols[descIdx]);
+        if(!code||!descripcion){skipped++;continue;}
+        map.set(code,{code,descripcion});
+      }
+      const validRows=[...map.values()];
+      $("importMsg").innerHTML=`<div class="message warn">📦 ${validRows.length.toLocaleString('es-EC')} productos detectados. Iniciando carga…</div>`;
+      await saveProductRows(validRows,skipped,'datos pegados');
+    }catch(e){
+      $("importMsg").innerHTML='<div class="message err">❌ '+e.message+'</div>';
+      toast('❌ Error cargando maestro');
+    }finally{
+      btn.disabled=false; btn.textContent='📥 Guardar datos pegados';
+    }
+  };
+
   $("importProducts").onclick=async()=>{
     const f=$("productFile").files?.[0];if(!f)return toast('⚠️ Selecciona un Excel');
     const btn=$("importProducts");
@@ -485,34 +579,7 @@
       }
       if(!validRows.length)throw new Error('No encontré productos válidos para cargar.');
 
-      let processed=0;
-      for(let i=0;i<validRows.length;i+=400){
-        const chunk=validRows.slice(i,i+400); const batch=writeBatch(db);
-        chunk.forEach(({code,descripcion})=>{
-          batch.set(doc(db,'productos',code),{codigo:code,descripcion,categoria:categorize(descripcion),activo:true,actualizado_local:localISO(),actualizado_en:serverTimestamp()},{merge:true});
-        });
-        await batch.commit();
-        processed+=chunk.length;
-        const pct=Math.round((processed/validRows.length)*100);
-        $("importMsg").innerHTML=`<div class="message warn">⬆️ Cargando productos: <b>${processed.toLocaleString('es-EC')} / ${validRows.length.toLocaleString('es-EC')}</b> (${pct}%)</div>`;
-        await new Promise(r=>setTimeout(r,0));
-      }
-
-      // Verificación real en Firestore con el primer producto y refresco del SKU abierto.
-      const sample=validRows[0];
-      const verify=await getDoc(doc(db,'productos',sample.code));
-      if(!verify.exists()) throw new Error('La carga terminó, pero no pude verificar los datos en Firebase.');
-      if(activeOpId){
-        const active=openOps.get(activeOpId);
-        if(active?.code){
-          const refreshed=await getDoc(doc(db,'productos',active.code));
-          if(refreshed.exists()) active.product=refreshed.data();
-          renderWorkspace();
-        }
-      }
-      $("importMsg").innerHTML=`<div class="message ok">✅ <b>Carga exitosa</b><br>${processed.toLocaleString('es-EC')} productos guardados en Firebase${skipped?` · ${skipped.toLocaleString('es-EC')} filas omitidas`:''}.<br><span class="small">Verificado: ${sample.code} — ${verify.data().descripcion||'sin descripción'}</span></div>`;
-      toast(`✅ Maestro actualizado: ${processed.toLocaleString('es-EC')} productos`);
-      await loadDashboard();
+      await saveProductRows(validRows,skipped,'Excel');
     }catch(e){
       $("importMsg").innerHTML='<div class="message err">❌ '+e.message+'</div>';
       toast('❌ Error cargando maestro');
