@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0f6b45" />
+  <title>Control de Etiquetado</title>
+  <style>
+    :root{
+      --bg:#f6f7f4; --card:#ffffff; --ink:#15231d; --muted:#66756d;
+      --green:#0f6b45; --green2:#1d855c; --greenSoft:#e6f4ed;
+      --blue:#315efb; --blueSoft:#edf2ff; --amber:#b7791f; --amberSoft:#fff6df;
+      --red:#c73737; --redSoft:#ffebeb; --border:#dfe6e1; --shadow:0 12px 30px rgba(20,55,40,.08);
+      --radius:22px;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:linear-gradient(135deg,#f8faf8 0%,#f3f6f4 100%);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--ink);min-height:100vh}
+    button,input,select{font:inherit}
+    button{cursor:pointer}
+    .app{max-width:1280px;margin:0 auto;padding:18px}
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+    .brand{display:flex;align-items:center;gap:12px}.logo{width:48px;height:48px;border-radius:16px;background:var(--green);display:grid;place-items:center;color:#fff;font-size:25px;box-shadow:var(--shadow)}
+    .brand h1{font-size:24px;margin:0}.brand p{margin:3px 0 0;color:var(--muted);font-size:13px}
+    .status{display:flex;align-items:center;gap:8px;padding:9px 12px;background:#fff;border:1px solid var(--border);border-radius:999px;font-size:13px}.dot{width:9px;height:9px;border-radius:50%;background:#a0a0a0}.dot.ok{background:#28a86b}.dot.bad{background:#d64545}
+    .mainTabs{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}.mainTab{border:1px solid var(--border);background:#fff;border-radius:18px;padding:16px 18px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow);transition:.18s}.mainTab:hover{transform:translateY(-1px)}.mainTab.active{border-color:#8fc7ac;background:var(--greenSoft)}.mainTab .emoji{font-size:28px}.mainTab b{display:block;font-size:18px}.mainTab span{font-size:13px;color:var(--muted)}
+    .panel{display:none}.panel.active{display:block}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px}
+    .landing{display:grid;grid-template-columns:1.15fr .85fr;gap:18px;align-items:stretch}.hero{padding:24px}.hero h2{font-size:32px;line-height:1.05;margin:0 0 10px}.hero p{color:var(--muted);max-width:620px}.heroBadges{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}.badge{padding:8px 11px;border-radius:999px;background:#f0f3f1;border:1px solid var(--border);font-size:12px}.quick{display:grid;gap:10px}.quickRow{display:flex;align-items:center;justify-content:space-between;padding:14px;border-radius:15px;background:#fafcfb;border:1px solid var(--border)}
+    .authBox{max-width:520px;margin:20px auto}.authBox h2{margin-top:0}.field{display:grid;gap:6px;margin-bottom:12px}.field label{font-weight:700;font-size:13px}.field input,.field select{width:100%;padding:13px 14px;border:1px solid #ccd7d0;border-radius:12px;background:#fff;outline:none}.field input:focus,.field select:focus{border-color:#70b591;box-shadow:0 0 0 3px rgba(26,126,82,.10)}
+    .btn{border:0;border-radius:13px;padding:12px 16px;font-weight:800}.btn.primary{background:var(--green);color:#fff}.btn.secondary{background:#eef2ef;color:#173c2c}.btn.blue{background:var(--blue);color:#fff}.btn.warn{background:#f4b942;color:#3a2a05}.btn.danger{background:#d84545;color:#fff}.btn.ghost{background:#fff;border:1px solid var(--border)}.btn.big{padding:17px 22px;font-size:18px;min-width:180px}
+    .operatorShell{display:grid;grid-template-columns:260px 1fr;gap:16px}.side{display:grid;align-content:start;gap:12px}.userPicker{display:grid;gap:8px}.userItem{padding:12px;border:1px solid var(--border);border-radius:12px;background:#fff;display:flex;justify-content:space-between;align-items:center}.userItem small{color:var(--muted)}
+    .opTabs{display:flex;gap:8px;overflow:auto;padding-bottom:6px;margin-bottom:12px}.opTab{border:1px solid var(--border);border-radius:13px;background:#fff;padding:10px 12px;min-width:150px;display:flex;justify-content:space-between;gap:10px;align-items:center}.opTab.active{background:var(--greenSoft);border-color:#91c7ad}.opTab .miniStatus{font-size:11px;color:var(--muted)}
+    .workGrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.timerCard{grid-row:span 2;display:grid;place-items:center;min-height:330px}.timer{font-size:64px;font-weight:900;letter-spacing:2px;font-variant-numeric:tabular-nums}.timerLabel{color:var(--muted);text-align:center}.timerBtns{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:20px}.productCard h3{margin:0 0 14px}.productMeta{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:12px}.metric{padding:12px;background:#f8faf8;border:1px solid var(--border);border-radius:14px}.metric span{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:800}.metric strong{font-size:17px}.message{margin-top:10px;padding:11px 12px;border-radius:12px;font-size:13px}.message.ok{background:var(--greenSoft);color:#145b3d}.message.err{background:var(--redSoft);color:#9d2626}.message.warn{background:var(--amberSoft);color:#795111}
+    .finishBox{display:none;margin-top:14px}.finishBox.show{display:block}.twoCols{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .supGrid{display:grid;grid-template-columns:230px 1fr;gap:16px}.supNav{display:grid;gap:8px;align-content:start}.supNav button{text-align:left}.supView{display:none}.supView.active{display:block}.sectionTitle{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}.sectionTitle h2{margin:0}.tableWrap{overflow:auto;border:1px solid var(--border);border-radius:14px}table{border-collapse:collapse;width:100%;min-width:760px}th,td{padding:11px 12px;border-bottom:1px solid #e9eeeb;text-align:left;font-size:13px}th{background:#f1f6f3;color:#27513d}.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.kpi{padding:16px;border:1px solid var(--border);border-radius:15px;background:#fff}.kpi span{font-size:12px;color:var(--muted)}.kpi strong{display:block;font-size:25px;margin-top:4px}.uploadBox{border:2px dashed #bfd1c7;border-radius:16px;padding:18px;text-align:center;background:#fbfdfc}.small{font-size:12px;color:var(--muted)}.hidden{display:none!important}
+    .toast{position:fixed;right:18px;bottom:18px;padding:12px 14px;border-radius:12px;background:#173d2d;color:#fff;box-shadow:var(--shadow);opacity:0;transform:translateY(10px);pointer-events:none;transition:.2s;z-index:30}.toast.show{opacity:1;transform:none}
+    @media (max-width:900px){.landing,.operatorShell,.supGrid,.workGrid{grid-template-columns:1fr}.timerCard{grid-row:auto}.mainTabs{grid-template-columns:1fr 1fr}.kpis{grid-template-columns:repeat(2,1fr)}.side{order:2}.timer{font-size:48px}}
+    @media (orientation:landscape) and (max-height:600px){.app{padding:10px}.topbar{margin-bottom:8px}.brand h1{font-size:20px}.mainTabs{margin-bottom:10px}.card{padding:14px}.timerCard{min-height:250px}.timer{font-size:52px}.operatorShell{grid-template-columns:220px 1fr}.hero h2{font-size:26px}}
+  </style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div class="brand"><div class="logo">🏷️</div><div><h1>Control de Etiquetado</h1><p>Gestión operativa y productividad</p></div></div>
+    <div class="status"><span id="firebaseDot" class="dot"></span><span id="firebaseStatus">Firebase: conectando…</span></div>
+  </div>
+
+  <div class="mainTabs">
+    <button class="mainTab active" data-main="operarios"><span class="emoji">👷</span><span><b>OPERARIOS</b><span>Registro de códigos, tiempos y unidades</span></span></button>
+    <button class="mainTab" data-main="supervisor"><span class="emoji">🔒</span><span><b>SUPERVISOR</b><span>Dashboard, metas, productos y configuración</span></span></button>
+  </div>
+
+  <section id="panel-operarios" class="panel active">
+    <div id="operatorApp" class="hidden">
+      <div class="operatorShell">
+        <aside class="side card">
+          <div><strong>👥 Operarios disponibles</strong><div class="small">Máximo 3 activos por celular</div></div>
+          <div id="operatorPicker" class="userPicker"></div>
+          <button id="refreshOps" class="btn secondary">🔄 Actualizar lista</button>
+          <button id="deviceLogout" class="btn ghost">🔄 Verificar conexión</button>
+        </aside>
+        <main>
+          <div id="opTabs" class="opTabs"></div>
+          <div id="opWorkspace"></div>
+        </main>
+      </div>
+    </div>
+  </section>
+
+  <section id="panel-supervisor" class="panel">
+    <div id="supAuth" class="authBox card">
+      <h2>🔒 Acceso Supervisor</h2>
+      <p class="small">Ingresa el PIN de Supervisor. Firebase queda trabajando en segundo plano como almacenamiento.</p>
+      <div class="field"><label>PIN</label><input id="supPin" type="password" inputmode="numeric" maxlength="8" placeholder="••••"></div>
+      <button id="supLoginBtn" class="btn primary">👨‍💼 Ingresar</button>
+      <div id="supAuthMsg"></div>
+    </div>
+
+    <div id="supApp" class="hidden">
+      <div class="supGrid">
+        <aside class="supNav card">
+          <button class="btn secondary supNavBtn" data-view="dashboard">📊 Dashboard</button>
+          <button class="btn secondary supNavBtn" data-view="productos">📦 Productos</button>
+          <button class="btn secondary supNavBtn" data-view="metas">🎯 Metas</button>
+          <button class="btn secondary supNavBtn" data-view="registros">🧾 Registros</button>
+          <button class="btn secondary supNavBtn" data-view="usuarios">👥 Usuarios</button>
+          <button id="supLogout" class="btn ghost">🚪 Cerrar sesión</button>
+        </aside>
+
+        <section>
+          <div id="view-dashboard" class="supView active card">
+            <div class="sectionTitle"><h2>📊 Dashboard</h2><button id="refreshDashboard" class="btn ghost">🔄 Actualizar</button></div>
+            <div class="kpis">
+              <div class="kpi"><span>Productos</span><strong id="kpiProductos">—</strong></div>
+              <div class="kpi"><span>Metas definidas</span><strong id="kpiMetas">—</strong></div>
+              <div class="kpi"><span>Registros hoy</span><strong id="kpiRegistros">—</strong></div>
+              <div class="kpi"><span>Sesiones activas</span><strong id="kpiSesiones">—</strong></div>
+            </div>
+            <div class="message warn" style="margin-top:14px">🚧 Este es el MVP operativo. Aquí iremos agregando productividad por persona, SKU, categoría, pausas, tendencias y ranking.</div>
+          </div>
+
+          <div id="view-productos" class="supView card">
+            <div class="sectionTitle"><h2>📦 Maestro de productos</h2><span class="small">Excel .xlsx / .xls</span></div>
+            <div class="uploadBox">
+              <div style="font-size:32px">📤</div>
+              <strong>Actualizar maestro desde Excel</strong>
+              <p class="small">Busca columnas equivalentes a Código / Código Producto y Descripción.</p>
+              <input id="productFile" type="file" accept=".xlsx,.xls" />
+              <div style="margin-top:10px"><button id="importProducts" class="btn blue">⬆️ Cargar productos</button></div>
+            </div>
+            <div id="importMsg"></div>
+          </div>
+
+          <div id="view-metas" class="supView card">
+            <div class="sectionTitle"><h2>🎯 Metas por código</h2></div>
+            <div class="twoCols">
+              <div class="field"><label>Código</label><input id="metaCode" placeholder="Ej. 46966"></div>
+              <div class="field"><label>Meta u/h</label><input id="metaValue" type="number" min="1" placeholder="Ej. 700"></div>
+            </div>
+            <div class="field"><label>Motivo / observación</label><input id="metaReason" placeholder="Meta aprobada según histórico"></div>
+            <button id="saveMeta" class="btn primary">💾 Guardar meta</button>
+            <div id="metaMsg"></div>
+          </div>
+
+          <div id="view-registros" class="supView card">
+            <div class="sectionTitle"><h2>🧾 Últimos registros</h2><button id="loadRecords" class="btn ghost">🔄 Cargar</button></div>
+            <div class="tableWrap"><table><thead><tr><th>Fecha</th><th>Operario</th><th>Código</th><th>Unidades</th><th>Min netos</th><th>U/H</th><th>Meta</th></tr></thead><tbody id="recordsBody"><tr><td colspan="7">Sin cargar</td></tr></tbody></table></div>
+          </div>
+
+          <div id="view-usuarios" class="supView card">
+            <div class="sectionTitle"><h2>👥 Usuarios de operación</h2></div>
+            <div class="twoCols">
+              <div class="field"><label>Nombre</label><input id="newOpName" placeholder="Miguel Solís"></div>
+              <div class="field"><label>Tipo</label><select id="newOpType"><option value="Ransa">Ransa</option><option value="Maquila">Maquila</option></select></div>
+            </div>
+            <button id="addOperator" class="btn primary">➕ Crear operario</button>
+            <div id="userMsg"></div>
+            <div style="height:12px"></div>
+            <div class="tableWrap"><table><thead><tr><th>Nombre</th><th>Tipo</th><th>Activo</th></tr></thead><tbody id="usersBody"><tr><td colspan="3">Sin cargar</td></tr></tbody></table></div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </section>
+</div>
+<div id="toast" class="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+  import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
+  import {
+    getFirestore, doc, getDoc, setDoc, updateDoc, addDoc, collection, getDocs,
+    query, where, orderBy, limit, serverTimestamp, writeBatch
+  } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCfBgw1pgM-V1sF2WmiNowS46lBQUBH-PI",
+    authDomain: "etiquetado-479a4.firebaseapp.com",
+    projectId: "etiquetado-479a4",
+    storageBucket: "etiquetado-479a4.firebasestorage.app",
+    messagingSenderId: "1003894889078",
+    appId: "1:1003894889078:web:a3ada409265381fd1bdd57"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  const $ = (id)=>document.getElementById(id);
+  const toast=(m)=>{const t=$("toast");t.textContent=m;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2600)};
+  const localISO=()=>{const d=new Date(); const z=n=>String(n).padStart(2,'0'); return `${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())}T${z(d.getHours())}:${z(d.getMinutes())}:${z(d.getSeconds())}`};
+  const fmtTimer=(ms)=>{ms=Math.max(0,ms);const s=Math.floor(ms/1000),h=Math.floor(s/3600),m=Math.floor((s%3600)/60),ss=s%60;return [h,m,ss].map(x=>String(x).padStart(2,'0')).join(':')};
+  const norm=s=>String(s??'').trim();
+  const slug=s=>norm(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+  const safeNum=v=>{const n=Number(String(v).replace(',','.'));return Number.isFinite(n)?n:0};
+
+
+  document.querySelectorAll('.mainTab').forEach(btn=>btn.addEventListener('click',()=>{
+    document.querySelectorAll('.mainTab').forEach(x=>x.classList.remove('active')); btn.classList.add('active');
+    document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active')); $("panel-"+btn.dataset.main).classList.add('active');
+  }));
+
+  // Acceso visual del panel Supervisor. Cambia este PIN antes de publicar.
+  const SUPERVISOR_PIN = "8357";
+  let supervisorUnlocked = sessionStorage.getItem('supervisorUnlocked') === '1';
+
+  async function ensureFirebaseSession(){
+    if(auth.currentUser) return auth.currentUser;
+    const cred = await signInAnonymously(auth);
+    return cred.user;
+  }
+
+  function renderSupervisorAccess(){
+    if(supervisorUnlocked){
+      $("supAuth").classList.add('hidden');
+      $("supApp").classList.remove('hidden');
+      loadDashboard().catch(()=>{});
+      loadUsersTable().catch(()=>{});
+    }else{
+      $("supAuth").classList.remove('hidden');
+      $("supApp").classList.add('hidden');
+    }
+  }
+
+  $("supLoginBtn").onclick=async()=>{
+    const pin = $("supPin").value.trim();
+    if(pin === SUPERVISOR_PIN){
+      supervisorUnlocked = true;
+      sessionStorage.setItem('supervisorUnlocked','1');
+      $("supPin").value='';
+      $("supAuthMsg").innerHTML='<div class="message ok">✅ Acceso autorizado.</div>';
+      renderSupervisorAccess();
+    }else{
+      $("supAuthMsg").innerHTML='<div class="message err">❌ PIN incorrecto.</div>';
+    }
+  };
+
+  $("supLogout").onclick=()=>{
+    supervisorUnlocked=false;
+    sessionStorage.removeItem('supervisorUnlocked');
+    renderSupervisorAccess();
+  };
+
+  $("deviceLogout").onclick=()=>{
+    toast('📱 El dispositivo permanece conectado a Firebase.');
+  };
+
+  onAuthStateChanged(auth, async user=>{
+    if(!user){
+      $("firebaseDot").className='dot';
+      $("firebaseStatus").textContent='Firebase: conectando…';
+      try{ await ensureFirebaseSession(); }
+      catch(e){ $("firebaseDot").className='dot bad'; $("firebaseStatus").textContent='Firebase: sin conexión'; toast('❌ '+e.message); }
+      return;
+    }
+    $("firebaseDot").className='dot ok';
+    $("firebaseStatus").textContent='Firebase: conectado';
+    $("operatorApp").classList.remove('hidden');
+    renderSupervisorAccess();
+    try{ await loadOperators(); }catch(e){ toast('⚠️ No se pudo cargar operarios: '+e.message); }
+  });
+
+  ensureFirebaseSession().catch(e=>{
+    $("firebaseDot").className='dot bad';
+    $("firebaseStatus").textContent='Firebase: sin conexión';
+    toast('❌ Activa Authentication anónimo en Firebase.');
+  });
+
+  // ---------- OPERARIOS ----------
+  let operators=[]; const openOps=new Map(); let activeOpId=null;
+
+  async function loadOperators(){
+    const snap=await getDocs(query(collection(db,'operarios'),where('activo','==',true)));
+    operators=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>norm(a.nombre).localeCompare(norm(b.nombre)));
+    renderOperatorPicker();
+  }
+  function renderOperatorPicker(){
+    const box=$("operatorPicker"); box.innerHTML='';
+    if(!operators.length){box.innerHTML='<div class="message warn">⚠️ Aún no hay operarios creados.</div>';return;}
+    operators.forEach(o=>{const el=document.createElement('button');el.className='userItem';el.innerHTML=`<span><b>${o.nombre}</b><br><small>${o.tipo||''}</small></span><span>➕</span>`;el.onclick=()=>openOperator(o);box.appendChild(el)});
+  }
+  $("refreshOps").onclick=loadOperators;
+
+  async function openOperator(o){
+    if(openOps.has(o.id)){activeOpId=o.id;renderOpTabs();renderWorkspace();return;}
+    if(openOps.size>=3){toast('⚠️ Máximo 3 operarios por celular');return;}
+    try{
+      const s=await getDoc(doc(db,'sesiones_activas',o.id));
+      if(s.exists() && s.data().estado && s.data().estado!=='finalizada'){
+        toast(`⚠️ ${o.nombre} ya tiene una sesión activa`); return;
+      }
+    }catch(e){toast('⚠️ No se pudo validar simultaneidad: '+e.message);return;}
+    openOps.set(o.id,{operator:o,code:'',product:null,meta:null,state:'idle',startMs:null,pauseStart:null,pauseTotal:0,pauses:[],interval:null});
+    activeOpId=o.id; renderOpTabs(); renderWorkspace();
+  }
+  function closeOperator(id){const x=openOps.get(id);if(x?.state==='running'||x?.state==='paused'){toast('⚠️ Finaliza el trabajo antes de cerrar la pestaña');return;}openOps.delete(id);activeOpId=[...openOps.keys()][0]||null;renderOpTabs();renderWorkspace();}
+  function renderOpTabs(){
+    const box=$("opTabs");box.innerHTML='';
+    openOps.forEach((s,id)=>{const b=document.createElement('button');b.className='opTab '+(id===activeOpId?'active':'');const st=s.state==='running'?'🟢 TRABAJANDO':s.state==='paused'?'🟡 PAUSA':'⚪ LISTO';b.innerHTML=`<span><b>${s.operator.nombre}</b><div class="miniStatus">${st}</div></span><span data-x="1">✕</span>`;b.onclick=(e)=>{if(e.target.dataset.x){e.stopPropagation();closeOperator(id)}else{activeOpId=id;renderOpTabs();renderWorkspace()}};box.appendChild(b)});
+  }
+  function currentElapsed(s){if(!s.startMs)return 0;const end=s.state==='running'?Date.now():(s.pauseStart||Date.now());return end-s.startMs-s.pauseTotal;}
+  function renderWorkspace(){
+    const root=$("opWorkspace"); if(!activeOpId){root.innerHTML='<div class="card"><h2>👷 Selecciona un operario</h2><p class="small">Elige un nombre desde el panel izquierdo para abrir su pestaña.</p></div>';return;}
+    const s=openOps.get(activeOpId);
+    root.innerHTML=`<div class="workGrid">
+      <div class="card productCard">
+        <h3>📦 Producto</h3>
+        <div class="field"><label>Código</label><div style="display:flex;gap:8px"><input id="codeInput" inputmode="numeric" value="${s.code}" ${s.state!=='idle'?'disabled':''} placeholder="Digite el código"><button id="validateCode" class="btn blue" ${s.state!=='idle'?'disabled':''}>🔎 Validar</button></div></div>
+        <div id="productInfo">${s.product?productHTML(s):'<div class="small">Digite un código y valide.</div>'}</div>
+      </div>
+      <div class="card timerCard">
+        <div><div class="timerLabel">⏱️ Tiempo productivo</div><div id="timer" class="timer">${fmtTimer(currentElapsed(s))}</div>
+        <div class="timerBtns">
+          ${s.state==='idle'?'<button id="startBtn" class="btn primary big" '+(!s.product?'disabled':'')+'>▶️ INICIAR</button>':''}
+          ${s.state==='running'?'<button id="pauseBtn" class="btn warn big">⏸️ PAUSAR</button><button id="finishBtn" class="btn danger big">⏹️ TERMINAR</button>':''}
+          ${s.state==='paused'?'<button id="resumeBtn" class="btn primary big">▶️ REANUDAR</button><button id="finishBtn" class="btn danger big">⏹️ TERMINAR</button>':''}
+        </div></div>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0">📌 Estado</h3>
+        <div class="productMeta"><div class="metric"><span>Operario</span><strong>${s.operator.nombre}</strong></div><div class="metric"><span>Estado</span><strong>${s.state==='running'?'Trabajando':s.state==='paused'?'Pausado':'Listo'}</strong></div><div class="metric"><span>Pausas</span><strong>${s.pauses.length}</strong></div><div class="metric"><span>Tiempo pausado</span><strong>${fmtTimer(s.pauseTotal+(s.state==='paused'&&s.pauseStart?Date.now()-s.pauseStart:0))}</strong></div></div>
+        <div id="finishBox" class="finishBox"><div class="field"><label>Unidades procesadas</label><input id="qtyInput" type="number" min="1" inputmode="numeric" placeholder="Ej. 1080"></div><button id="confirmFinish" class="btn primary">💾 Confirmar y guardar</button></div>
+      </div>
+    </div>`;
+    $("validateCode")?.addEventListener('click',()=>validateProduct(s));
+    $("codeInput")?.addEventListener('keydown',e=>{if(e.key==='Enter')validateProduct(s)});
+    $("startBtn")?.addEventListener('click',()=>startWork(s)); $("pauseBtn")?.addEventListener('click',()=>pauseWork(s)); $("resumeBtn")?.addEventListener('click',()=>resumeWork(s)); $("finishBtn")?.addEventListener('click',()=>showFinish(s)); $("confirmFinish")?.addEventListener('click',()=>confirmFinish(s));
+    startTimerLoop(s);
+  }
+  function productHTML(s){return `<div class="message ok">✅ Código válido</div><div class="productMeta"><div class="metric"><span>Código</span><strong>${s.code}</strong></div><div class="metric"><span>Descripción</span><strong>${s.product.descripcion||'—'}</strong></div><div class="metric"><span>Categoría</span><strong>${s.product.categoria||'Sin categorizar'}</strong></div><div class="metric"><span>Meta</span><strong>${s.meta?Number(s.meta.meta_u_h).toLocaleString('es-EC')+' u/h':'En evaluación'}</strong></div></div>`}
+  async function validateProduct(s){
+    const code=norm($("codeInput").value); if(!code)return toast('⚠️ Digita un código');
+    try{
+      const ps=await getDoc(doc(db,'productos',code));
+      if(!ps.exists()){s.product=null;s.code=code;$("productInfo").innerHTML='<div class="message err">❌ Código no encontrado en el maestro.</div>';return;}
+      s.code=code;s.product=ps.data();
+      const ms=await getDoc(doc(db,'metas',code));s.meta=ms.exists()?ms.data():null;
+      $("productInfo").innerHTML=productHTML(s); renderWorkspace();
+    }catch(e){$("productInfo").innerHTML='<div class="message err">❌ '+e.message+'</div>';}
+  }
+  async function startWork(s){
+    try{
+      const activeRef=doc(db,'sesiones_activas',s.operator.id); const existing=await getDoc(activeRef); if(existing.exists()&&existing.data().estado!=='finalizada'){toast('⚠️ Este operario ya tiene una sesión activa');return;}
+      s.startMs=Date.now();s.state='running';s.pauseTotal=0;s.pauses=[];
+      await setDoc(activeRef,{operarioId:s.operator.id,operario:s.operator.nombre,codigo:s.code,descripcion:s.product.descripcion||'',categoria:s.product.categoria||'',meta_u_h:s.meta?.meta_u_h||null,estado:'running',inicio_local:localISO(),inicio_ms:s.startMs,dispositivo:navigator.userAgent.slice(0,180)});
+      renderOpTabs();renderWorkspace();
+    }catch(e){toast('❌ '+e.message)}
+  }
+  async function pauseWork(s){
+    const motivo=prompt('Motivo de pausa:\n- Falta de etiquetas\n- Falta de producto\n- Break\n- Calidad\n- Reproceso\n- Cambio operativo\n- Otro','Falta de etiquetas'); if(!motivo)return;
+    s.pauseStart=Date.now();s.state='paused';s.pauses.push({motivo,inicio_local:localISO(),inicio_ms:s.pauseStart,fin_local:null,fin_ms:null,duracion_ms:null});
+    try{await updateDoc(doc(db,'sesiones_activas',s.operator.id),{estado:'paused',pausas:s.pauses,ultima_actualizacion_local:localISO()});}catch(e){toast('⚠️ '+e.message)}
+    renderOpTabs();renderWorkspace();
+  }
+  async function resumeWork(s){
+    const now=Date.now(); const p=s.pauses[s.pauses.length-1]; if(p&&!p.fin_ms){p.fin_ms=now;p.fin_local=localISO();p.duracion_ms=now-p.inicio_ms;s.pauseTotal+=p.duracion_ms}
+    s.pauseStart=null;s.state='running';
+    try{await updateDoc(doc(db,'sesiones_activas',s.operator.id),{estado:'running',pausas:s.pauses,pausa_total_ms:s.pauseTotal,ultima_actualizacion_local:localISO()});}catch(e){toast('⚠️ '+e.message)}
+    renderOpTabs();renderWorkspace();
+  }
+  function showFinish(s){ if(s.state==='paused') resumeWork(s).then(()=>{s.state='paused';renderWorkspace();setTimeout(()=>$("finishBox")?.classList.add('show'),0)}); else $("finishBox")?.classList.add('show'); }
+  async function confirmFinish(s){
+    const qty=Math.floor(safeNum($("qtyInput").value)); if(qty<=0)return toast('⚠️ Ingresa las unidades procesadas');
+    const now=Date.now();
+    if(s.state==='paused'&&s.pauseStart){const p=s.pauses[s.pauses.length-1];p.fin_ms=now;p.fin_local=localISO();p.duracion_ms=now-p.inicio_ms;s.pauseTotal+=p.duracion_ms;s.pauseStart=null;}
+    const netMs=now-s.startMs-s.pauseTotal; const hours=netMs/3600000; const uph=hours>0?Math.round(qty/hours):0; const meta=s.meta?.meta_u_h||null; const compliance=meta?Math.round((uph/meta)*1000)/10:null;
+    const data={fecha_local:localISO().slice(0,10),fin_local:localISO(),inicio_local:new Date(s.startMs).toLocaleString('sv-SE').replace(' ','T'),operarioId:s.operator.id,operario:s.operator.nombre,tipo_personal:s.operator.tipo||'',codigo:s.code,descripcion:s.product.descripcion||'',categoria:s.product.categoria||'',unidades:qty,tiempo_neto_ms:netMs,tiempo_pausa_ms:s.pauseTotal,productividad_u_h:uph,meta_u_h:meta,cumplimiento_pct:compliance,pausas:s.pauses,creado_en:serverTimestamp()};
+    try{
+      await addDoc(collection(db,'registros_etiquetado'),data);
+      await setDoc(doc(db,'sesiones_activas',s.operator.id),{...data,estado:'finalizada'});
+      toast(`✅ Guardado: ${uph.toLocaleString('es-EC')} u/h`);
+      clearInterval(s.interval);openOps.set(s.operator.id,{operator:s.operator,code:'',product:null,meta:null,state:'idle',startMs:null,pauseStart:null,pauseTotal:0,pauses:[],interval:null});renderOpTabs();renderWorkspace();
+    }catch(e){toast('❌ No se pudo guardar: '+e.message)}
+  }
+  function startTimerLoop(s){if(s.interval)clearInterval(s.interval);s.interval=setInterval(()=>{if(activeOpId!==s.operator.id)return;const el=$("timer");if(el)el.textContent=fmtTimer(currentElapsed(s));},500)}
+
+  // ---------- SUPERVISOR ----------
+  document.querySelectorAll('.supNavBtn').forEach(b=>b.onclick=()=>{document.querySelectorAll('.supView').forEach(v=>v.classList.remove('active'));$("view-"+b.dataset.view).classList.add('active');if(b.dataset.view==='usuarios')loadUsersTable();if(b.dataset.view==='registros')loadRecords();});
+
+  async function loadDashboard(){
+    try{
+      const [p,m,r,s]=await Promise.all([getDocs(collection(db,'productos')),getDocs(collection(db,'metas')),getDocs(collection(db,'registros_etiquetado')),getDocs(collection(db,'sesiones_activas'))]);
+      $("kpiProductos").textContent=p.size.toLocaleString('es-EC'); $("kpiMetas").textContent=m.size.toLocaleString('es-EC');
+      const today=localISO().slice(0,10); $("kpiRegistros").textContent=r.docs.filter(x=>x.data().fecha_local===today).length; $("kpiSesiones").textContent=s.docs.filter(x=>['running','paused'].includes(x.data().estado)).length;
+    }catch(e){toast('⚠️ Dashboard: '+e.message)}
+  }
+  $("refreshDashboard").onclick=loadDashboard;
+
+  $("addOperator").onclick=async()=>{
+    const nombre=norm($("newOpName").value),tipo=$("newOpType").value;if(!nombre)return;
+    try{const id=slug(nombre);await setDoc(doc(db,'operarios',id),{nombre,tipo,activo:true,creado_en:serverTimestamp()},{merge:true});$("userMsg").innerHTML='<div class="message ok">✅ Operario creado.</div>';$("newOpName").value='';await loadUsersTable();await loadOperators();}catch(e){$("userMsg").innerHTML='<div class="message err">❌ '+e.message+'</div>'}
+  };
+  async function loadUsersTable(){
+    try{const snap=await getDocs(collection(db,'operarios'));const arr=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>norm(a.nombre).localeCompare(norm(b.nombre)));$("usersBody").innerHTML=arr.length?arr.map(x=>`<tr><td>${x.nombre}</td><td>${x.tipo||''}</td><td>${x.activo?'✅':'❌'}</td></tr>`).join(''):'<tr><td colspan="3">Sin operarios</td></tr>';}catch(e){$("usersBody").innerHTML=`<tr><td colspan="3">${e.message}</td></tr>`}
+  }
+
+  $("saveMeta").onclick=async()=>{
+    const code=norm($("metaCode").value),meta=Math.floor(safeNum($("metaValue").value)),reason=norm($("metaReason").value);if(!code||meta<=0)return;
+    try{
+      const prev=await getDoc(doc(db,'metas',code));const old=prev.exists()?prev.data().meta_u_h:null;
+      await setDoc(doc(db,'metas',code),{codigo:code,meta_u_h:meta,estado:'aprobada',motivo:reason,actualizado_local:localISO(),actualizado_en:serverTimestamp()},{merge:true});
+      await addDoc(collection(db,'historial_metas'),{codigo:code,meta_anterior:old,meta_nueva:meta,motivo:reason,fecha_local:localISO(),usuario_uid:auth.currentUser?.uid||'',creado_en:serverTimestamp()});
+      $("metaMsg").innerHTML=`<div class="message ok">✅ Meta ${code}: ${meta.toLocaleString('es-EC')} u/h guardada.</div>`;await loadDashboard();
+    }catch(e){$("metaMsg").innerHTML='<div class="message err">❌ '+e.message+'</div>'}
+  };
+
+  $("loadRecords").onclick=loadRecords;
+  async function loadRecords(){
+    try{const snap=await getDocs(query(collection(db,'registros_etiquetado'),orderBy('creado_en','desc'),limit(100)));$("recordsBody").innerHTML=snap.empty?'<tr><td colspan="7">Sin registros</td></tr>':snap.docs.map(d=>{const x=d.data();return `<tr><td>${x.fecha_local||''}</td><td>${x.operario||''}</td><td>${x.codigo||''}</td><td>${Number(x.unidades||0).toLocaleString('es-EC')}</td><td>${Math.round((x.tiempo_neto_ms||0)/60000)}</td><td><b>${Number(x.productividad_u_h||0).toLocaleString('es-EC')}</b></td><td>${x.meta_u_h?Number(x.meta_u_h).toLocaleString('es-EC'):'—'}</td></tr>`}).join('');}catch(e){$("recordsBody").innerHTML=`<tr><td colspan="7">${e.message}</td></tr>`}
+  }
+
+  $("importProducts").onclick=async()=>{
+    const f=$("productFile").files?.[0];if(!f)return toast('⚠️ Selecciona un Excel');
+    try{
+      $("importMsg").innerHTML='<div class="message warn">⏳ Leyendo archivo…</div>';
+      const wb=XLSX.read(await f.arrayBuffer(),{type:'array'});const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''});if(!rows.length)throw new Error('El archivo no contiene filas.');
+      const keys=Object.keys(rows[0]); const findKey=(opts)=>keys.find(k=>opts.some(o=>k.toLowerCase().replace(/\s+/g,' ').includes(o)));
+      const codeKey=findKey(['código producto','codigo producto','código','codigo','item code','product code']); const descKey=findKey(['descripción','descripcion','description','producto']);
+      if(!codeKey||!descKey)throw new Error('No encontré columnas de Código y Descripción.');
+      let batch=writeBatch(db),n=0,created=0;
+      for(const r of rows){const code=norm(r[codeKey]);if(!code)continue;const descripcion=norm(r[descKey]);const ref=doc(db,'productos',code);batch.set(ref,{codigo:code,descripcion,categoria:categorize(descripcion),activo:true,actualizado_local:localISO(),actualizado_en:serverTimestamp()},{merge:true});n++;created++;if(n===400){await batch.commit();batch=writeBatch(db);n=0}}
+      if(n)await batch.commit();$("importMsg").innerHTML=`<div class="message ok">✅ ${created.toLocaleString('es-EC')} productos procesados. El histórico de metas no se modifica.</div>`;await loadDashboard();
+    }catch(e){$("importMsg").innerHTML='<div class="message err">❌ '+e.message+'</div>'}
+  };
+  function categorize(desc){const d=norm(desc).toUpperCase();const rules=[['PENCIL','LÁPIZ'],['LIPSTICK','LABIAL'],['LIP GLOSS','LABIAL'],['MASCARA','MÁSCARA'],['EAU DE PARFUM','PERFUME'],[' EDP','PERFUME'],['EAU DE TOILETTE','PERFUME'],[' EDT','PERFUME'],['PERFUME','PERFUME'],['CREAM','CREMA'],['CREME','CREMA'],['SHAMPOO','SHAMPOO'],['SOAP','JABÓN'],['DEODORANT','DESODORANTE'],['ROLL-ON','DESODORANTE'],['FOUNDATION','MAQUILLAJE'],['POWDER','MAQUILLAJE'],['CONCEALER','MAQUILLAJE'],['SERUM','SÉRUM'],['CLEANSER','LIMPIEZA FACIAL'],['TONER','LIMPIEZA FACIAL']];for(const [k,v] of rules)if(d.includes(k))return v;return 'OTROS'}
+</script>
+</body>
+</html>
