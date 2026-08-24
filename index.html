@@ -22,47 +22,47 @@
     .brand{display:flex;align-items:center;gap:12px}.logo{width:48px;height:48px;border-radius:16px;background:var(--green);display:grid;place-items:center;color:#fff;font-size:25px;box-shadow:var(--shadow)}
     .brand h1{font-size:24px;margin:0}.brand p{margin:3px 0 0;color:var(--muted);font-size:13px}
     .status{display:flex;align-items:center;gap:8px;padding:9px 12px;background:#fff;border:1px solid var(--border);border-radius:999px;font-size:13px}.dot{width:9px;height:9px;border-radius:50%;background:#a0a0a0}.dot.ok{background:#28a86b}.dot.bad{background:#d64545}
-    .mainTabs{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}.mainTab{border:1px solid var(--border);background:#fff;border-radius:18px;padding:16px 18px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow);transition:.18s}.mainTab:hover{transform:translateY(-1px)}.mainTab.active{border-color:#8fc7ac;background:var(--greenSoft)}.mainTab .emoji{font-size:28px}.mainTab b{display:block;font-size:18px}.mainTab span{font-size:13px;color:var(--muted)}
+    .mainTabs{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}.mainTabs.profile-selected{display:flex;align-items:stretch}.mainTabs.profile-selected .mainTab.active{flex:1}.mainTabs.profile-selected .profileBack{flex:0 0 auto}.mainTabs.profile-selected .mainTab:not(.active){display:none}.mainTab{border:1px solid var(--border);background:#fff;border-radius:18px;padding:16px 18px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow);transition:.18s}.mainTab:hover{transform:translateY(-1px)}.mainTab.active{border-color:#8fc7ac;background:var(--greenSoft)}.mainTab .emoji{font-size:28px}.mainTab b{display:block;font-size:18px}.mainTab span{font-size:13px;color:var(--muted)}
     .panel{display:none}.panel.active{display:block}
     .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px}
     .landing{display:grid;grid-template-columns:1.15fr .85fr;gap:18px;align-items:stretch}.hero{padding:24px}.hero h2{font-size:32px;line-height:1.05;margin:0 0 10px}.hero p{color:var(--muted);max-width:620px}.heroBadges{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}.badge{padding:8px 11px;border-radius:999px;background:#f0f3f1;border:1px solid var(--border);font-size:12px}.quick{display:grid;gap:10px}.quickRow{display:flex;align-items:center;justify-content:space-between;padding:14px;border-radius:15px;background:#fafcfb;border:1px solid var(--border)}
     .authBox{max-width:520px;margin:20px auto}.authBox h2{margin-top:0}.field{display:grid;gap:6px;margin-bottom:12px}.field label{font-weight:700;font-size:13px}.field input,.field select{width:100%;padding:13px 14px;border:1px solid #ccd7d0;border-radius:12px;background:#fff;outline:none}.field input:focus,.field select:focus{border-color:#70b591;box-shadow:0 0 0 3px rgba(26,126,82,.10)}
     .btn{border:0;border-radius:13px;padding:12px 16px;font-weight:800}.btn.primary{background:var(--green);color:#fff}.btn.secondary{background:#eef2ef;color:#173c2c}.btn.blue{background:var(--blue);color:#fff}.btn.warn{background:#f4b942;color:#3a2a05}.btn.danger{background:#d84545;color:#fff}.btn.ghost{background:#fff;border:1px solid var(--border)}.btn.big{padding:17px 22px;font-size:18px;min-width:180px}
-    .operatorShell{display:grid;grid-template-columns:260px 1fr;gap:16px}.side{display:grid;align-content:start;gap:12px}.userPicker{display:grid;gap:8px}.userItem{padding:12px;border:1px solid var(--border);border-radius:12px;background:#fff;display:flex;justify-content:space-between;align-items:center}.userItem small{color:var(--muted)}
-    .opTabs{display:flex;gap:8px;overflow:auto;padding-bottom:6px;margin-bottom:12px}.opTab{border:1px solid var(--border);border-radius:13px;background:#fff;padding:10px 12px;min-width:150px;display:flex;justify-content:space-between;gap:10px;align-items:center}.opTab.active{background:var(--greenSoft);border-color:#91c7ad}.opTab .miniStatus{font-size:11px;color:var(--muted)}
-    .workGrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.timerCard{grid-row:span 2;display:grid;place-items:center;min-height:330px}.timer{font-size:64px;font-weight:900;letter-spacing:2px;font-variant-numeric:tabular-nums}.timerLabel{color:var(--muted);text-align:center}.timerBtns{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:20px}.productCard h3{margin:0 0 14px}.productMeta{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:12px}.metric{padding:12px;background:#f8faf8;border:1px solid var(--border);border-radius:14px}.metric span{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:800}.metric strong{font-size:17px}.message{margin-top:10px;padding:11px 12px;border-radius:12px;font-size:13px}.message.ok{background:var(--greenSoft);color:#145b3d}.message.err{background:var(--redSoft);color:#9d2626}.message.warn{background:var(--amberSoft);color:#795111}
+    .operatorShell{display:grid;grid-template-columns:1fr;gap:16px}.operatorEntry{display:grid;grid-template-columns:minmax(260px,520px) auto;gap:10px;align-items:end;margin-bottom:12px}.operatorEntry .field{margin:0}.operatorEntry .btn{height:48px}.userPicker{display:none}
+    .opTabs{display:flex;gap:8px;overflow:auto;padding-bottom:6px;margin-bottom:12px}.opTab{border:1px solid var(--border);border-radius:13px;background:#fff;padding:10px 12px;min-width:150px;display:flex;justify-content:flex-start;gap:10px;align-items:center}.opTab.active{background:var(--greenSoft);border-color:#91c7ad}.opTab .miniStatus{font-size:11px;color:var(--muted)}
+    .workGrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.timerCard{grid-row:span 2;display:grid;place-items:center;min-height:330px}.timer{font-size:64px;font-weight:900;letter-spacing:2px;font-variant-numeric:tabular-nums}.timerLabel{color:var(--muted);text-align:center}.timerBtns{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:20px}.productCard h3{margin:0 0 14px}.productMeta{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:12px}.metric{padding:12px;background:#f8faf8;border:1px solid var(--border);border-radius:14px}.metric span{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:800}.metric strong{font-size:17px}.metric strong.productDescription{font-size:13px;line-height:1.25;font-weight:800;display:block;word-break:break-word}.message{margin-top:10px;padding:11px 12px;border-radius:12px;font-size:13px}.message.ok{background:var(--greenSoft);color:#145b3d}.message.err{background:var(--redSoft);color:#9d2626}.message.warn{background:var(--amberSoft);color:#795111}
     .finishBox{display:none;margin-top:14px}.finishBox.show{display:block}.twoCols{display:grid;grid-template-columns:1fr 1fr;gap:12px}
     .supGrid{display:grid;grid-template-columns:230px 1fr;gap:16px}.supNav{display:grid;gap:8px;align-content:start}.supNav button{text-align:left}.supView{display:none}.supView.active{display:block}.sectionTitle{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}.sectionTitle h2{margin:0}.tableWrap{overflow:auto;border:1px solid var(--border);border-radius:14px}table{border-collapse:collapse;width:100%;min-width:760px}th,td{padding:11px 12px;border-bottom:1px solid #e9eeeb;text-align:left;font-size:13px}th{background:#f1f6f3;color:#27513d}.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.kpi{padding:16px;border:1px solid var(--border);border-radius:15px;background:#fff}.kpi span{font-size:12px;color:var(--muted)}.kpi strong{display:block;font-size:25px;margin-top:4px}.uploadBox{border:2px dashed #bfd1c7;border-radius:16px;padding:18px;text-align:center;background:#fbfdfc}.small{font-size:12px;color:var(--muted)}.hidden{display:none!important}
-    .toast{position:fixed;right:18px;bottom:18px;padding:12px 14px;border-radius:12px;background:#173d2d;color:#fff;box-shadow:var(--shadow);opacity:0;transform:translateY(10px);pointer-events:none;transition:.2s;z-index:30}.toast.show{opacity:1;transform:none}
+    .toast{position:fixed;right:18px;bottom:18px;padding:12px 14px;border-radius:12px;background:#173d2d;color:#fff;box-shadow:var(--shadow);opacity:0;transform:translateY(10px);pointer-events:none;transition:.2s;z-index:30}.toast.show{opacity:1;transform:none}.profileBack{display:none;margin-left:auto}.mainTabs.profile-selected .profileBack{display:block}.modalBackdrop{position:fixed;inset:0;background:rgba(12,30,22,.52);display:none;align-items:center;justify-content:center;padding:18px;z-index:100}.modalBackdrop.show{display:flex}.modalCard{width:min(720px,96vw);max-height:88vh;overflow:auto;background:#fff;border:1px solid var(--border);border-radius:22px;box-shadow:0 24px 70px rgba(0,0,0,.22);padding:20px}.modalHead{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}.modalHead h2{margin:0}
     @media (max-width:900px){.landing,.operatorShell,.supGrid,.workGrid{grid-template-columns:1fr}.timerCard{grid-row:auto}.mainTabs{grid-template-columns:1fr 1fr}.kpis{grid-template-columns:repeat(2,1fr)}.side{order:2}.timer{font-size:48px}}
-    @media (orientation:landscape) and (max-height:600px){.app{padding:10px}.topbar{margin-bottom:8px}.brand h1{font-size:20px}.mainTabs{margin-bottom:10px}.card{padding:14px}.timerCard{min-height:250px}.timer{font-size:52px}.operatorShell{grid-template-columns:220px 1fr}.hero h2{font-size:26px}}
+    @media (orientation:landscape) and (max-height:600px){.app{padding:10px}.topbar{margin-bottom:8px}.brand h1{font-size:20px}.mainTabs{margin-bottom:10px}.card{padding:14px}.timerCard{min-height:250px}.timer{font-size:52px}.operatorShell{grid-template-columns:1fr}.operatorEntry{grid-template-columns:minmax(260px,1fr) auto}.hero h2{font-size:26px}}
   </style>
 </head>
 <body>
 <div class="app">
   <div class="topbar">
-    <div class="brand"><div class="logo">🏷️</div><div><h1>Control de Etiquetado</h1><p>Gestión operativa y productividad</p></div></div>
+    <div class="brand"><div class="logo">🏷️</div><div><h1>Control de Etiquetado</h1></div></div>
     <div class="status"><span id="firebaseDot" class="dot"></span><span id="firebaseStatus">Firebase: conectando…</span></div>
   </div>
 
   <div class="mainTabs">
-    <button class="mainTab active" data-main="operarios"><span class="emoji">👷</span><span><b>OPERARIOS</b><span>Registro de códigos, tiempos y unidades</span></span></button>
-    <button class="mainTab" data-main="supervisor"><span class="emoji">🔒</span><span><b>SUPERVISOR</b><span>Dashboard, metas, productos y configuración</span></span></button>
+    <button class="mainTab" data-main="operarios"><span class="emoji">👷</span><span><b>OPERARIOS</b></span></button>
+    <button class="mainTab" data-main="supervisor"><span class="emoji">🔒</span><span><b>SUPERVISOR</b></span></button>
+    <button id="changeProfile" class="btn ghost profileBack">↩️ Cambiar perfil</button>
   </div>
 
-  <section id="panel-operarios" class="panel active">
+  <section id="panel-operarios" class="panel">
     <div id="operatorApp" class="hidden">
       <div class="operatorShell">
-        <aside class="side card">
-          <div><strong>👥 Operarios disponibles</strong><div class="small">Máximo 3 activos por celular</div></div>
-          <div id="operatorPicker" class="userPicker"></div>
-          <button id="refreshOps" class="btn secondary">🔄 Actualizar lista</button>
-          <button id="deviceLogout" class="btn ghost">🔄 Verificar conexión</button>
-        </aside>
-        <main>
+        <div class="card">
+          <div class="operatorEntry">
+            <div class="field"><label>👤 Operario</label><input id="operatorSearch" list="operatorSuggestions" autocomplete="off" placeholder="Escriba el nombre del operario"></div>
+            <button id="openOperatorBtn" class="btn primary">➕ Abrir</button>
+          </div>
+          <datalist id="operatorSuggestions"></datalist>
           <div id="opTabs" class="opTabs"></div>
           <div id="opWorkspace"></div>
-        </main>
+        </div>
       </div>
     </div>
   </section>
@@ -70,7 +70,6 @@
   <section id="panel-supervisor" class="panel">
     <div id="supAuth" class="authBox card">
       <h2>🔒 Acceso Supervisor</h2>
-      <p class="small">Ingresa el PIN de Supervisor. Firebase queda trabajando en segundo plano como almacenamiento.</p>
       <div class="field"><label>PIN</label><input id="supPin" type="password" inputmode="numeric" maxlength="8" placeholder="••••"></div>
       <button id="supLoginBtn" class="btn primary">👨‍💼 Ingresar</button>
       <div id="supAuthMsg"></div>
@@ -80,7 +79,6 @@
       <div class="supGrid">
         <aside class="supNav card">
           <button class="btn secondary supNavBtn" data-view="dashboard">📊 Dashboard</button>
-          <button class="btn secondary supNavBtn" data-view="productos">📦 Productos</button>
           <button class="btn secondary supNavBtn" data-view="metas">🎯 Metas</button>
           <button class="btn secondary supNavBtn" data-view="registros">🧾 Registros</button>
           <button class="btn secondary supNavBtn" data-view="usuarios">👥 Usuarios</button>
@@ -97,18 +95,6 @@
               <div class="kpi"><span>Sesiones activas</span><strong id="kpiSesiones">—</strong></div>
             </div>
             <div class="message warn" style="margin-top:14px">🚧 Este es el MVP operativo. Aquí iremos agregando productividad por persona, SKU, categoría, pausas, tendencias y ranking.</div>
-          </div>
-
-          <div id="view-productos" class="supView card">
-            <div class="sectionTitle"><h2>📦 Maestro de productos</h2><span class="small">Excel .xlsx / .xls</span></div>
-            <div class="uploadBox">
-              <div style="font-size:32px">📤</div>
-              <strong>Actualizar maestro desde Excel</strong>
-              <p class="small">Busca columnas equivalentes a Código / Código Producto y Descripción.</p>
-              <input id="productFile" type="file" accept=".xlsx,.xls" />
-              <div style="margin-top:10px"><button id="importProducts" class="btn blue">⬆️ Cargar productos</button></div>
-            </div>
-            <div id="importMsg"></div>
           </div>
 
           <div id="view-metas" class="supView card">
@@ -142,6 +128,19 @@
       </div>
     </div>
   </section>
+</div>
+
+<div id="productModal" class="modalBackdrop">
+  <div class="modalCard">
+    <div class="modalHead"><h2>📦 Maestro de productos</h2><button id="closeProductModal" class="btn ghost">✕ Cerrar</button></div>
+    <div class="uploadBox">
+      <div style="font-size:32px">📤</div>
+      <strong>Actualizar maestro desde Excel</strong>
+      <input id="productFile" type="file" accept=".xlsx,.xls" />
+      <div style="margin-top:10px"><button id="importProducts" class="btn blue">⬆️ Cargar productos</button></div>
+    </div>
+    <div id="importMsg"></div>
+  </div>
 </div>
 <div id="toast" class="toast"></div>
 
@@ -177,9 +176,18 @@
 
 
   document.querySelectorAll('.mainTab').forEach(btn=>btn.addEventListener('click',()=>{
-    document.querySelectorAll('.mainTab').forEach(x=>x.classList.remove('active')); btn.classList.add('active');
-    document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active')); $("panel-"+btn.dataset.main).classList.add('active');
+    document.querySelectorAll('.mainTab').forEach(x=>x.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
+    $("panel-"+btn.dataset.main).classList.add('active');
+    document.querySelector('.mainTabs').classList.add('profile-selected');
   }));
+
+  $("changeProfile").onclick=()=>{
+    document.querySelector('.mainTabs').classList.remove('profile-selected');
+    document.querySelectorAll('.mainTab').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
+  };
 
   // Acceso visual del panel Supervisor. Cambia este PIN antes de publicar.
   const SUPERVISOR_PIN = "8357";
@@ -222,10 +230,6 @@
     renderSupervisorAccess();
   };
 
-  $("deviceLogout").onclick=()=>{
-    toast('📱 El dispositivo permanece conectado a Firebase.');
-  };
-
   onAuthStateChanged(auth, async user=>{
     if(!user){
       $("firebaseDot").className='dot';
@@ -256,11 +260,22 @@
     renderOperatorPicker();
   }
   function renderOperatorPicker(){
-    const box=$("operatorPicker"); box.innerHTML='';
-    if(!operators.length){box.innerHTML='<div class="message warn">⚠️ Aún no hay operarios creados.</div>';return;}
-    operators.forEach(o=>{const el=document.createElement('button');el.className='userItem';el.innerHTML=`<span><b>${o.nombre}</b><br><small>${o.tipo||''}</small></span><span>➕</span>`;el.onclick=()=>openOperator(o);box.appendChild(el)});
+    const list=$("operatorSuggestions");
+    if(!list) return;
+    list.innerHTML=operators.map(o=>`<option value="${o.nombre.replace(/"/g,'&quot;')}">${o.tipo||''}</option>`).join('');
   }
-  $("refreshOps").onclick=loadOperators;
+
+  function openOperatorFromSearch(){
+    const typed=norm($("operatorSearch").value);
+    if(!typed) return toast('⚠️ Escribe el nombre del operario');
+    const key=typed.toLocaleLowerCase('es');
+    const exact=operators.find(o=>norm(o.nombre).toLocaleLowerCase('es')===key);
+    if(!exact) return toast('⚠️ Selecciona un operario válido del autocompletado');
+    openOperator(exact);
+    $("operatorSearch").value='';
+  }
+  $("openOperatorBtn").onclick=openOperatorFromSearch;
+  $("operatorSearch").addEventListener('keydown',e=>{if(e.key==='Enter')openOperatorFromSearch()});
 
   async function openOperator(o){
     if(openOps.has(o.id)){activeOpId=o.id;renderOpTabs();renderWorkspace();return;}
@@ -274,14 +289,30 @@
     openOps.set(o.id,{operator:o,code:'',product:null,meta:null,state:'idle',startMs:null,pauseStart:null,pauseTotal:0,pauses:[],interval:null});
     activeOpId=o.id; renderOpTabs(); renderWorkspace();
   }
-  function closeOperator(id){const x=openOps.get(id);if(x?.state==='running'||x?.state==='paused'){toast('⚠️ Finaliza el trabajo antes de cerrar la pestaña');return;}openOps.delete(id);activeOpId=[...openOps.keys()][0]||null;renderOpTabs();renderWorkspace();}
+  function closeOperator(id){
+    const x=openOps.get(id);
+    if(x?.state==='running'||x?.state==='paused'){toast('⚠️ Finaliza el trabajo antes de cerrar la sesión');return;}
+    if(!confirm(`¿Cerrar la sesión del día de ${x?.operator?.nombre||'este operario'}?`)) return;
+    openOps.delete(id);
+    activeOpId=[...openOps.keys()][0]||null;
+    renderOpTabs();
+    renderWorkspace();
+    toast('🚪 Sesión del operario cerrada');
+  }
   function renderOpTabs(){
     const box=$("opTabs");box.innerHTML='';
-    openOps.forEach((s,id)=>{const b=document.createElement('button');b.className='opTab '+(id===activeOpId?'active':'');const st=s.state==='running'?'🟢 TRABAJANDO':s.state==='paused'?'🟡 PAUSA':'⚪ LISTO';b.innerHTML=`<span><b>${s.operator.nombre}</b><div class="miniStatus">${st}</div></span><span data-x="1">✕</span>`;b.onclick=(e)=>{if(e.target.dataset.x){e.stopPropagation();closeOperator(id)}else{activeOpId=id;renderOpTabs();renderWorkspace()}};box.appendChild(b)});
+    openOps.forEach((s,id)=>{
+      const b=document.createElement('button');
+      b.className='opTab '+(id===activeOpId?'active':'');
+      const st=s.state==='running'?'🟢 TRABAJANDO':s.state==='paused'?'🟡 PAUSA':'⚪ LISTO';
+      b.innerHTML=`<span><b>${s.operator.nombre}</b><div class="miniStatus">${st}</div></span>`;
+      b.onclick=()=>{activeOpId=id;renderOpTabs();renderWorkspace()};
+      box.appendChild(b)
+    });
   }
   function currentElapsed(s){if(!s.startMs)return 0;const end=s.state==='running'?Date.now():(s.pauseStart||Date.now());return end-s.startMs-s.pauseTotal;}
   function renderWorkspace(){
-    const root=$("opWorkspace"); if(!activeOpId){root.innerHTML='<div class="card"><h2>👷 Selecciona un operario</h2><p class="small">Elige un nombre desde el panel izquierdo para abrir su pestaña.</p></div>';return;}
+    const root=$("opWorkspace"); if(!activeOpId){root.innerHTML='<div class="message warn">👷 Escribe y selecciona un operario arriba para comenzar.</div>';return;}
     const s=openOps.get(activeOpId);
     root.innerHTML=`<div class="workGrid">
       <div class="card productCard">
@@ -301,14 +332,15 @@
         <h3 style="margin-top:0">📌 Estado</h3>
         <div class="productMeta"><div class="metric"><span>Operario</span><strong>${s.operator.nombre}</strong></div><div class="metric"><span>Estado</span><strong>${s.state==='running'?'Trabajando':s.state==='paused'?'Pausado':'Listo'}</strong></div><div class="metric"><span>Pausas</span><strong>${s.pauses.length}</strong></div><div class="metric"><span>Tiempo pausado</span><strong>${fmtTimer(s.pauseTotal+(s.state==='paused'&&s.pauseStart?Date.now()-s.pauseStart:0))}</strong></div></div>
         <div id="finishBox" class="finishBox"><div class="field"><label>Unidades procesadas</label><input id="qtyInput" type="number" min="1" inputmode="numeric" placeholder="Ej. 1080"></div><button id="confirmFinish" class="btn primary">💾 Confirmar y guardar</button></div>
+        ${s.state==='idle'?'<div style="margin-top:16px;text-align:right"><button id="closeDaySession" class="btn ghost">🚪 Cerrar sesión del día</button></div>':''}
       </div>
     </div>`;
     $("validateCode")?.addEventListener('click',()=>validateProduct(s));
     $("codeInput")?.addEventListener('keydown',e=>{if(e.key==='Enter')validateProduct(s)});
-    $("startBtn")?.addEventListener('click',()=>startWork(s)); $("pauseBtn")?.addEventListener('click',()=>pauseWork(s)); $("resumeBtn")?.addEventListener('click',()=>resumeWork(s)); $("finishBtn")?.addEventListener('click',()=>showFinish(s)); $("confirmFinish")?.addEventListener('click',()=>confirmFinish(s));
+    $("startBtn")?.addEventListener('click',()=>startWork(s)); $("pauseBtn")?.addEventListener('click',()=>pauseWork(s)); $("resumeBtn")?.addEventListener('click',()=>resumeWork(s)); $("finishBtn")?.addEventListener('click',()=>showFinish(s)); $("confirmFinish")?.addEventListener('click',()=>confirmFinish(s)); $("closeDaySession")?.addEventListener('click',()=>closeOperator(s.operator.id));
     startTimerLoop(s);
   }
-  function productHTML(s){return `<div class="message ok">✅ Código válido</div><div class="productMeta"><div class="metric"><span>Código</span><strong>${s.code}</strong></div><div class="metric"><span>Descripción</span><strong>${s.product.descripcion||'—'}</strong></div><div class="metric"><span>Categoría</span><strong>${s.product.categoria||'Sin categorizar'}</strong></div><div class="metric"><span>Meta</span><strong>${s.meta?Number(s.meta.meta_u_h).toLocaleString('es-EC')+' u/h':'En evaluación'}</strong></div></div>`}
+  function productHTML(s){return `<div class="message ok">✅ Código válido</div><div class="productMeta"><div class="metric"><span>Código</span><strong>${s.code}</strong></div><div class="metric"><span>Descripción</span><strong class="productDescription">${s.product.descripcion||'—'}</strong></div><div class="metric"><span>Categoría</span><strong>${s.product.categoria||'Sin categorizar'}</strong></div><div class="metric"><span>Meta</span><strong>${s.meta?Number(s.meta.meta_u_h).toLocaleString('es-EC')+' u/h':'En evaluación'}</strong></div></div>`}
   async function validateProduct(s){
     const code=norm($("codeInput").value); if(!code)return toast('⚠️ Digita un código');
     try{
@@ -355,6 +387,26 @@
   }
   function startTimerLoop(s){if(s.interval)clearInterval(s.interval);s.interval=setInterval(()=>{if(activeOpId!==s.operator.id)return;const el=$("timer");if(el)el.textContent=fmtTimer(currentElapsed(s));},500)}
 
+
+  // Maestro de productos oculto: Ctrl + Shift + O
+  function openProductModal(){
+    if(!supervisorUnlocked){
+      toast('🔒 Ingresa primero como Supervisor');
+      return;
+    }
+    $("productModal").classList.add('show');
+  }
+  function closeProductModal(){ $("productModal").classList.remove('show'); }
+  document.addEventListener('keydown',e=>{
+    if(e.ctrlKey && e.shiftKey && e.key.toLowerCase()==='o'){
+      e.preventDefault();
+      openProductModal();
+    }
+    if(e.key==='Escape') closeProductModal();
+  });
+  $("closeProductModal").onclick=closeProductModal;
+  $("productModal").addEventListener('click',e=>{if(e.target===$("productModal"))closeProductModal()});
+
   // ---------- SUPERVISOR ----------
   document.querySelectorAll('.supNavBtn').forEach(b=>b.onclick=()=>{document.querySelectorAll('.supView').forEach(v=>v.classList.remove('active'));$("view-"+b.dataset.view).classList.add('active');if(b.dataset.view==='usuarios')loadUsersTable();if(b.dataset.view==='registros')loadRecords();});
 
@@ -395,8 +447,12 @@
     try{
       $("importMsg").innerHTML='<div class="message warn">⏳ Leyendo archivo…</div>';
       const wb=XLSX.read(await f.arrayBuffer(),{type:'array'});const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''});if(!rows.length)throw new Error('El archivo no contiene filas.');
-      const keys=Object.keys(rows[0]); const findKey=(opts)=>keys.find(k=>opts.some(o=>k.toLowerCase().replace(/\s+/g,' ').includes(o)));
-      const codeKey=findKey(['código producto','codigo producto','código','codigo','item code','product code']); const descKey=findKey(['descripción','descripcion','description','producto']);
+      const keys=Object.keys(rows[0]);
+      const normalizeHeader=(v)=>String(v||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim();
+      const keyMap=new Map(keys.map(k=>[normalizeHeader(k),k]));
+      const findExact=(opts)=>{for(const o of opts){const k=keyMap.get(normalizeHeader(o));if(k)return k}return null};
+      const codeKey=findExact(['Código Producto','Codigo Producto','Código','Codigo','Item Code','Product Code']);
+      const descKey=findExact(['Descripción','Descripcion','Description','Nombre Producto','Product Description']);
       if(!codeKey||!descKey)throw new Error('No encontré columnas de Código y Descripción.');
       let batch=writeBatch(db),n=0,created=0;
       for(const r of rows){const code=norm(r[codeKey]);if(!code)continue;const descripcion=norm(r[descKey]);const ref=doc(db,'productos',code);batch.set(ref,{codigo:code,descripcion,categoria:categorize(descripcion),activo:true,actualizado_local:localISO(),actualizado_en:serverTimestamp()},{merge:true});n++;created++;if(n===400){await batch.commit();batch=writeBatch(db);n=0}}
