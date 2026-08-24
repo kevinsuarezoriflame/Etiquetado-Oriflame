@@ -30,12 +30,14 @@
     .btn{border:0;border-radius:13px;padding:12px 16px;font-weight:800}.btn.primary{background:var(--green);color:#fff}.btn.secondary{background:#eef2ef;color:#173c2c}.btn.blue{background:var(--blue);color:#fff}.btn.warn{background:#f4b942;color:#3a2a05}.btn.danger{background:#d84545;color:#fff}.btn.ghost{background:#fff;border:1px solid var(--border)}.btn.big{padding:17px 22px;font-size:18px;min-width:180px}
     .operatorShell{display:grid;grid-template-columns:1fr;gap:16px}.operatorEntry{display:grid;grid-template-columns:minmax(260px,520px) auto;gap:10px;align-items:end;margin-bottom:12px}.operatorEntry .field{margin:0}.operatorEntry .btn{height:48px}.userPicker{display:none}
     .opTabs{display:flex;gap:8px;overflow:auto;padding-bottom:6px;margin-bottom:12px}.opTab{border:1px solid var(--border);border-radius:13px;background:#fff;padding:10px 12px;min-width:150px;display:flex;justify-content:flex-start;gap:10px;align-items:center}.opTab.active{background:var(--greenSoft);border-color:#91c7ad}.opTab .miniStatus{font-size:11px;color:var(--muted)}
-    .workGrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.timerCard{grid-row:span 2;display:grid;place-items:center;min-height:330px}.timer{font-size:64px;font-weight:900;letter-spacing:2px;font-variant-numeric:tabular-nums}.timerLabel{color:var(--muted);text-align:center}.timerBtns{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:20px}.productCard h3{margin:0 0 14px}.productMeta{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:12px}.metric{padding:12px;background:#f8faf8;border:1px solid var(--border);border-radius:14px}.metric span{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:800}.metric strong{font-size:17px}.metric strong.productDescription{font-size:13px;line-height:1.25;font-weight:800;display:block;word-break:break-word}.message{margin-top:10px;padding:11px 12px;border-radius:12px;font-size:13px}.message.ok{background:var(--greenSoft);color:#145b3d}.message.err{background:var(--redSoft);color:#9d2626}.message.warn{background:var(--amberSoft);color:#795111}
+    .workGrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.timerCard{grid-row:span 2;display:grid;place-items:center;min-height:330px}.timer{font-size:64px;font-weight:900;letter-spacing:2px;font-variant-numeric:tabular-nums}.timerLabel{color:var(--muted);text-align:center}.timerBtns{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:20px}.timerBtns .btn{display:inline-flex;align-items:center;justify-content:center}.productCard h3{margin:0 0 14px}.productMeta{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:12px}.metric{padding:12px;background:#f8faf8;border:1px solid var(--border);border-radius:14px}.metric span{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:800}.metric strong{font-size:17px}.metric strong.productDescription{font-size:13px;line-height:1.25;font-weight:800;display:block;word-break:break-word}.message{margin-top:10px;padding:11px 12px;border-radius:12px;font-size:13px}.message.ok{background:var(--greenSoft);color:#145b3d}.message.err{background:var(--redSoft);color:#9d2626}.message.warn{background:var(--amberSoft);color:#795111}
     .finishBox{display:none;margin-top:14px}.finishBox.show{display:block}.twoCols{display:grid;grid-template-columns:1fr 1fr;gap:12px}
     .supGrid{display:grid;grid-template-columns:230px 1fr;gap:16px}.supNav{display:grid;gap:8px;align-content:start}.supNav button{text-align:left}.supView{display:none}.supView.active{display:block}.sectionTitle{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}.sectionTitle h2{margin:0}.tableWrap{overflow:auto;border:1px solid var(--border);border-radius:14px}table{border-collapse:collapse;width:100%;min-width:760px}th,td{padding:11px 12px;border-bottom:1px solid #e9eeeb;text-align:left;font-size:13px}th{background:#f1f6f3;color:#27513d}.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.kpi{padding:16px;border:1px solid var(--border);border-radius:15px;background:#fff}.kpi span{font-size:12px;color:var(--muted)}.kpi strong{display:block;font-size:25px;margin-top:4px}.uploadBox{border:2px dashed #bfd1c7;border-radius:16px;padding:18px;text-align:center;background:#fbfdfc}.small{font-size:12px;color:var(--muted)}.hidden{display:none!important}
     .toast{position:fixed;right:18px;bottom:18px;padding:12px 14px;border-radius:12px;background:#173d2d;color:#fff;box-shadow:var(--shadow);opacity:0;transform:translateY(10px);pointer-events:none;transition:.2s;z-index:30}.toast.show{opacity:1;transform:none}.profileBack{display:none;margin-left:auto}.mainTabs.profile-selected .profileBack{display:block}.modalBackdrop{position:fixed;inset:0;background:rgba(12,30,22,.52);display:none;align-items:center;justify-content:center;padding:18px;z-index:100}.modalBackdrop.show{display:flex}.modalCard{width:min(720px,96vw);max-height:88vh;overflow:auto;background:#fff;border:1px solid var(--border);border-radius:22px;box-shadow:0 24px 70px rgba(0,0,0,.22);padding:20px}.modalHead{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}.modalHead h2{margin:0}
     @media (max-width:900px){.landing,.operatorShell,.supGrid,.workGrid{grid-template-columns:1fr}.timerCard{grid-row:auto}.mainTabs{grid-template-columns:1fr 1fr}.kpis{grid-template-columns:repeat(2,1fr)}.side{order:2}.timer{font-size:48px}}
-    @media (orientation:landscape) and (max-height:600px){.app{padding:10px}.topbar{margin-bottom:8px}.brand h1{font-size:20px}.mainTabs{margin-bottom:10px}.card{padding:14px}.timerCard{min-height:250px}.timer{font-size:52px}.operatorShell{grid-template-columns:1fr}.operatorEntry{grid-template-columns:minmax(260px,1fr) auto}.hero h2{font-size:26px}}
+    @media (orientation:landscape) and (max-height:700px){
+      body{overflow:hidden}.app{padding:6px 10px;height:100dvh;overflow:hidden}.topbar{margin-bottom:4px;height:44px}.logo{width:38px;height:38px;border-radius:12px;font-size:20px}.brand h1{font-size:18px}.status{padding:6px 9px;font-size:11px}.mainTabs{margin-bottom:6px;gap:8px}.mainTab{padding:7px 10px;border-radius:12px}.mainTab .emoji{font-size:20px}.mainTab b{font-size:14px}.profileBack{padding:7px 10px;font-size:12px}.card{padding:9px;border-radius:16px}.operatorEntry{grid-template-columns:minmax(250px,1fr) 120px;gap:7px;margin-bottom:6px}.operatorEntry .btn{height:40px;padding:8px 12px}.field{gap:3px;margin-bottom:6px}.field label{font-size:11px}.field input,.field select{padding:8px 10px;border-radius:10px}.opTabs{margin-bottom:5px;padding-bottom:2px}.opTab{padding:6px 9px;min-width:125px;border-radius:10px}.opTab b{font-size:12px}.opTab .miniStatus{font-size:9px}.workGrid{grid-template-columns:1.08fr .92fr;grid-template-rows:auto auto;gap:7px}.productCard h3,.workGrid h3{font-size:15px;margin-bottom:6px}.productMeta{grid-template-columns:repeat(4,1fr);gap:5px;margin-top:6px}.metric{padding:6px 8px;border-radius:10px}.metric span{font-size:8px}.metric strong{font-size:12px}.metric strong.productDescription{font-size:10px;line-height:1.15}.message{margin-top:5px;padding:6px 8px;font-size:10px}.timerCard{grid-row:span 2;min-height:0;height:calc(100dvh - 166px);padding:8px}.timerLabel{font-size:12px}.timer{font-size:48px}.timerBtns{margin-top:8px;gap:6px}.btn.big{padding:10px 14px;font-size:14px;min-width:130px}.finishBox{margin-top:7px}.workGrid>.card:not(.timerCard):last-child .productMeta{grid-template-columns:repeat(4,1fr)}.workGrid>.card:not(.timerCard):last-child{padding:8px}.workGrid>.card:not(.timerCard):last-child h3{margin:0 0 4px}.workGrid>.card:not(.timerCard):last-child #closeDaySession{padding:6px 9px;font-size:10px;margin-top:4px}.small{font-size:9px}
+    }
   </style>
 </head>
 <body>
@@ -340,24 +342,38 @@
     $("startBtn")?.addEventListener('click',()=>startWork(s)); $("pauseBtn")?.addEventListener('click',()=>pauseWork(s)); $("resumeBtn")?.addEventListener('click',()=>resumeWork(s)); $("finishBtn")?.addEventListener('click',()=>showFinish(s)); $("confirmFinish")?.addEventListener('click',()=>confirmFinish(s)); $("closeDaySession")?.addEventListener('click',()=>closeOperator(s.operator.id));
     startTimerLoop(s);
   }
-  function productHTML(s){return `<div class="message ok">✅ Código válido</div><div class="productMeta"><div class="metric"><span>Código</span><strong>${s.code}</strong></div><div class="metric"><span>Descripción</span><strong class="productDescription">${s.product.descripcion||'—'}</strong></div><div class="metric"><span>Categoría</span><strong>${s.product.categoria||'Sin categorizar'}</strong></div><div class="metric"><span>Meta</span><strong>${s.meta?Number(s.meta.meta_u_h).toLocaleString('es-EC')+' u/h':'En evaluación'}</strong></div></div>`}
+  function productHTML(s){return `<div class="message ok">✅ Código válido</div><div class="productMeta"><div class="metric"><span>Código</span><strong>${s.code}</strong></div><div class="metric"><span>Descripción</span><strong class="productDescription">${s.product.descripcion||s.product.descripcion_producto||s.product.nombre||'—'}</strong></div><div class="metric"><span>Categoría</span><strong>${s.product.categoria||'Sin categorizar'}</strong></div><div class="metric"><span>Meta</span><strong>${s.meta?Number(s.meta.meta_u_h).toLocaleString('es-EC')+' u/h':'En evaluación'}</strong></div></div>`}
   async function validateProduct(s){
     const code=norm($("codeInput").value); if(!code)return toast('⚠️ Digita un código');
     try{
       const ps=await getDoc(doc(db,'productos',code));
       if(!ps.exists()){s.product=null;s.code=code;$("productInfo").innerHTML='<div class="message err">❌ Código no encontrado en el maestro.</div>';return;}
       s.code=code;s.product=ps.data();
+      if(!s.product.descripcion && s.product.description) s.product.descripcion=s.product.description;
       const ms=await getDoc(doc(db,'metas',code));s.meta=ms.exists()?ms.data():null;
       $("productInfo").innerHTML=productHTML(s); renderWorkspace();
     }catch(e){$("productInfo").innerHTML='<div class="message err">❌ '+e.message+'</div>';}
   }
   async function startWork(s){
+    const btn=$('startBtn');
+    if(btn){btn.disabled=true;btn.textContent='⏳ INICIANDO…';}
     try{
-      const activeRef=doc(db,'sesiones_activas',s.operator.id); const existing=await getDoc(activeRef); if(existing.exists()&&existing.data().estado!=='finalizada'){toast('⚠️ Este operario ya tiene una sesión activa');return;}
-      s.startMs=Date.now();s.state='running';s.pauseTotal=0;s.pauses=[];
-      await setDoc(activeRef,{operarioId:s.operator.id,operario:s.operator.nombre,codigo:s.code,descripcion:s.product.descripcion||'',categoria:s.product.categoria||'',meta_u_h:s.meta?.meta_u_h||null,estado:'running',inicio_local:localISO(),inicio_ms:s.startMs,dispositivo:navigator.userAgent.slice(0,180)});
+      const activeRef=doc(db,'sesiones_activas',s.operator.id);
+      const existing=await getDoc(activeRef);
+      if(existing.exists()&&['running','paused'].includes(existing.data().estado)){
+        if(btn){btn.disabled=false;btn.textContent='▶️ INICIAR';}
+        toast('⚠️ Este operario ya tiene una sesión activa');return;
+      }
+      const startMs=Date.now();
+      await setDoc(activeRef,{operarioId:s.operator.id,operario:s.operator.nombre,codigo:s.code,descripcion:s.product.descripcion||'',categoria:s.product.categoria||'',meta_u_h:s.meta?.meta_u_h||null,estado:'running',inicio_local:localISO(),inicio_ms:startMs,dispositivo:navigator.userAgent.slice(0,180)});
+      s.startMs=startMs;s.state='running';s.pauseTotal=0;s.pauses=[];s.pauseStart=null;
       renderOpTabs();renderWorkspace();
-    }catch(e){toast('❌ '+e.message)}
+      toast('▶️ Proceso iniciado');
+    }catch(e){
+      s.startMs=null;s.state='idle';s.pauseTotal=0;s.pauses=[];s.pauseStart=null;
+      renderOpTabs();renderWorkspace();
+      toast('❌ No se pudo iniciar: '+e.message);
+    }
   }
   async function pauseWork(s){
     const motivo=prompt('Motivo de pausa:\n- Falta de etiquetas\n- Falta de producto\n- Break\n- Calidad\n- Reproceso\n- Cambio operativo\n- Otro','Falta de etiquetas'); if(!motivo)return;
@@ -444,20 +460,65 @@
 
   $("importProducts").onclick=async()=>{
     const f=$("productFile").files?.[0];if(!f)return toast('⚠️ Selecciona un Excel');
+    const btn=$("importProducts");
+    btn.disabled=true;btn.textContent='⏳ Procesando…';
     try{
-      $("importMsg").innerHTML='<div class="message warn">⏳ Leyendo archivo…</div>';
-      const wb=XLSX.read(await f.arrayBuffer(),{type:'array'});const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''});if(!rows.length)throw new Error('El archivo no contiene filas.');
+      $("importMsg").innerHTML='<div class="message warn">📖 Leyendo Excel…</div>';
+      const wb=XLSX.read(await f.arrayBuffer(),{type:'array'});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const rows=XLSX.utils.sheet_to_json(ws,{defval:'',raw:false});
+      if(!rows.length)throw new Error('El archivo no contiene filas.');
       const keys=Object.keys(rows[0]);
       const normalizeHeader=(v)=>String(v||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim();
       const keyMap=new Map(keys.map(k=>[normalizeHeader(k),k]));
       const findExact=(opts)=>{for(const o of opts){const k=keyMap.get(normalizeHeader(o));if(k)return k}return null};
       const codeKey=findExact(['Código Producto','Codigo Producto','Código','Codigo','Item Code','Product Code']);
       const descKey=findExact(['Descripción','Descripcion','Description','Nombre Producto','Product Description']);
-      if(!codeKey||!descKey)throw new Error('No encontré columnas de Código y Descripción.');
-      let batch=writeBatch(db),n=0,created=0;
-      for(const r of rows){const code=norm(r[codeKey]);if(!code)continue;const descripcion=norm(r[descKey]);const ref=doc(db,'productos',code);batch.set(ref,{codigo:code,descripcion,categoria:categorize(descripcion),activo:true,actualizado_local:localISO(),actualizado_en:serverTimestamp()},{merge:true});n++;created++;if(n===400){await batch.commit();batch=writeBatch(db);n=0}}
-      if(n)await batch.commit();$("importMsg").innerHTML=`<div class="message ok">✅ ${created.toLocaleString('es-EC')} productos procesados. El histórico de metas no se modifica.</div>`;await loadDashboard();
-    }catch(e){$("importMsg").innerHTML='<div class="message err">❌ '+e.message+'</div>'}
+      if(!codeKey||!descKey)throw new Error('No encontré las columnas "Código Producto" y "Descripción".');
+
+      const validRows=[]; let skipped=0;
+      for(const r of rows){
+        const code=norm(r[codeKey]); const descripcion=norm(r[descKey]);
+        if(!code){skipped++;continue;}
+        if(!descripcion){skipped++;continue;}
+        validRows.push({code,descripcion});
+      }
+      if(!validRows.length)throw new Error('No encontré productos válidos para cargar.');
+
+      let processed=0;
+      for(let i=0;i<validRows.length;i+=400){
+        const chunk=validRows.slice(i,i+400); const batch=writeBatch(db);
+        chunk.forEach(({code,descripcion})=>{
+          batch.set(doc(db,'productos',code),{codigo:code,descripcion,categoria:categorize(descripcion),activo:true,actualizado_local:localISO(),actualizado_en:serverTimestamp()},{merge:true});
+        });
+        await batch.commit();
+        processed+=chunk.length;
+        const pct=Math.round((processed/validRows.length)*100);
+        $("importMsg").innerHTML=`<div class="message warn">⬆️ Cargando productos: <b>${processed.toLocaleString('es-EC')} / ${validRows.length.toLocaleString('es-EC')}</b> (${pct}%)</div>`;
+        await new Promise(r=>setTimeout(r,0));
+      }
+
+      // Verificación real en Firestore con el primer producto y refresco del SKU abierto.
+      const sample=validRows[0];
+      const verify=await getDoc(doc(db,'productos',sample.code));
+      if(!verify.exists()) throw new Error('La carga terminó, pero no pude verificar los datos en Firebase.');
+      if(activeOpId){
+        const active=openOps.get(activeOpId);
+        if(active?.code){
+          const refreshed=await getDoc(doc(db,'productos',active.code));
+          if(refreshed.exists()) active.product=refreshed.data();
+          renderWorkspace();
+        }
+      }
+      $("importMsg").innerHTML=`<div class="message ok">✅ <b>Carga exitosa</b><br>${processed.toLocaleString('es-EC')} productos guardados en Firebase${skipped?` · ${skipped.toLocaleString('es-EC')} filas omitidas`:''}.<br><span class="small">Verificado: ${sample.code} — ${verify.data().descripcion||'sin descripción'}</span></div>`;
+      toast(`✅ Maestro actualizado: ${processed.toLocaleString('es-EC')} productos`);
+      await loadDashboard();
+    }catch(e){
+      $("importMsg").innerHTML='<div class="message err">❌ '+e.message+'</div>';
+      toast('❌ Error cargando maestro');
+    }finally{
+      btn.disabled=false;btn.textContent='⬆️ Cargar productos';
+    }
   };
   function categorize(desc){const d=norm(desc).toUpperCase();const rules=[['PENCIL','LÁPIZ'],['LIPSTICK','LABIAL'],['LIP GLOSS','LABIAL'],['MASCARA','MÁSCARA'],['EAU DE PARFUM','PERFUME'],[' EDP','PERFUME'],['EAU DE TOILETTE','PERFUME'],[' EDT','PERFUME'],['PERFUME','PERFUME'],['CREAM','CREMA'],['CREME','CREMA'],['SHAMPOO','SHAMPOO'],['SOAP','JABÓN'],['DEODORANT','DESODORANTE'],['ROLL-ON','DESODORANTE'],['FOUNDATION','MAQUILLAJE'],['POWDER','MAQUILLAJE'],['CONCEALER','MAQUILLAJE'],['SERUM','SÉRUM'],['CLEANSER','LIMPIEZA FACIAL'],['TONER','LIMPIEZA FACIAL']];for(const [k,v] of rules)if(d.includes(k))return v;return 'OTROS'}
 </script>
