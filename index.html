@@ -138,7 +138,7 @@
     <div class="uploadBox">
       <div style="font-size:32px">📋</div>
       <strong>Pegar maestro de productos</strong>
-      <div class="small" style="margin:6px 0 10px">Copia desde Excel las columnas <b>Código Producto</b> y <b>Descripción</b> y pégalas aquí.</div>
+      <div class="small" style="margin:6px 0 10px">Copia desde Excel las columnas <b>Código Producto</b> y <b>Descripción</b> y pégalas aquí.<br><span class="small">⚠️ Al guardar, el maestro anterior se elimina y se reemplaza completamente por esta nueva data.</span></div>
       <textarea id="productPaste" placeholder="Código Producto\tDescripción\n12760\tTender Care Natural Multi-purpose Balm" style="width:100%;min-height:180px;resize:vertical;padding:12px;border:1px solid var(--border);border-radius:12px;font:inherit"></textarea>
       <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:10px">
         <button id="importPastedProducts" class="btn blue">📥 Guardar datos pegados</button>
@@ -473,44 +473,110 @@
   async function saveProductRows(validRows, skipped=0, sourceLabel='datos pegados') {
     if(!validRows.length) throw new Error('No encontré productos válidos para guardar.');
     if(!auth.currentUser) await ensureFirebaseSession();
+
     const msg=$("importMsg");
-    let processed=0;
     const BATCH_SIZE=100;
+
     const withTimeout=(promise,ms,label)=>Promise.race([
       promise,
-      new Promise((_,reject)=>setTimeout(()=>reject(new Error(`${label} tardó más de ${Math.round(ms/1000)} s. Revisa conexión o reglas de Firestore.`)),ms))
+      new Promise((_,reject)=>setTimeout(
+        ()=>reject(new Error(`${label} tardó más de ${Math.round(ms/1000)} s. Revisa conexión o reglas de Firestore.`)),
+        ms
+      ))
     ]);
+
+    // 1) BORRAR COMPLETAMENTE EL MAESTRO ANTERIOR
+    msg.innerHTML='<div class="message warn">🧹 Preparando reemplazo del maestro anterior…</div>';
+    const oldSnap = await withTimeout(
+      getDocs(collection(db,'productos')),
+      20000,
+      'La lectura del maestro anterior'
+    );
+
+    const oldDocs = oldSnap.docs;
+    let deleted = 0;
+
+    if(oldDocs.length){
+      const totalDeleteBatches = Math.ceil(oldDocs.length / BATCH_SIZE);
+
+      for(let i=0;i<oldDocs.length;i+=BATCH_SIZE){
+        const chunk = oldDocs.slice(i,i+BATCH_SIZE);
+        const batch = writeBatch(db);
+
+        chunk.forEach(d => batch.delete(d.ref));
+
+        const lote = Math.floor(i/BATCH_SIZE)+1;
+        msg.innerHTML=`<div class="message warn">🗑️ Borrando maestro anterior: <b>${lote} / ${totalDeleteBatches}</b> · ${deleted.toLocaleString('es-EC')} de ${oldDocs.length.toLocaleString('es-EC')}</div>`;
+
+        await withTimeout(batch.commit(),20000,`El borrado del lote ${lote}`);
+        deleted += chunk.length;
+
+        msg.innerHTML=`<div class="message warn">🗑️ Maestro anterior eliminado: <b>${deleted.toLocaleString('es-EC')} / ${oldDocs.length.toLocaleString('es-EC')}</b></div>`;
+        await new Promise(r=>setTimeout(r,20));
+      }
+    }
+
+    // 2) CARGAR EL NUEVO MAESTRO DESDE CERO
+    let processed=0;
+
     for(let i=0;i<validRows.length;i+=BATCH_SIZE){
       const chunk=validRows.slice(i,i+BATCH_SIZE);
       const batch=writeBatch(db);
+
       chunk.forEach(({code,descripcion})=>{
         batch.set(doc(db,'productos',code),{
-          codigo:code,descripcion,categoria:categorize(descripcion),activo:true,
-          actualizado_local:localISO(),actualizado_en:serverTimestamp()
-        },{merge:true});
+          codigo:code,
+          descripcion,
+          categoria:categorize(descripcion),
+          activo:true,
+          actualizado_local:localISO(),
+          actualizado_en:serverTimestamp()
+        });
       });
+
       const lote=Math.floor(i/BATCH_SIZE)+1;
       const totalLotes=Math.ceil(validRows.length/BATCH_SIZE);
-      msg.innerHTML=`<div class="message warn">⬆️ Enviando lote <b>${lote} / ${totalLotes}</b> · ${processed.toLocaleString('es-EC')} de ${validRows.length.toLocaleString('es-EC')} guardados</div>`;
-      await withTimeout(batch.commit(),20000,`El lote ${lote}`);
+
+      msg.innerHTML=`<div class="message warn">⬆️ Cargando nuevo maestro: <b>${lote} / ${totalLotes}</b> · ${processed.toLocaleString('es-EC')} de ${validRows.length.toLocaleString('es-EC')}</div>`;
+
+      await withTimeout(batch.commit(),20000,`La carga del lote ${lote}`);
       processed+=chunk.length;
+
       const pct=Math.round((processed/validRows.length)*100);
-      msg.innerHTML=`<div class="message warn">⬆️ Guardando en Firebase: <b>${processed.toLocaleString('es-EC')} / ${validRows.length.toLocaleString('es-EC')}</b> (${pct}%)</div>`;
+      msg.innerHTML=`<div class="message warn">⬆️ Nuevo maestro en Firebase: <b>${processed.toLocaleString('es-EC')} / ${validRows.length.toLocaleString('es-EC')}</b> (${pct}%)</div>`;
+
       await new Promise(r=>setTimeout(r,20));
     }
+
+    // 3) VERIFICAR QUE REALMENTE SE REEMPLAZÓ
     const sample=validRows[0];
-    const verify=await getDoc(doc(db,'productos',sample.code));
-    if(!verify.exists()) throw new Error('Finalicé el proceso, pero no pude verificar los datos en Firebase.');
+    const verify=await withTimeout(
+      getDoc(doc(db,'productos',sample.code)),
+      15000,
+      'La verificación final'
+    );
+
+    if(!verify.exists()){
+      throw new Error('La carga terminó, pero no pude verificar el nuevo maestro en Firebase.');
+    }
+
     if(activeOpId){
       const active=openOps.get(activeOpId);
       if(active?.code){
         const refreshed=await getDoc(doc(db,'productos',active.code));
-        if(refreshed.exists()) active.product=refreshed.data();
+        active.product = refreshed.exists() ? refreshed.data() : null;
         renderWorkspace();
       }
     }
-    msg.innerHTML=`<div class="message ok">✅ <b>Carga exitosa</b><br>${processed.toLocaleString('es-EC')} productos guardados desde ${sourceLabel}${skipped?` · ${skipped.toLocaleString('es-EC')} filas omitidas`:''}.<br><span class="small">Verificado: ${sample.code} — ${verify.data().descripcion||'sin descripción'}</span></div>`;
-    toast(`✅ Maestro actualizado: ${processed.toLocaleString('es-EC')} productos`);
+
+    msg.innerHTML=`<div class="message ok">✅ <b>Maestro reemplazado correctamente</b><br>
+      🗑️ ${deleted.toLocaleString('es-EC')} productos anteriores eliminados<br>
+      📦 ${processed.toLocaleString('es-EC')} productos nuevos cargados
+      ${skipped?`<br>⚠️ ${skipped.toLocaleString('es-EC')} filas omitidas`:''}
+      <br><span class="small">Verificado: ${sample.code} — ${verify.data().descripcion||'sin descripción'}</span>
+    </div>`;
+
+    toast(`✅ Maestro reemplazado: ${processed.toLocaleString('es-EC')} productos`);
     await loadDashboard();
   }
 
