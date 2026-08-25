@@ -449,6 +449,102 @@
     }
     .processChoiceBtn .sub{display:none!important}
 
+  
+    /* ===== Desplazamiento normal ===== */
+    html{
+      overflow-y:scroll;
+      overflow-x:hidden;
+    }
+    body{
+      overflow-y:auto!important;
+      overflow-x:hidden!important;
+      min-height:100vh;
+    }
+    .app{
+      height:auto!important;
+      min-height:100vh;
+      overflow:visible!important;
+    }
+
+    /* Barra lateral visible en navegadores compatibles */
+    html{
+      scrollbar-width:auto;
+      scrollbar-color:#8fcdbd #eef6f3;
+    }
+    html::-webkit-scrollbar{width:12px}
+    html::-webkit-scrollbar-track{background:#eef6f3}
+    html::-webkit-scrollbar-thumb{
+      background:#8fcdbd;
+      border-radius:10px;
+      border:3px solid #eef6f3;
+    }
+    html::-webkit-scrollbar-thumb:hover{background:#58b69d}
+
+    @media (orientation:landscape) and (max-height:700px){
+      body{
+        overflow-y:auto!important;
+        overflow-x:hidden!important;
+      }
+      .app{
+        height:auto!important;
+        min-height:100dvh!important;
+        overflow:visible!important;
+      }
+    }
+
+  
+    /* ===== Dashboard gráfico ===== */
+    .chartFilterBar{
+      display:grid;
+      grid-template-columns:190px 190px 1fr;
+      gap:10px;
+      align-items:end;
+      margin-bottom:14px;
+    }
+    .chartGrid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:14px;
+    }
+    .chartCard{
+      border:1px solid var(--border);
+      border-radius:18px;
+      background:#fff;
+      padding:14px;
+      min-height:340px;
+    }
+    .chartCard h3{
+      margin:0 0 4px;
+      font-size:16px;
+    }
+    .chartCard p{
+      margin:0 0 10px;
+      color:var(--muted);
+      font-size:12px;
+    }
+    .chartCanvasWrap{
+      position:relative;
+      height:270px;
+      width:100%;
+    }
+    .chartTopKpis{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:10px;
+      margin-bottom:14px;
+    }
+    @media(max-width:900px){
+      .chartGrid{grid-template-columns:1fr}
+      .chartFilterBar{grid-template-columns:1fr 1fr}
+      .chartFilterBar .chartLoadWrap{grid-column:1/-1}
+    }
+    @media(max-width:560px){
+      .chartFilterBar,.chartTopKpis{grid-template-columns:1fr}
+      .chartFilterBar .chartLoadWrap{grid-column:auto}
+      .chartCard{min-height:310px;padding:11px}
+      .chartCanvasWrap{height:240px}
+    }
+
   </style>
 </head>
 <body>
@@ -496,6 +592,7 @@
         <aside class="supNav card">
           <button class="btn secondary supNavBtn active" data-view="dashboard">📊 Dashboard</button>
           <button class="btn secondary supNavBtn" data-view="productividad">📈 Productividad</button>
+          <button class="btn secondary supNavBtn" data-view="graficos">📊 Gráficos</button>
           <button class="btn secondary supNavBtn" data-view="categorias">🧩 Categorías</button>
           <button class="btn secondary supNavBtn" data-view="metas">🎯 Metas</button>
           <button class="btn secondary supNavBtn" data-view="registros">🧾 Registros</button>
@@ -520,6 +617,63 @@
               <div class="subCard"><h3>📦 Armado de hoy</h3><div id="dashArmadoResumen" class="small">Sin cargar</div></div>
             </div>
             <div class="subCard" style="margin-top:12px"><h3>👷 Actividad actual</h3><div id="dashActiveSessions" class="small">Sin cargar</div></div>
+          </div>
+
+          <div id="view-graficos" class="supView card">
+            <div class="sectionTitle">
+              <h2>📊 Gráficos del día</h2>
+              <span class="small">Vista visual de la jornada seleccionada</span>
+            </div>
+
+            <div class="chartFilterBar">
+              <div class="field">
+                <label>Fecha</label>
+                <input id="chartsDate" type="date">
+              </div>
+              <div class="field">
+                <label>Proceso</label>
+                <select id="chartsProcess">
+                  <option value="etiquetado">🏷️ Etiquetado</option>
+                  <option value="armado">📦 Armado</option>
+                  <option value="todos">Todos</option>
+                </select>
+              </div>
+              <div class="chartLoadWrap">
+                <button id="loadCharts" class="btn primary">🔄 Actualizar gráficos</button>
+              </div>
+            </div>
+
+            <div class="chartTopKpis">
+              <div class="miniKpi"><span>Total unidades</span><strong id="chartsTotalUnits">—</strong></div>
+              <div class="miniKpi"><span>Trabajadores</span><strong id="chartsWorkers">—</strong></div>
+              <div class="miniKpi"><span>Mediana productividad</span><strong id="chartsMedian">—</strong></div>
+            </div>
+
+            <div class="chartGrid">
+              <div class="chartCard">
+                <h3>👷 Unidades por trabajador</h3>
+                <p>Compara el volumen procesado por cada persona durante el día.</p>
+                <div class="chartCanvasWrap"><canvas id="chartUnitsWorker"></canvas></div>
+              </div>
+
+              <div class="chartCard">
+                <h3>⚡ Productividad por trabajador</h3>
+                <p>Compara la productividad mediana en unidades por hora.</p>
+                <div class="chartCanvasWrap"><canvas id="chartProductivityWorker"></canvas></div>
+              </div>
+
+              <div class="chartCard">
+                <h3>🕐 Unidades por hora</h3>
+                <p>Muestra cómo se distribuyó la producción a lo largo de la jornada.</p>
+                <div class="chartCanvasWrap"><canvas id="chartUnitsHour"></canvas></div>
+              </div>
+
+              <div class="chartCard">
+                <h3>🧩 Productividad por categoría</h3>
+                <p>Permite comparar qué tipos de producto son más rápidos o lentos.</p>
+                <div class="chartCanvasWrap"><canvas id="chartCategoryProductivity"></canvas></div>
+              </div>
+            </div>
           </div>
 
           <div id="view-productividad" class="supView card">
@@ -698,6 +852,7 @@
 <div id="toast" class="toast"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
   import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
@@ -1477,6 +1632,7 @@
     if(b.dataset.view==='registros') await loadRecords();
     if(b.dataset.view==='reporte') await loadDailyReport();
     if(b.dataset.view==='productividad') await loadProductivity();
+    if(b.dataset.view==='graficos') await loadCharts();
     if(b.dataset.view==='categorias') await loadCategories();
     if(b.dataset.view==='metas') await loadEvaluation();
     if(b.dataset.view==='supervision') await loadSupervision();
@@ -1668,6 +1824,202 @@
     }catch(e){$("auditBody").innerHTML=`<tr><td colspan="8">${e.message}</td></tr>`}
   }
   $("refreshSupervision").onclick=()=>loadSupervision(true);
+
+  // ---------- GRÁFICOS DEL DÍA ----------
+  let supervisorCharts={
+    unitsWorker:null,
+    productivityWorker:null,
+    unitsHour:null,
+    categoryProductivity:null
+  };
+
+  function destroySupervisorChart(key){
+    if(supervisorCharts[key]){
+      supervisorCharts[key].destroy();
+      supervisorCharts[key]=null;
+    }
+  }
+
+  function chartMedian(values){
+    const a=values.map(Number).filter(v=>Number.isFinite(v)&&v>0).sort((a,b)=>a-b);
+    if(!a.length)return 0;
+    const mid=Math.floor(a.length/2);
+    return a.length%2?a[mid]:(a[mid-1]+a[mid])/2;
+  }
+
+  function extractHour(localValue){
+    const s=String(localValue||'');
+    const m=s.match(/T(\d{2}):/);
+    if(m)return Number(m[1]);
+    const d=new Date(localValue);
+    return Number.isNaN(d.getTime())?null:d.getHours();
+  }
+
+  function makeBarChart(canvasId, labels, values, label, horizontal=false, target=null){
+    const ctx=$(canvasId);
+    if(!ctx || !window.Chart)return null;
+
+    const datasets=[{
+      label,
+      data:values,
+      borderWidth:1,
+      borderRadius:7
+    }];
+
+    if(target!==null && labels.length){
+      datasets.push({
+        type:'line',
+        label:'Meta',
+        data:labels.map(()=>target),
+        borderWidth:2,
+        pointRadius:0,
+        tension:0
+      });
+    }
+
+    return new Chart(ctx,{
+      type:'bar',
+      data:{labels,datasets},
+      options:{
+        responsive:true,
+        maintainAspectRatio:false,
+        indexAxis:horizontal?'y':'x',
+        plugins:{
+          legend:{display:target!==null},
+          tooltip:{enabled:true}
+        },
+        scales:{
+          x:{beginAtZero:true,grid:{display:false}},
+          y:{beginAtZero:true}
+        }
+      }
+    });
+  }
+
+  async function loadCharts(){
+    const date=$("chartsDate").value || localISO().slice(0,10);
+    $("chartsDate").value=date;
+    const proc=$("chartsProcess").value;
+
+    try{
+      const snap=await getDocs(
+        query(
+          collection(db,'registros_etiquetado'),
+          where('fecha_local','==',date)
+        )
+      );
+
+      let rows=snap.docs.map(d=>({id:d.id,...d.data()}));
+      rows=rows.filter(x=>proc==='todos'||(x.proceso||'etiquetado')===proc);
+
+      const totalUnits=rows.reduce((s,x)=>s+Number(x.unidades||0),0);
+      const workers=[...new Set(rows.map(x=>x.operario).filter(Boolean))];
+      const speeds=rows.map(x=>Number(x.productividad_u_h||0)).filter(v=>v>0);
+
+      $("chartsTotalUnits").textContent=fmtInt(totalUnits);
+      $("chartsWorkers").textContent=fmtInt(workers.length);
+      $("chartsMedian").textContent=speeds.length?fmtInt(chartMedian(speeds))+' u/h':'—';
+
+      // 1. Units by worker
+      const byWorker=new Map();
+      rows.forEach(x=>{
+        const k=x.operario||'Sin operario';
+        if(!byWorker.has(k))byWorker.set(k,{units:0,speeds:[]});
+        const g=byWorker.get(k);
+        g.units+=Number(x.unidades||0);
+        const v=Number(x.productividad_u_h||0);
+        if(v>0)g.speeds.push(v);
+      });
+      const workerRows=[...byWorker.entries()]
+        .map(([name,g])=>({name,units:g.units,median:chartMedian(g.speeds)}))
+        .sort((a,b)=>b.units-a.units);
+
+      destroySupervisorChart('unitsWorker');
+      supervisorCharts.unitsWorker=makeBarChart(
+        'chartUnitsWorker',
+        workerRows.map(x=>x.name),
+        workerRows.map(x=>x.units),
+        'Unidades',
+        workerRows.length>=6
+      );
+
+      // 2. Productivity by worker
+      const prodRows=[...workerRows].sort((a,b)=>b.median-a.median);
+      destroySupervisorChart('productivityWorker');
+      supervisorCharts.productivityWorker=makeBarChart(
+        'chartProductivityWorker',
+        prodRows.map(x=>x.name),
+        prodRows.map(x=>Math.round(x.median)),
+        'u/h',
+        prodRows.length>=6,
+        proc==='etiquetado'?500:null
+      );
+
+      // 3. Units by hour
+      const hourly=new Map();
+      rows.forEach(x=>{
+        const h=extractHour(x.inicio_local);
+        if(h===null)return;
+        hourly.set(h,(hourly.get(h)||0)+Number(x.unidades||0));
+      });
+      const hours=[...hourly.keys()].sort((a,b)=>a-b);
+      destroySupervisorChart('unitsHour');
+      const hourCanvas=$("chartUnitsHour");
+      if(hourCanvas && window.Chart){
+        supervisorCharts.unitsHour=new Chart(hourCanvas,{
+          type:'line',
+          data:{
+            labels:hours.map(h=>String(h).padStart(2,'0')+':00'),
+            datasets:[{
+              label:'Unidades',
+              data:hours.map(h=>hourly.get(h)),
+              borderWidth:3,
+              pointRadius:4,
+              tension:.25,
+              fill:false
+            }]
+          },
+          options:{
+            responsive:true,
+            maintainAspectRatio:false,
+            plugins:{legend:{display:false}},
+            scales:{y:{beginAtZero:true},x:{grid:{display:false}}}
+          }
+        });
+      }
+
+      // 4. Productivity by category
+      const byCategory=new Map();
+      rows.forEach(x=>{
+        const cat=x.categoria||'OTROS';
+        if(!byCategory.has(cat))byCategory.set(cat,[]);
+        const v=Number(x.productividad_u_h||0);
+        if(v>0)byCategory.get(cat).push(v);
+      });
+      const catRows=[...byCategory.entries()]
+        .map(([cat,vals])=>({cat,median:chartMedian(vals)}))
+        .filter(x=>x.median>0)
+        .sort((a,b)=>b.median-a.median);
+
+      destroySupervisorChart('categoryProductivity');
+      supervisorCharts.categoryProductivity=makeBarChart(
+        'chartCategoryProductivity',
+        catRows.map(x=>x.cat),
+        catRows.map(x=>Math.round(x.median)),
+        'u/h',
+        catRows.length>=6,
+        proc==='etiquetado'?500:null
+      );
+
+      if(!rows.length)toast('ℹ️ No hay registros para la fecha y proceso seleccionados');
+    }catch(e){
+      toast('⚠️ Gráficos: '+e.message);
+    }
+  }
+
+  $("chartsDate").value=localISO().slice(0,10);
+  $("loadCharts").onclick=loadCharts;
+  $("chartsProcess").addEventListener('change',loadCharts);
 
   async function loadDataSummary(){
     try{
