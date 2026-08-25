@@ -95,33 +95,64 @@
       flex:0 0 auto;
     }
 
-    /* ===== Selector de proceso ===== */
-    .processSelector{
+
+  
+    /* ===== Selección previa de proceso ===== */
+    .processChoice{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+      margin-top:12px;
+    }
+    .processChoiceBtn{
+      border:1px solid var(--border);
+      background:#fff;
+      border-radius:16px;
+      padding:18px 14px;
+      min-height:100px;
+      text-align:center;
+      font-weight:900;
+      color:var(--ink);
+      box-shadow:0 5px 16px rgba(20,55,40,.06);
+    }
+    .processChoiceBtn .emoji{display:block;font-size:30px;margin-bottom:8px}
+    .processChoiceBtn .title{display:block;font-size:18px}
+    .processChoiceBtn .sub{display:block;font-size:11px;color:var(--muted);margin-top:4px;font-weight:600}
+    .processChoiceBtn:active{background:var(--greenSoft);border-color:#45ad79}
+
+    .processBadge{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:900;
+      background:var(--greenSoft);
+      color:var(--green);
+      border:1px solid #bfe4cf;
+      margin-bottom:8px;
+    }
+
+    /* ===== Separación de registros en Supervisor ===== */
+    .recordProcessTabs{
       display:grid;
       grid-template-columns:1fr 1fr;
       gap:8px;
-      margin:0 0 10px;
+      margin:10px 0 12px;
     }
-    .processBtn{
+    .recordProcessBtn{
       border:1px solid var(--border);
       background:#fff;
-      border-radius:13px;
-      padding:11px 10px;
-      font-weight:900;
       color:var(--muted);
-      text-align:center;
+      border-radius:12px;
+      padding:10px;
+      font-weight:900;
     }
-    .processBtn.active{
+    .recordProcessBtn.active{
       background:var(--green);
       color:#fff;
       border-color:var(--green);
-      box-shadow:0 5px 14px rgba(20,113,74,.16);
-    }
-    .processHint{
-      font-size:11px;
-      color:var(--muted);
-      margin:-3px 0 8px;
-      text-align:center;
     }
 
   </style>
@@ -182,7 +213,8 @@
             <div class="kpis">
               <div class="kpi"><span>Productos</span><strong id="kpiProductos">—</strong></div>
               <div class="kpi"><span>Metas definidas</span><strong id="kpiMetas">—</strong></div>
-              <div class="kpi"><span>Registros hoy</span><strong id="kpiRegistros">—</strong></div>
+              <div class="kpi"><span>Etiquetados hoy</span><strong id="kpiEtiquetadoHoy">—</strong></div>
+              <div class="kpi"><span>Armados hoy</span><strong id="kpiArmadoHoy">—</strong></div>
               <div class="kpi"><span>Sesiones activas</span><strong id="kpiSesiones">—</strong></div>
             </div>
             <div class="message warn" style="margin-top:14px">🚧 Este es el MVP operativo. Aquí iremos agregando productividad por persona, SKU, categoría, pausas, tendencias y ranking.</div>
@@ -201,7 +233,25 @@
 
           <div id="view-registros" class="supView card">
             <div class="sectionTitle"><h2>🧾 Últimos registros</h2><button id="loadRecords" class="btn ghost">🔄 Cargar</button></div>
-            <div class="tableWrap"><table><thead><tr><th>Fecha</th><th>Operario</th><th>Proceso</th><th>Código</th><th>Unidades</th><th>Min netos</th><th>U/H</th><th>Meta</th></tr></thead><tbody id="recordsBody"><tr><td colspan="8">Sin cargar</td></tr></tbody></table></div>
+
+            <div class="recordProcessTabs">
+              <button id="recordsEtiquetadoBtn" class="recordProcessBtn active">🏷️ Etiquetado</button>
+              <button id="recordsArmadoBtn" class="recordProcessBtn">📦 Armado</button>
+            </div>
+
+            <div id="recordsEtiquetadoWrap" class="tableWrap">
+              <table>
+                <thead><tr><th>Fecha</th><th>Operario</th><th>Código</th><th>Unidades</th><th>Min netos</th><th>U/H</th><th>Meta</th></tr></thead>
+                <tbody id="recordsEtiquetadoBody"><tr><td colspan="7">Sin cargar</td></tr></tbody>
+              </table>
+            </div>
+
+            <div id="recordsArmadoWrap" class="tableWrap hidden">
+              <table>
+                <thead><tr><th>Fecha</th><th>Operario</th><th>Código</th><th>Unidades</th><th>Min netos</th><th>U/H</th></tr></thead>
+                <tbody id="recordsArmadoBody"><tr><td colspan="6">Sin cargar</td></tr></tbody>
+              </table>
+            </div>
           </div>
 
           <div id="view-usuarios" class="supView card">
@@ -467,7 +517,7 @@
         toast(`⚠️ ${o.nombre} ya tiene una sesión activa`); return;
       }
     }catch(e){toast('⚠️ No se pudo validar simultaneidad: '+e.message);return;}
-    openOps.set(o.id,{operator:o,proceso:'etiquetado',code:'',product:null,meta:null,state:'idle',startMs:null,pauseStart:null,pauseTotal:0,pauses:[],interval:null});
+    openOps.set(o.id,{operator:o,proceso:null,code:'',product:null,meta:null,state:'idle',startMs:null,pauseStart:null,pauseTotal:0,pauses:[],interval:null});
     activeOpId=o.id; renderOpTabs(); renderWorkspace();
   }
   function closeOperator(id){
@@ -493,24 +543,59 @@
   }
   function currentElapsed(s){if(!s.startMs)return 0;const end=s.state==='running'?Date.now():(s.pauseStart||Date.now());return end-s.startMs-s.pauseTotal;}
   function renderWorkspace(){
-    const root=$("opWorkspace"); 
+    const root=$("opWorkspace");
+
     if(!activeOpId){
       root.innerHTML='<div class="message warn">👷 Escribe y selecciona un operario arriba para comenzar.</div>';
       return;
     }
 
     const s=openOps.get(activeOpId);
-    const proceso=s.proceso||'etiquetado';
+
+    // Primero se elige el proceso. No mostramos códigos hasta seleccionar uno.
+    if(!s.proceso){
+      root.innerHTML=`
+        <div class="card" style="max-width:760px;margin:12px auto">
+          <h3 style="margin:0 0 5px">⚙️ Seleccione el proceso</h3>
+          <div class="small">Operario: <b>${s.operator.nombre}</b></div>
+
+          <div class="processChoice">
+            <button id="chooseEtiquetado" class="processChoiceBtn">
+              <span class="emoji">🏷️</span>
+              <span class="title">ETIQUETADO</span>
+              <span class="sub">Etiquetas, tiempos, pausas y unidades</span>
+            </button>
+            <button id="chooseArmado" class="processChoiceBtn">
+              <span class="emoji">📦</span>
+              <span class="title">ARMADO</span>
+              <span class="sub">Armados, tiempos, pausas y unidades</span>
+            </button>
+          </div>
+
+          <div style="margin-top:14px;text-align:right">
+            <button id="closeDaySession" class="btn ghost">🚪 Cerrar sesión del día</button>
+          </div>
+        </div>`;
+
+      $("chooseEtiquetado").onclick=()=>{
+        s.proceso='etiquetado';
+        renderWorkspace();
+      };
+      $("chooseArmado").onclick=()=>{
+        s.proceso='armado';
+        renderWorkspace();
+      };
+      $("closeDaySession").onclick=()=>closeOperator(s.operator.id);
+      return;
+    }
+
+    const proceso=s.proceso;
 
     root.innerHTML=`<div class="workGrid">
       <div class="card productCard">
-        <div class="processSelector">
-          <button id="processEtiquetado" class="processBtn ${proceso==='etiquetado'?'active':''}" ${s.state!=='idle'?'disabled':''}>🏷️ ETIQUETADO</button>
-          <button id="processArmado" class="processBtn ${proceso==='armado'?'active':''}" ${s.state!=='idle'?'disabled':''}>📦 ARMADO</button>
-        </div>
-        <div class="processHint">Proceso seleccionado: <b>${proceso==='etiquetado'?'Etiquetado':'Armado'}</b></div>
-
+        <div class="processBadge">${proceso==='etiquetado'?'🏷️ Etiquetado':'📦 Armado'}</div>
         <h3>📦 Producto</h3>
+
         <div class="field">
           <label>Código</label>
           <div style="display:flex;gap:8px">
@@ -518,6 +603,7 @@
             <button id="validateCode" class="btn blue" ${s.state!=='idle'?'disabled':''}>🔎 Validar</button>
           </div>
         </div>
+
         <div id="productInfo">${s.product?productHTML(s):'<div class="small">Digite un código y valide.</div>'}</div>
       </div>
 
@@ -525,6 +611,7 @@
         <div>
           <div class="timerLabel">⏱️ Tiempo productivo</div>
           <div id="timer" class="timer">${fmtTimer(currentElapsed(s))}</div>
+
           <div class="timerBtns">
             ${s.state==='idle'?'<button id="startBtn" class="btn primary big" '+(!s.product?'disabled':'')+'>▶️ INICIAR</button>':''}
             ${s.state==='running'?'<button id="pauseBtn" class="btn warn big">⏸️ PAUSAR</button><button id="finishBtn" class="btn danger big">⏹️ TERMINAR</button>':''}
@@ -535,6 +622,7 @@
 
       <div class="card">
         <h3 style="margin-top:0">📌 Estado</h3>
+
         <div class="productMeta">
           <div class="metric"><span>Operario</span><strong>${s.operator.nombre}</strong></div>
           <div class="metric"><span>Proceso</span><strong>${proceso==='etiquetado'?'Etiquetado':'Armado'}</strong></div>
@@ -544,23 +632,20 @@
         </div>
 
         <div id="finishBox" class="finishBox">
-          <div class="field"><label>Unidades procesadas</label><input id="qtyInput" type="number" min="1" inputmode="numeric" placeholder="Ej. 1080"></div>
+          <div class="field">
+            <label>Unidades procesadas</label>
+            <input id="qtyInput" type="number" min="1" inputmode="numeric" placeholder="Ej. 1080">
+          </div>
           <button id="confirmFinish" class="btn primary">💾 Confirmar y guardar</button>
         </div>
 
-        ${s.state==='idle'?'<div style="margin-top:16px;text-align:right"><button id="closeDaySession" class="btn ghost">🚪 Cerrar sesión del día</button></div>':''}
+        ${s.state==='idle'?`
+          <div style="margin-top:16px;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">
+            <button id="changeProcess" class="btn ghost">🔁 Cambiar proceso</button>
+            <button id="closeDaySession" class="btn ghost">🚪 Cerrar sesión del día</button>
+          </div>`:''}
       </div>
     </div>`;
-
-    $("processEtiquetado")?.addEventListener('click',()=>{
-      if(s.state!=='idle') return;
-      s.proceso='etiquetado'; s.code=''; s.product=null; s.meta=null; renderWorkspace();
-    });
-
-    $("processArmado")?.addEventListener('click',()=>{
-      if(s.state!=='idle') return;
-      s.proceso='armado'; s.code=''; s.product=null; s.meta=null; renderWorkspace();
-    });
 
     $("validateCode")?.addEventListener('click',()=>validateProduct(s));
     $("codeInput")?.addEventListener('keydown',e=>{if(e.key==='Enter')validateProduct(s)});
@@ -569,11 +654,32 @@
     $("resumeBtn")?.addEventListener('click',()=>resumeWork(s));
     $("finishBtn")?.addEventListener('click',()=>showFinish(s));
     $("confirmFinish")?.addEventListener('click',()=>confirmFinish(s));
+
+    $("changeProcess")?.addEventListener('click',()=>{
+      s.proceso=null;
+      s.code='';
+      s.product=null;
+      s.meta=null;
+      renderWorkspace();
+    });
+
     $("closeDaySession")?.addEventListener('click',()=>closeOperator(s.operator.id));
 
     startTimerLoop(s);
   }
-  function productHTML(s){return `<div class="message ok">✅ Código válido</div><div class="productMeta"><div class="metric"><span>Código</span><strong>${s.code}</strong></div><div class="metric"><span>Descripción</span><strong class="productDescription">${s.product.descripcion||s.product.descripcion_producto||s.product.nombre||'—'}</strong></div><div class="metric"><span>Categoría</span><strong>${s.product.categoria||'Sin categorizar'}</strong></div><div class="metric"><span>Meta</span><strong>${s.meta?Number(s.meta.meta_u_h).toLocaleString('es-EC')+' u/h':'En evaluación'}</strong></div></div>`}
+  function productHTML(s){
+    const metaText = s.proceso==='armado'
+      ? 'Recopilando data'
+      : (s.meta ? Number(s.meta.meta_u_h).toLocaleString('es-EC')+' u/h' : 'En evaluación');
+
+    return `<div class="message ok">✅ Código válido</div>
+      <div class="productMeta">
+        <div class="metric"><span>Código</span><strong>${s.code}</strong></div>
+        <div class="metric"><span>Descripción</span><strong class="productDescription">${s.product.descripcion||s.product.descripcion_producto||s.product.nombre||'—'}</strong></div>
+        <div class="metric"><span>Categoría</span><strong>${s.product.categoria||'Sin categorizar'}</strong></div>
+        <div class="metric"><span>${s.proceso==='armado'?'Histórico':'Meta'}</span><strong>${metaText}</strong></div>
+      </div>`;
+  }
 
   // ---------- MAESTRO VERSIONADO Y OPTIMIZADO ----------
   let activeMasterConfig = null;
@@ -636,7 +742,12 @@
       if(!product){s.product=null;s.code=code;$("productInfo").innerHTML='<div class="message err">❌ Código no encontrado en el maestro.</div>';return;}
       s.code=code;s.product=product;
       if(!s.product.descripcion && s.product.description) s.product.descripcion=s.product.description;
-      const ms=await getDoc(doc(db,'metas',code));s.meta=ms.exists()?ms.data():null;
+      if(s.proceso==='etiquetado'){
+        const ms=await getDoc(doc(db,'metas',code));
+        s.meta=ms.exists()?ms.data():null;
+      }else{
+        s.meta=null;
+      }
       $("productInfo").innerHTML=productHTML(s); renderWorkspace();
     }catch(e){$("productInfo").innerHTML='<div class="message err">❌ '+e.message+'</div>';}
   }
@@ -684,7 +795,7 @@
       await addDoc(collection(db,'registros_etiquetado'),data);
       await setDoc(doc(db,'sesiones_activas',s.operator.id),{...data,estado:'finalizada'});
       toast(`✅ Guardado: ${uph.toLocaleString('es-EC')} u/h`);
-      clearInterval(s.interval);openOps.set(s.operator.id,{operator:s.operator,proceso:s.proceso||'etiquetado',code:'',product:null,meta:null,state:'idle',startMs:null,pauseStart:null,pauseTotal:0,pauses:[],interval:null});renderOpTabs();renderWorkspace();
+      clearInterval(s.interval);openOps.set(s.operator.id,{operator:s.operator,proceso:null,code:'',product:null,meta:null,state:'idle',startMs:null,pauseStart:null,pauseTotal:0,pauses:[],interval:null});renderOpTabs();renderWorkspace();
     }catch(e){toast('❌ No se pudo guardar: '+e.message)}
   }
   function startTimerLoop(s){if(s.interval)clearInterval(s.interval);s.interval=setInterval(()=>{if(activeOpId!==s.operator.id)return;const el=$("timer");if(el)el.textContent=fmtTimer(currentElapsed(s));},500)}
@@ -732,7 +843,9 @@
       $("kpiProductos").textContent=totalProductos.toLocaleString('es-EC');
       $("kpiMetas").textContent=m.size.toLocaleString('es-EC');
       const today=localISO().slice(0,10);
-      $("kpiRegistros").textContent=r.docs.filter(x=>x.data().fecha_local===today).length;
+      const todayRecords=r.docs.map(x=>x.data()).filter(x=>x.fecha_local===today);
+      $("kpiEtiquetadoHoy").textContent=todayRecords.filter(x=>(x.proceso||'etiquetado')==='etiquetado').length;
+      $("kpiArmadoHoy").textContent=todayRecords.filter(x=>x.proceso==='armado').length;
       $("kpiSesiones").textContent=s.docs.filter(x=>['running','paused'].includes(x.data().estado)).length;
     }catch(e){toast('⚠️ Dashboard: '+e.message)}
   }
@@ -757,8 +870,61 @@
   };
 
   $("loadRecords").onclick=loadRecords;
+
+  $("recordsEtiquetadoBtn").onclick=()=>{
+    $("recordsEtiquetadoBtn").classList.add('active');
+    $("recordsArmadoBtn").classList.remove('active');
+    $("recordsEtiquetadoWrap").classList.remove('hidden');
+    $("recordsArmadoWrap").classList.add('hidden');
+  };
+
+  $("recordsArmadoBtn").onclick=()=>{
+    $("recordsArmadoBtn").classList.add('active');
+    $("recordsEtiquetadoBtn").classList.remove('active');
+    $("recordsArmadoWrap").classList.remove('hidden');
+    $("recordsEtiquetadoWrap").classList.add('hidden');
+  };
+
   async function loadRecords(){
-    try{const snap=await getDocs(query(collection(db,'registros_etiquetado'),orderBy('creado_en','desc'),limit(100)));$("recordsBody").innerHTML=snap.empty?'<tr><td colspan="8">Sin registros</td></tr>':snap.docs.map(d=>{const x=d.data();return `<tr><td>${x.fecha_local||''}</td><td>${x.operario||''}</td><td>${x.proceso==='armado'?'Armado':'Etiquetado'}</td><td>${x.codigo||''}</td><td>${Number(x.unidades||0).toLocaleString('es-EC')}</td><td>${Math.round((x.tiempo_neto_ms||0)/60000)}</td><td><b>${Number(x.productividad_u_h||0).toLocaleString('es-EC')}</b></td><td>${x.meta_u_h?Number(x.meta_u_h).toLocaleString('es-EC'):'—'}</td></tr>`}).join('');}catch(e){$("recordsBody").innerHTML=`<tr><td colspan="8">${e.message}</td></tr>`}
+    try{
+      const snap=await getDocs(
+        query(
+          collection(db,'registros_etiquetado'),
+          orderBy('creado_en','desc'),
+          limit(200)
+        )
+      );
+
+      const all=snap.docs.map(d=>d.data());
+      const etiquetado=all.filter(x=>(x.proceso||'etiquetado')==='etiquetado');
+      const armado=all.filter(x=>x.proceso==='armado');
+
+      $("recordsEtiquetadoBody").innerHTML=etiquetado.length
+        ? etiquetado.map(x=>`<tr>
+            <td>${x.fecha_local||''}</td>
+            <td>${x.operario||''}</td>
+            <td>${x.codigo||''}</td>
+            <td>${Number(x.unidades||0).toLocaleString('es-EC')}</td>
+            <td>${Math.round((x.tiempo_neto_ms||0)/60000)}</td>
+            <td><b>${Number(x.productividad_u_h||0).toLocaleString('es-EC')}</b></td>
+            <td>${x.meta_u_h?Number(x.meta_u_h).toLocaleString('es-EC'):'—'}</td>
+          </tr>`).join('')
+        : '<tr><td colspan="7">Sin registros de etiquetado</td></tr>';
+
+      $("recordsArmadoBody").innerHTML=armado.length
+        ? armado.map(x=>`<tr>
+            <td>${x.fecha_local||''}</td>
+            <td>${x.operario||''}</td>
+            <td>${x.codigo||''}</td>
+            <td>${Number(x.unidades||0).toLocaleString('es-EC')}</td>
+            <td>${Math.round((x.tiempo_neto_ms||0)/60000)}</td>
+            <td><b>${Number(x.productividad_u_h||0).toLocaleString('es-EC')}</b></td>
+          </tr>`).join('')
+        : '<tr><td colspan="6">Sin registros de armado</td></tr>';
+    }catch(e){
+      $("recordsEtiquetadoBody").innerHTML=`<tr><td colspan="7">${e.message}</td></tr>`;
+      $("recordsArmadoBody").innerHTML=`<tr><td colspan="6">${e.message}</td></tr>`;
+    }
   }
 
 
