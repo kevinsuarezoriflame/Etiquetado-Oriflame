@@ -545,6 +545,44 @@
       .chartCanvasWrap{height:240px}
     }
 
+  
+    /* ===== Registro de unidades: total o cajas ===== */
+    .qtyModeToggle{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:7px;
+      margin-bottom:10px;
+    }
+    .qtyModeBtn{
+      border:1px solid var(--border);
+      background:#fff;
+      border-radius:10px;
+      padding:8px 10px;
+      font-weight:900;
+      font-size:12px;
+      color:var(--muted);
+    }
+    .qtyModeBtn.active{
+      background:var(--green);
+      color:#fff;
+      border-color:var(--green);
+    }
+    .qtyBoxesGrid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:8px;
+      margin-bottom:8px;
+    }
+    .qtyCalculated{
+      border:1px solid #bfe5d8;
+      background:#f0faf7;
+      border-radius:11px;
+      padding:9px 10px;
+      font-weight:900;
+      text-align:center;
+      margin-bottom:8px;
+    }
+
   </style>
 </head>
 <body>
@@ -1005,6 +1043,7 @@
       pauseStart:null,
       pauseTotal:0,
       pauses:[],
+      qtyMode:'total',
       interval:null
     };
   }
@@ -1055,6 +1094,7 @@
               pauseStart:null,
               pauseTotal:Number(x.pausa_total_ms||0),
               pauses:Array.isArray(x.pausas)?x.pausas:[],
+              qtyMode:'total',
               interval:null
             };
 
@@ -1218,6 +1258,7 @@
               pauseStart:null,
               pauseTotal:Number(x.pausa_total_ms||0),
               pauses:Array.isArray(x.pausas)?x.pausas:[],
+              qtyMode:'total',
               interval:null
             };
 
@@ -1369,10 +1410,31 @@
           ${s.state==='finishing'?`
             <div class="finishInline">
               <div style="font-weight:900;margin-bottom:7px">✅ Tiempo detenido en ${fmtTimer(currentElapsed(s))}</div>
-              <div class="field">
-                <label>Unidades procesadas</label>
-                <input id="qtyInput" type="number" min="1" inputmode="numeric" placeholder="Ej. 1080" autofocus>
+
+              <div class="qtyModeToggle">
+                <button id="qtyModeTotal" class="qtyModeBtn ${(s.qtyMode||'total')==='total'?'active':''}">🔢 Total unidades</button>
+                <button id="qtyModeBoxes" class="qtyModeBtn ${s.qtyMode==='boxes'?'active':''}">📦 Cajas</button>
               </div>
+
+              ${(s.qtyMode||'total')==='total'?`
+                <div class="field">
+                  <label>Unidades procesadas</label>
+                  <input id="qtyInput" type="number" min="1" inputmode="numeric" placeholder="Ej. 1080" autofocus>
+                </div>
+              `:`
+                <div class="qtyBoxesGrid">
+                  <div class="field">
+                    <label>N.º cajas</label>
+                    <input id="qtyBoxes" type="number" min="1" inputmode="numeric" placeholder="Ej. 12">
+                  </div>
+                  <div class="field">
+                    <label>Unidades/caja</label>
+                    <input id="qtyPerBox" type="number" min="1" inputmode="numeric" placeholder="Ej. 90">
+                  </div>
+                </div>
+                <div id="qtyCalculated" class="qtyCalculated">0 unidades</div>
+              `}
+
               <button id="confirmFinish" class="btn primary" style="width:100%">💾 GUARDAR REGISTRO</button>
             </div>`:''}
         </div>
@@ -1389,8 +1451,30 @@
     $("pauseBtn")?.addEventListener('click',()=>pauseWork(s));
     $("resumeBtn")?.addEventListener('click',()=>resumeWork(s));
     $("finishBtn")?.addEventListener('click',()=>showFinish(s));
+    $("qtyModeTotal")?.addEventListener('click',()=>{
+      s.qtyMode='total';
+      renderWorkspace();
+      setTimeout(()=>$("qtyInput")?.focus(),60);
+    });
+    $("qtyModeBoxes")?.addEventListener('click',()=>{
+      s.qtyMode='boxes';
+      renderWorkspace();
+      setTimeout(()=>$("qtyBoxes")?.focus(),60);
+    });
+
+    const updateQtyCalculated=()=>{
+      const boxes=Number($("qtyBoxes")?.value||0);
+      const perBox=Number($("qtyPerBox")?.value||0);
+      const total=boxes*perBox;
+      if($("qtyCalculated"))$("qtyCalculated").textContent=`${total.toLocaleString('es-EC')} unidades`;
+    };
+    $("qtyBoxes")?.addEventListener('input',updateQtyCalculated);
+    $("qtyPerBox")?.addEventListener('input',updateQtyCalculated);
+
     $("confirmFinish")?.addEventListener('click',()=>confirmFinish(s));
     $("qtyInput")?.addEventListener('keydown',e=>{if(e.key==='Enter')confirmFinish(s)});
+    $("qtyBoxes")?.addEventListener('keydown',e=>{if(e.key==='Enter')$("qtyPerBox")?.focus()});
+    $("qtyPerBox")?.addEventListener('keydown',e=>{if(e.key==='Enter')confirmFinish(s)});
     $("closeDaySession")?.addEventListener('click',()=>closeOperator(s.operator.id));
 
     startTimerLoop(s);
@@ -1556,10 +1640,22 @@
     setTimeout(()=>$("qtyInput")?.focus(),80);
   }
   async function confirmFinish(s){
-    const qty=Math.floor(safeNum($("qtyInput").value)); if(qty<=0)return toast('⚠️ Ingresa las unidades procesadas');
+    let qty=0;
+    let cajas=null;
+    let unidadesPorCaja=null;
+
+    if((s.qtyMode||'total')==='boxes'){
+      cajas=Math.floor(safeNum($("qtyBoxes")?.value));
+      unidadesPorCaja=Math.floor(safeNum($("qtyPerBox")?.value));
+      if(cajas<=0||unidadesPorCaja<=0)return toast('⚠️ Ingresa cajas y unidades por caja');
+      qty=cajas*unidadesPorCaja;
+    }else{
+      qty=Math.floor(safeNum($("qtyInput")?.value));
+      if(qty<=0)return toast('⚠️ Ingresa las unidades procesadas');
+    }
     const now=s.finishMs||Date.now();
     const netMs=Math.max(0,now-s.startMs-s.pauseTotal); const hours=netMs/3600000; const uph=hours>0?Math.round(qty/hours):0; const meta=s.meta?.meta_u_h||null; const compliance=meta?Math.round((uph/meta)*1000)/10:null;
-    const data={fecha_local:new Date(now).toLocaleDateString('sv-SE'),fin_local:new Date(now).toLocaleString('sv-SE').replace(' ','T'),inicio_local:new Date(s.startMs).toLocaleString('sv-SE').replace(' ','T'),operarioId:s.operator.id,operario:s.operator.nombre,tipo_personal:s.operator.tipo||'',proceso:s.proceso||'etiquetado',codigo:s.code,descripcion:s.product.descripcion||'',categoria:s.product.categoria||'',unidades:qty,tiempo_neto_ms:netMs,tiempo_pausa_ms:s.pauseTotal,productividad_u_h:uph,meta_u_h:meta,cumplimiento_pct:compliance,pausas:s.pauses,creado_en:serverTimestamp()};
+    const data={fecha_local:new Date(now).toLocaleDateString('sv-SE'),fin_local:new Date(now).toLocaleString('sv-SE').replace(' ','T'),inicio_local:new Date(s.startMs).toLocaleString('sv-SE').replace(' ','T'),operarioId:s.operator.id,operario:s.operator.nombre,tipo_personal:s.operator.tipo||'',proceso:s.proceso||'etiquetado',codigo:s.code,descripcion:s.product.descripcion||'',categoria:s.product.categoria||'',unidades:qty,modo_registro_unidades:(s.qtyMode||'total'),cajas,unidades_por_caja:unidadesPorCaja,tiempo_neto_ms:netMs,tiempo_pausa_ms:s.pauseTotal,productividad_u_h:uph,meta_u_h:meta,cumplimiento_pct:compliance,pausas:s.pauses,creado_en:serverTimestamp()};
     try{
       await addDoc(collection(db,'registros_etiquetado'),data);
       await setDoc(doc(db,'sesiones_activas',s.operator.id),{...data,deviceId,estado:'finalizada'});
