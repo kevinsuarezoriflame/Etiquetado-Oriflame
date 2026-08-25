@@ -155,6 +155,55 @@
       border-color:var(--green);
     }
 
+  
+    /* ===== Supervisor v2 ===== */
+    .supNavBtn.active{
+      background:var(--green)!important;
+      color:#fff!important;
+      border-color:var(--green)!important;
+    }
+    .filterGrid{
+      display:grid;
+      grid-template-columns:repeat(4,minmax(0,1fr));
+      gap:10px;
+      margin-bottom:12px;
+    }
+    .miniKpis{
+      display:grid;
+      grid-template-columns:repeat(4,minmax(0,1fr));
+      gap:10px;
+      margin:12px 0;
+    }
+    .miniKpi{
+      border:1px solid var(--border);
+      border-radius:14px;
+      background:#fff;
+      padding:12px;
+    }
+    .miniKpi span{display:block;font-size:11px;color:var(--muted)}
+    .miniKpi strong{display:block;font-size:21px;margin-top:3px}
+    .statusPill{
+      display:inline-flex;align-items:center;gap:5px;border-radius:999px;
+      padding:4px 8px;font-size:11px;font-weight:800;border:1px solid var(--border);
+      white-space:nowrap;
+    }
+    .statusPill.ok{background:#e8f7ee;color:#1c764b;border-color:#bfe7cf}
+    .statusPill.warn{background:#fff6dc;color:#8a6500;border-color:#f1dfa2}
+    .statusPill.bad{background:#ffebea;color:#a23e37;border-color:#efc4c1}
+    .splitCards{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+    .subCard{border:1px solid var(--border);border-radius:14px;background:#fbfdfc;padding:12px}
+    .subCard h3{margin:0 0 10px;font-size:15px}
+    .emptyState{padding:24px;text-align:center;color:var(--muted)}
+    .dataSummary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0}
+    @media(max-width:900px){
+      .supGrid{grid-template-columns:1fr}
+      .supNav{grid-template-columns:repeat(2,minmax(0,1fr));position:sticky;top:0;z-index:50}
+      .filterGrid,.miniKpis,.splitCards,.dataSummary{grid-template-columns:1fr 1fr}
+    }
+    @media(max-width:560px){
+      .filterGrid,.miniKpis,.splitCards,.dataSummary{grid-template-columns:1fr}
+    }
+
   </style>
 </head>
 <body>
@@ -200,28 +249,59 @@
     <div id="supApp" class="hidden">
       <div class="supGrid">
         <aside class="supNav card">
-          <button class="btn secondary supNavBtn" data-view="dashboard">📊 Dashboard</button>
+          <button class="btn secondary supNavBtn active" data-view="dashboard">📊 Dashboard</button>
+          <button class="btn secondary supNavBtn" data-view="productividad">📈 Productividad</button>
+          <button class="btn secondary supNavBtn" data-view="categorias">🧩 Categorías</button>
           <button class="btn secondary supNavBtn" data-view="metas">🎯 Metas</button>
           <button class="btn secondary supNavBtn" data-view="registros">🧾 Registros</button>
-          <button class="btn secondary supNavBtn" data-view="usuarios">👥 Usuarios</button>
+          <button class="btn secondary supNavBtn" data-view="supervision">👀 Supervisión</button>
+          <button class="btn secondary supNavBtn" data-view="operarios">👷 Operarios</button>
+          <button class="btn secondary supNavBtn" data-view="data">📦 Data</button>
           <button id="supLogout" class="btn ghost">🚪 Cerrar sesión</button>
         </aside>
 
         <section>
           <div id="view-dashboard" class="supView active card">
-            <div class="sectionTitle"><h2>📊 Dashboard</h2><button id="refreshDashboard" class="btn ghost">🔄 Actualizar</button></div>
+            <div class="sectionTitle"><h2>📊 Dashboard operativo</h2><button id="refreshDashboard" class="btn ghost">🔄 Actualizar</button></div>
             <div class="kpis">
               <div class="kpi"><span>Productos</span><strong id="kpiProductos">—</strong></div>
-              <div class="kpi"><span>Metas definidas</span><strong id="kpiMetas">—</strong></div>
               <div class="kpi"><span>Etiquetados hoy</span><strong id="kpiEtiquetadoHoy">—</strong></div>
               <div class="kpi"><span>Armados hoy</span><strong id="kpiArmadoHoy">—</strong></div>
               <div class="kpi"><span>Sesiones activas</span><strong id="kpiSesiones">—</strong></div>
             </div>
-            <div class="message warn" style="margin-top:14px">🚧 Este es el MVP operativo. Aquí iremos agregando productividad por persona, SKU, categoría, pausas, tendencias y ranking.</div>
+            <div class="splitCards">
+              <div class="subCard"><h3>🏷️ Etiquetado de hoy</h3><div id="dashEtiquetadoResumen" class="small">Sin cargar</div></div>
+              <div class="subCard"><h3>📦 Armado de hoy</h3><div id="dashArmadoResumen" class="small">Sin cargar</div></div>
+            </div>
+            <div class="subCard" style="margin-top:12px"><h3>👷 Actividad actual</h3><div id="dashActiveSessions" class="small">Sin cargar</div></div>
+          </div>
+
+          <div id="view-productividad" class="supView card">
+            <div class="sectionTitle"><h2>📈 Análisis de productividad</h2><button id="refreshProductivity" class="btn ghost">🔄 Actualizar</button></div>
+            <div class="filterGrid">
+              <div class="field"><label>Proceso</label><select id="prodFilterProcess"><option value="etiquetado">🏷️ Etiquetado</option><option value="armado">📦 Armado</option><option value="todos">Todos</option></select></div>
+              <div class="field"><label>Operario</label><select id="prodFilterOperator"><option value="">Todos</option></select></div>
+              <div class="field"><label>Categoría</label><select id="prodFilterCategory"><option value="">Todas</option></select></div>
+              <div class="field"><label>Agrupar por</label><select id="prodGroupBy"><option value="operario">Operario</option><option value="codigo">SKU / Código</option><option value="categoria">Categoría</option></select></div>
+            </div>
+            <div class="miniKpis">
+              <div class="miniKpi"><span>Observaciones</span><strong id="prodObs">—</strong></div>
+              <div class="miniKpi"><span>Unidades</span><strong id="prodUnits">—</strong></div>
+              <div class="miniKpi"><span>Promedio u/h</span><strong id="prodAvg">—</strong></div>
+              <div class="miniKpi"><span>Mediana u/h</span><strong id="prodMedian">—</strong></div>
+            </div>
+            <div class="tableWrap"><table><thead><tr><th id="prodGroupHeader">Operario</th><th>Registros</th><th>Unidades</th><th>Promedio u/h</th><th>Mediana u/h</th><th>Mejor u/h</th><th>Referencia</th></tr></thead><tbody id="productivityBody"><tr><td colspan="7">Sin cargar</td></tr></tbody></table></div>
+            <div class="small" style="margin-top:8px">ℹ️ Una sola carga reciente de registros se reutiliza entre las vistas para reducir lecturas en Firebase.</div>
+          </div>
+
+          <div id="view-categorias" class="supView card">
+            <div class="sectionTitle"><h2>🧩 Productividad por categoría</h2><button id="refreshCategories" class="btn ghost">🔄 Actualizar</button></div>
+            <div class="message warn">Las categorías se construyen desde la descripción del producto y el histórico real. Sirven como referencia inicial para productos con poca data propia.</div>
+            <div class="tableWrap" style="margin-top:12px"><table><thead><tr><th>Categoría</th><th>SKUs</th><th>Registros</th><th>Operarios</th><th>Unidades</th><th>Promedio u/h</th><th>Mediana u/h</th><th>Madurez</th></tr></thead><tbody id="categoriesBody"><tr><td colspan="8">Sin cargar</td></tr></tbody></table></div>
           </div>
 
           <div id="view-metas" class="supView card">
-            <div class="sectionTitle"><h2>🎯 Metas por código</h2></div>
+            <div class="sectionTitle"><h2>🎯 Metas y productos en evaluación</h2><button id="refreshMetasAnalysis" class="btn ghost">🔄 Analizar</button></div><div class="message warn">🏷️ Las metas se aplican a Etiquetado. Armado se mantiene por ahora como recopilación de histórico.</div>
             <div class="twoCols">
               <div class="field"><label>Código</label><input id="metaCode" placeholder="Ej. 46966"></div>
               <div class="field"><label>Meta u/h</label><input id="metaValue" type="number" min="1" placeholder="Ej. 700"></div>
@@ -229,6 +309,9 @@
             <div class="field"><label>Motivo / observación</label><input id="metaReason" placeholder="Meta aprobada según histórico"></div>
             <button id="saveMeta" class="btn primary">💾 Guardar meta</button>
             <div id="metaMsg"></div>
+            <div style="height:14px"></div>
+            <h3>🔬 Productos en evaluación</h3>
+            <div class="tableWrap"><table><thead><tr><th>Código</th><th>Descripción</th><th>Categoría</th><th>Registros</th><th>Operarios</th><th>Mediana u/h</th><th>Estado</th></tr></thead><tbody id="evaluationBody"><tr><td colspan="7">Presiona Analizar</td></tr></tbody></table></div>
           </div>
 
           <div id="view-registros" class="supView card">
@@ -254,8 +337,30 @@
             </div>
           </div>
 
-          <div id="view-usuarios" class="supView card">
-            <div class="sectionTitle"><h2>👥 Usuarios de operación</h2></div>
+          <div id="view-supervision" class="supView card">
+            <div class="sectionTitle"><h2>👀 Supervisión y auditoría</h2><button id="refreshSupervision" class="btn ghost">🔄 Revisar</button></div>
+            <div class="miniKpis">
+              <div class="miniKpi"><span>Registros revisados</span><strong id="auditReviewed">—</strong></div>
+              <div class="miniKpi"><span>Alertas</span><strong id="auditAlerts">—</strong></div>
+              <div class="miniKpi"><span>Pausas altas</span><strong id="auditPauses">—</strong></div>
+              <div class="miniKpi"><span>Duraciones largas</span><strong id="auditLong">—</strong></div>
+            </div>
+            <div class="tableWrap"><table><thead><tr><th>Fecha</th><th>Operario</th><th>Proceso</th><th>Código</th><th>U/H</th><th>Tiempo neto</th><th>Pausa</th><th>Alerta</th></tr></thead><tbody id="auditBody"><tr><td colspan="8">Sin revisar</td></tr></tbody></table></div>
+          </div>
+
+          <div id="view-data" class="supView card">
+            <div class="sectionTitle"><h2>📦 Data de productos</h2><button id="openDataModalBtn" class="btn blue">📥 Actualizar data</button></div>
+            <div class="message ok">La data de productos se guarda en Firebase y sirve para validar códigos en Etiquetado y Armado.</div>
+            <div class="dataSummary">
+              <div class="kpi"><span>Versión activa</span><strong id="dataVersion" style="font-size:16px">—</strong></div>
+              <div class="kpi"><span>Productos activos</span><strong id="dataProducts">—</strong></div>
+              <div class="kpi"><span>Bloques</span><strong id="dataBuckets">—</strong></div>
+            </div>
+            <div class="small">También puedes abrir la carga con <b>Ctrl + Shift + O</b>.</div>
+          </div>
+
+          <div id="view-operarios" class="supView card">
+            <div class="sectionTitle"><h2>👷 Operarios</h2></div>
             <div class="twoCols">
               <div class="field"><label>Nombre</label><input id="newOpName" placeholder="Miguel Solís"></div>
               <div class="field"><label>Tipo</label><select id="newOpType"><option value="Ransa">Ransa</option><option value="Maquila">Maquila</option></select></div>
@@ -302,7 +407,7 @@
   import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
   import {
     getFirestore, doc, getDoc, setDoc, updateDoc, addDoc, collection, getDocs,
-    query, where, orderBy, limit, serverTimestamp, writeBatch
+    query, where, orderBy, limit, serverTimestamp, writeBatch, getCountFromServer
   } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -821,35 +926,205 @@
   $("productModal").addEventListener('click',e=>{if(e.target===$("productModal"))closeProductModal()});
 
   // ---------- SUPERVISOR ----------
-  document.querySelectorAll('.supNavBtn').forEach(b=>b.onclick=()=>{document.querySelectorAll('.supView').forEach(v=>v.classList.remove('active'));$("view-"+b.dataset.view).classList.add('active');if(b.dataset.view==='usuarios')loadUsersTable();if(b.dataset.view==='registros')loadRecords();});
+  let supervisorRecordsCache=[];
+  let supervisorRecordsLoadedAt=0;
+  const SUP_CACHE_MS=60000;
+  const SUP_RECORD_LIMIT=250;
 
-  async function loadDashboard(){
+  const median=(arr)=>{
+    const a=arr.map(Number).filter(Number.isFinite).sort((x,y)=>x-y);
+    if(!a.length) return 0;
+    const m=Math.floor(a.length/2);
+    return a.length%2?a[m]:(a[m-1]+a[m])/2;
+  };
+  const avg=(arr)=>{
+    const a=arr.map(Number).filter(Number.isFinite);
+    return a.length?a.reduce((s,v)=>s+v,0)/a.length:0;
+  };
+  const fmtInt=(n)=>Math.round(Number(n)||0).toLocaleString('es-EC');
+  const processName=(v)=>(v||'etiquetado')==='armado'?'Armado':'Etiquetado';
+
+  async function getSupervisorRecords(force=false){
+    if(!force && supervisorRecordsCache.length && (Date.now()-supervisorRecordsLoadedAt)<SUP_CACHE_MS){
+      return supervisorRecordsCache;
+    }
+    const snap=await getDocs(query(collection(db,'registros_etiquetado'),orderBy('creado_en','desc'),limit(SUP_RECORD_LIMIT)));
+    supervisorRecordsCache=snap.docs.map(d=>({id:d.id,...d.data()}));
+    supervisorRecordsLoadedAt=Date.now();
+    return supervisorRecordsCache;
+  }
+
+  document.querySelectorAll('.supNavBtn').forEach(b=>b.onclick=async()=>{
+    document.querySelectorAll('.supView').forEach(v=>v.classList.remove('active'));
+    document.querySelectorAll('.supNavBtn').forEach(x=>x.classList.remove('active'));
+    $("view-"+b.dataset.view).classList.add('active');
+    b.classList.add('active');
+
+    if(b.dataset.view==='operarios') await loadUsersTable();
+    if(b.dataset.view==='registros') await loadRecords();
+    if(b.dataset.view==='productividad') await loadProductivity();
+    if(b.dataset.view==='categorias') await loadCategories();
+    if(b.dataset.view==='metas') await loadEvaluation();
+    if(b.dataset.view==='supervision') await loadSupervision();
+    if(b.dataset.view==='data') await loadDataSummary();
+  });
+
+  async function loadDashboard(force=false){
     try{
-      const cfg = await getActiveMasterConfig();
-      const [m,r,s]=await Promise.all([
-        getDocs(collection(db,'metas')),
-        getDocs(collection(db,'registros_etiquetado')),
-        getDocs(collection(db,'sesiones_activas'))
-      ]);
+      const cfg=await getActiveMasterConfig(force);
+      const records=await getSupervisorRecords(force);
+      const sessionsSnap=await getDocs(collection(db,'sesiones_activas'));
 
-      let totalProductos = 0;
-      if(cfg.mode === 'versioned'){
-        totalProductos = Number(cfg.total_productos || 0);
-      }else{
-        const p = await getDocs(collection(db,'productos'));
-        totalProductos = p.size;
-      }
+      let totalProductos=0;
+      if(cfg.mode==='versioned') totalProductos=Number(cfg.total_productos||0);
+      else totalProductos=(await getCountFromServer(collection(db,'productos'))).data().count;
 
-      $("kpiProductos").textContent=totalProductos.toLocaleString('es-EC');
-      $("kpiMetas").textContent=m.size.toLocaleString('es-EC');
       const today=localISO().slice(0,10);
-      const todayRecords=r.docs.map(x=>x.data()).filter(x=>x.fecha_local===today);
-      $("kpiEtiquetadoHoy").textContent=todayRecords.filter(x=>(x.proceso||'etiquetado')==='etiquetado').length;
-      $("kpiArmadoHoy").textContent=todayRecords.filter(x=>x.proceso==='armado').length;
-      $("kpiSesiones").textContent=s.docs.filter(x=>['running','paused'].includes(x.data().estado)).length;
+      const todayRecords=records.filter(x=>x.fecha_local===today);
+      const et=todayRecords.filter(x=>(x.proceso||'etiquetado')==='etiquetado');
+      const ar=todayRecords.filter(x=>x.proceso==='armado');
+      const active=sessionsSnap.docs.map(d=>d.data()).filter(x=>['running','paused'].includes(x.estado));
+
+      $("kpiProductos").textContent=fmtInt(totalProductos);
+      $("kpiEtiquetadoHoy").textContent=fmtInt(et.length);
+      $("kpiArmadoHoy").textContent=fmtInt(ar.length);
+      $("kpiSesiones").textContent=fmtInt(active.length);
+
+      const summary=(arr,label)=>{
+        if(!arr.length) return `<div class="emptyState">Sin ${label.toLowerCase()} registrados hoy.</div>`;
+        const units=arr.reduce((s,x)=>s+Number(x.unidades||0),0);
+        const speeds=arr.map(x=>Number(x.productividad_u_h||0)).filter(v=>v>0);
+        return `<div class="miniKpis" style="grid-template-columns:repeat(3,1fr);margin:0">
+          <div class="miniKpi"><span>Registros</span><strong>${fmtInt(arr.length)}</strong></div>
+          <div class="miniKpi"><span>Unidades</span><strong>${fmtInt(units)}</strong></div>
+          <div class="miniKpi"><span>Mediana u/h</span><strong>${fmtInt(median(speeds))}</strong></div>
+        </div>`;
+      };
+      $("dashEtiquetadoResumen").innerHTML=summary(et,'Etiquetados');
+      $("dashArmadoResumen").innerHTML=summary(ar,'Armados');
+
+      $("dashActiveSessions").innerHTML=active.length
+        ? `<div class="tableWrap"><table style="min-width:620px"><thead><tr><th>Operario</th><th>Proceso</th><th>Código</th><th>Estado</th><th>Inicio</th></tr></thead><tbody>${active.map(x=>`<tr><td>${x.operario||'—'}</td><td>${processName(x.proceso)}</td><td>${x.codigo||'—'}</td><td><span class="statusPill ${x.estado==='paused'?'warn':'ok'}">${x.estado==='paused'?'⏸️ Pausado':'▶️ Trabajando'}</span></td><td>${x.inicio_local||'—'}</td></tr>`).join('')}</tbody></table></div>`
+        : '<div class="emptyState">No hay procesos activos.</div>';
     }catch(e){toast('⚠️ Dashboard: '+e.message)}
   }
-  $("refreshDashboard").onclick=loadDashboard;
+  $("refreshDashboard").onclick=()=>loadDashboard(true);
+
+  function fillProductivityFilters(records){
+    const ops=[...new Set(records.map(x=>x.operario).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+    const cats=[...new Set(records.map(x=>x.categoria||'OTROS').filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+    const opSel=$("prodFilterOperator"),catSel=$("prodFilterCategory");
+    const opCurrent=opSel.value,catCurrent=catSel.value;
+    opSel.innerHTML='<option value="">Todos</option>'+ops.map(v=>`<option>${v}</option>`).join('');
+    catSel.innerHTML='<option value="">Todas</option>'+cats.map(v=>`<option>${v}</option>`).join('');
+    if(ops.includes(opCurrent))opSel.value=opCurrent;
+    if(cats.includes(catCurrent))catSel.value=catCurrent;
+  }
+
+  async function loadProductivity(force=false){
+    try{
+      const records=await getSupervisorRecords(force);
+      fillProductivityFilters(records);
+      renderProductivity(records);
+    }catch(e){$("productivityBody").innerHTML=`<tr><td colspan="7">${e.message}</td></tr>`}
+  }
+
+  function renderProductivity(records=supervisorRecordsCache){
+    const proc=$("prodFilterProcess").value,op=$("prodFilterOperator").value,cat=$("prodFilterCategory").value,groupBy=$("prodGroupBy").value;
+    const rows=records.filter(x=>{
+      const p=x.proceso||'etiquetado';
+      return (proc==='todos'||p===proc)&&(!op||x.operario===op)&&(!cat||(x.categoria||'OTROS')===cat)&&Number(x.productividad_u_h||0)>0;
+    });
+
+    $("prodObs").textContent=fmtInt(rows.length);
+    $("prodUnits").textContent=fmtInt(rows.reduce((s,x)=>s+Number(x.unidades||0),0));
+    $("prodAvg").textContent=fmtInt(avg(rows.map(x=>x.productividad_u_h)));
+    $("prodMedian").textContent=fmtInt(median(rows.map(x=>x.productividad_u_h)));
+
+    const keyOf=x=>groupBy==='codigo'?(x.codigo||'SIN CÓDIGO'):groupBy==='categoria'?(x.categoria||'OTROS'):(x.operario||'SIN OPERARIO');
+    $("prodGroupHeader").textContent=groupBy==='codigo'?'SKU / Código':groupBy==='categoria'?'Categoría':'Operario';
+
+    const groups=new Map();
+    rows.forEach(x=>{const k=keyOf(x);if(!groups.has(k))groups.set(k,[]);groups.get(k).push(x)});
+    const data=[...groups.entries()].map(([key,arr])=>{
+      const speeds=arr.map(x=>Number(x.productividad_u_h||0)).filter(v=>v>0);
+      const units=arr.reduce((s,x)=>s+Number(x.unidades||0),0);
+      const ref=proc==='armado'?'<span class="statusPill ok">Histórico</span>':median(speeds)>=500?'<span class="statusPill ok">≥ 500</span>':'<span class="statusPill warn">&lt; 500</span>';
+      return {key,records:arr.length,units,avg:avg(speeds),med:median(speeds),best:Math.max(...speeds,0),ref};
+    }).sort((a,b)=>b.med-a.med);
+
+    $("productivityBody").innerHTML=data.length?data.map(x=>`<tr><td><b>${x.key}</b></td><td>${fmtInt(x.records)}</td><td>${fmtInt(x.units)}</td><td>${fmtInt(x.avg)}</td><td><b>${fmtInt(x.med)}</b></td><td>${fmtInt(x.best)}</td><td>${x.ref}</td></tr>`).join(''):'<tr><td colspan="7">Sin datos para los filtros seleccionados.</td></tr>';
+  }
+
+  ["prodFilterProcess","prodFilterOperator","prodFilterCategory","prodGroupBy"].forEach(id=>$(id)?.addEventListener('change',()=>renderProductivity()));
+  $("refreshProductivity").onclick=()=>loadProductivity(true);
+
+  async function loadCategories(force=false){
+    try{
+      const records=(await getSupervisorRecords(force)).filter(x=>(x.proceso||'etiquetado')==='etiquetado'&&Number(x.productividad_u_h||0)>0);
+      const groups=new Map();
+      records.forEach(x=>{const k=x.categoria||'OTROS';if(!groups.has(k))groups.set(k,[]);groups.get(k).push(x)});
+      const data=[...groups.entries()].map(([cat,arr])=>{
+        const skus=new Set(arr.map(x=>x.codigo).filter(Boolean)),ops=new Set(arr.map(x=>x.operario).filter(Boolean));
+        const speeds=arr.map(x=>Number(x.productividad_u_h||0)).filter(v=>v>0);
+        let maturity='<span class="statusPill warn">En evaluación</span>';
+        if(arr.length>=5&&ops.size>=2)maturity='<span class="statusPill ok">Base útil</span>';
+        if(arr.length>=12&&ops.size>=3)maturity='<span class="statusPill ok">Base sólida</span>';
+        return {cat,skus:skus.size,records:arr.length,ops:ops.size,units:arr.reduce((s,x)=>s+Number(x.unidades||0),0),avg:avg(speeds),med:median(speeds),maturity};
+      }).sort((a,b)=>b.records-a.records);
+      $("categoriesBody").innerHTML=data.length?data.map(x=>`<tr><td><b>${x.cat}</b></td><td>${x.skus}</td><td>${x.records}</td><td>${x.ops}</td><td>${fmtInt(x.units)}</td><td>${fmtInt(x.avg)}</td><td><b>${fmtInt(x.med)}</b></td><td>${x.maturity}</td></tr>`).join(''):'<tr><td colspan="8">Aún no hay histórico suficiente.</td></tr>';
+    }catch(e){$("categoriesBody").innerHTML=`<tr><td colspan="8">${e.message}</td></tr>`}
+  }
+  $("refreshCategories").onclick=()=>loadCategories(true);
+
+  async function loadEvaluation(force=false){
+    try{
+      const records=(await getSupervisorRecords(force)).filter(x=>(x.proceso||'etiquetado')==='etiquetado'&&Number(x.productividad_u_h||0)>0);
+      const groups=new Map();
+      records.forEach(x=>{const code=x.codigo||'';if(!code)return;if(!groups.has(code))groups.set(code,[]);groups.get(code).push(x)});
+      const data=[...groups.entries()].map(([code,arr])=>{
+        const ops=new Set(arr.map(x=>x.operario).filter(Boolean)),speeds=arr.map(x=>Number(x.productividad_u_h||0)).filter(v=>v>0);
+        let state='<span class="statusPill warn">En evaluación</span>';
+        if(arr.length>=3&&ops.size>=2)state='<span class="statusPill ok">Meta provisional</span>';
+        if(arr.length>=5&&ops.size>=2)state='<span class="statusPill ok">Apto para revisar meta</span>';
+        return {code,desc:arr[0].descripcion||'—',cat:arr[0].categoria||'OTROS',records:arr.length,ops:ops.size,med:median(speeds),state};
+      }).sort((a,b)=>b.records-a.records);
+      $("evaluationBody").innerHTML=data.length?data.map(x=>`<tr><td><b>${x.code}</b></td><td>${x.desc}</td><td>${x.cat}</td><td>${x.records}</td><td>${x.ops}</td><td>${fmtInt(x.med)}</td><td>${x.state}</td></tr>`).join(''):'<tr><td colspan="7">Aún no hay registros de etiquetado.</td></tr>';
+    }catch(e){$("evaluationBody").innerHTML=`<tr><td colspan="7">${e.message}</td></tr>`}
+  }
+  $("refreshMetasAnalysis").onclick=()=>loadEvaluation(true);
+
+  async function loadSupervision(force=false){
+    try{
+      const records=await getSupervisorRecords(force);
+      const alerts=[];let pauseHigh=0,longCount=0;
+      records.forEach(x=>{
+        const net=Number(x.tiempo_neto_ms||0),pause=Number(x.tiempo_pausa_ms||0),uph=Number(x.productividad_u_h||0),meta=Number(x.meta_u_h||0),proc=x.proceso||'etiquetado';
+        const reasons=[];
+        if(net>=8*3600000){reasons.push('Duración neta ≥ 8 h');longCount++}
+        if(pause>=60*60000){reasons.push('Pausa acumulada ≥ 60 min');pauseHigh++}
+        if(proc==='etiquetado'&&meta>0&&uph>0){
+          if(uph<meta*.35)reasons.push('Muy por debajo de meta');
+          if(uph>meta*2.5)reasons.push('Productividad atípicamente alta');
+        }
+        if(proc==='etiquetado'&&!meta&&uph>0&&uph<150)reasons.push('Productividad muy baja sin meta');
+        if(reasons.length)alerts.push({x,reasons});
+      });
+      $("auditReviewed").textContent=fmtInt(records.length);$("auditAlerts").textContent=fmtInt(alerts.length);$("auditPauses").textContent=fmtInt(pauseHigh);$("auditLong").textContent=fmtInt(longCount);
+      $("auditBody").innerHTML=alerts.length?alerts.map(({x,reasons})=>`<tr><td>${x.fecha_local||'—'}</td><td>${x.operario||'—'}</td><td>${processName(x.proceso)}</td><td>${x.codigo||'—'}</td><td>${fmtInt(x.productividad_u_h||0)}</td><td>${fmtTimer(Number(x.tiempo_neto_ms||0))}</td><td>${fmtTimer(Number(x.tiempo_pausa_ms||0))}</td><td><span class="statusPill warn">⚠️ ${reasons.join(' · ')}</span></td></tr>`).join(''):'<tr><td colspan="8"><div class="emptyState">✅ No se detectaron alertas en los registros cargados.</div></td></tr>';
+    }catch(e){$("auditBody").innerHTML=`<tr><td colspan="8">${e.message}</td></tr>`}
+  }
+  $("refreshSupervision").onclick=()=>loadSupervision(true);
+
+  async function loadDataSummary(){
+    try{
+      const cfg=await getActiveMasterConfig();
+      $("dataVersion").textContent=cfg.mode==='versioned'?(cfg.version_activa||'—'):'Legacy';
+      $("dataProducts").textContent=fmtInt(cfg.total_productos||0);
+      $("dataBuckets").textContent=cfg.mode==='versioned'?fmtInt(cfg.bucket_count||0):'—';
+    }catch(e){toast('⚠️ Data: '+e.message)}
+  }
+  $("openDataModalBtn").onclick=openProductModal;
 
   $("addOperator").onclick=async()=>{
     const nombre=norm($("newOpName").value),tipo=$("newOpType").value;if(!nombre)return;
@@ -869,7 +1144,7 @@
     }catch(e){$("metaMsg").innerHTML='<div class="message err">❌ '+e.message+'</div>'}
   };
 
-  $("loadRecords").onclick=loadRecords;
+  $("loadRecords").onclick=()=>loadRecords(true);
 
   $("recordsEtiquetadoBtn").onclick=()=>{
     $("recordsEtiquetadoBtn").classList.add('active');
@@ -885,41 +1160,18 @@
     $("recordsEtiquetadoWrap").classList.add('hidden');
   };
 
-  async function loadRecords(){
+  async function loadRecords(force=false){
     try{
-      const snap=await getDocs(
-        query(
-          collection(db,'registros_etiquetado'),
-          orderBy('creado_en','desc'),
-          limit(200)
-        )
-      );
-
-      const all=snap.docs.map(d=>d.data());
+      const all=await getSupervisorRecords(force);
       const etiquetado=all.filter(x=>(x.proceso||'etiquetado')==='etiquetado');
       const armado=all.filter(x=>x.proceso==='armado');
 
       $("recordsEtiquetadoBody").innerHTML=etiquetado.length
-        ? etiquetado.map(x=>`<tr>
-            <td>${x.fecha_local||''}</td>
-            <td>${x.operario||''}</td>
-            <td>${x.codigo||''}</td>
-            <td>${Number(x.unidades||0).toLocaleString('es-EC')}</td>
-            <td>${Math.round((x.tiempo_neto_ms||0)/60000)}</td>
-            <td><b>${Number(x.productividad_u_h||0).toLocaleString('es-EC')}</b></td>
-            <td>${x.meta_u_h?Number(x.meta_u_h).toLocaleString('es-EC'):'—'}</td>
-          </tr>`).join('')
+        ? etiquetado.map(x=>`<tr><td>${x.fecha_local||''}</td><td>${x.operario||''}</td><td>${x.codigo||''}</td><td>${fmtInt(x.unidades)}</td><td>${Math.round((x.tiempo_neto_ms||0)/60000)}</td><td><b>${fmtInt(x.productividad_u_h||0)}</b></td><td>${x.meta_u_h?fmtInt(x.meta_u_h):'—'}</td></tr>`).join('')
         : '<tr><td colspan="7">Sin registros de etiquetado</td></tr>';
 
       $("recordsArmadoBody").innerHTML=armado.length
-        ? armado.map(x=>`<tr>
-            <td>${x.fecha_local||''}</td>
-            <td>${x.operario||''}</td>
-            <td>${x.codigo||''}</td>
-            <td>${Number(x.unidades||0).toLocaleString('es-EC')}</td>
-            <td>${Math.round((x.tiempo_neto_ms||0)/60000)}</td>
-            <td><b>${Number(x.productividad_u_h||0).toLocaleString('es-EC')}</b></td>
-          </tr>`).join('')
+        ? armado.map(x=>`<tr><td>${x.fecha_local||''}</td><td>${x.operario||''}</td><td>${x.codigo||''}</td><td>${fmtInt(x.unidades)}</td><td>${Math.round((x.tiempo_neto_ms||0)/60000)}</td><td><b>${fmtInt(x.productividad_u_h||0)}</b></td></tr>`).join('')
         : '<tr><td colspan="6">Sin registros de armado</td></tr>';
     }catch(e){
       $("recordsEtiquetadoBody").innerHTML=`<tr><td colspan="7">${e.message}</td></tr>`;
