@@ -386,6 +386,58 @@
       border-color:#26b596;
     }
 
+  
+    /* ===== Reporte diario + depuración de pruebas ===== */
+    .dailyReportToolbar{
+      display:grid;
+      grid-template-columns:190px 190px 1fr;
+      gap:10px;
+      align-items:end;
+      margin-bottom:12px;
+    }
+    .dailyReportActions{
+      display:flex;
+      gap:8px;
+      justify-content:flex-end;
+      flex-wrap:wrap;
+    }
+    .deleteRecordBtn{
+      border:1px solid #efc4c1;
+      background:#fff4f3;
+      color:#9a2f29;
+      border-radius:9px;
+      padding:6px 9px;
+      font-weight:800;
+      cursor:pointer;
+      white-space:nowrap;
+    }
+    .deleteRecordBtn:hover{
+      background:#ffe9e7;
+    }
+    .operatorSessionFooter{
+      margin-top:10px;
+      padding-top:8px;
+      border-top:1px solid #e4efeb;
+      display:flex;
+      justify-content:center;
+    }
+    .operatorSessionFooter .btn{
+      font-size:12px;
+      padding:8px 12px;
+      opacity:.78;
+    }
+    .reportSummary{
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:10px;
+      margin-bottom:12px;
+    }
+    @media(max-width:760px){
+      .dailyReportToolbar{grid-template-columns:1fr 1fr}
+      .dailyReportActions{grid-column:1/-1;justify-content:flex-start}
+      .reportSummary{grid-template-columns:1fr}
+    }
+
   </style>
 </head>
 <body>
@@ -436,6 +488,7 @@
           <button class="btn secondary supNavBtn" data-view="categorias">🧩 Categorías</button>
           <button class="btn secondary supNavBtn" data-view="metas">🎯 Metas</button>
           <button class="btn secondary supNavBtn" data-view="registros">🧾 Registros</button>
+          <button class="btn secondary supNavBtn" data-view="reporte">📋 Reporte diario</button>
           <button class="btn secondary supNavBtn" data-view="supervision">👀 Supervisión</button>
           <button class="btn secondary supNavBtn" data-view="operarios">👷 Operarios</button>
           <button class="btn secondary supNavBtn" data-view="data">📦 Data</button>
@@ -506,15 +559,65 @@
 
             <div id="recordsEtiquetadoWrap" class="tableWrap">
               <table>
-                <thead><tr><th>Fecha</th><th>Operario</th><th>Código</th><th>Unidades</th><th>Min netos</th><th>U/H</th><th>Meta</th></tr></thead>
-                <tbody id="recordsEtiquetadoBody"><tr><td colspan="7">Sin cargar</td></tr></tbody>
+                <thead><tr><th>Fecha</th><th>Operario</th><th>Código</th><th>Unidades</th><th>Min netos</th><th>U/H</th><th>Meta</th><th>Acción</th></tr></thead>
+                <tbody id="recordsEtiquetadoBody"><tr><td colspan="8">Sin cargar</td></tr></tbody>
               </table>
             </div>
 
             <div id="recordsArmadoWrap" class="tableWrap hidden">
               <table>
-                <thead><tr><th>Fecha</th><th>Operario</th><th>Código</th><th>Unidades</th><th>Min netos</th><th>U/H</th></tr></thead>
-                <tbody id="recordsArmadoBody"><tr><td colspan="6">Sin cargar</td></tr></tbody>
+                <thead><tr><th>Fecha</th><th>Operario</th><th>Código</th><th>Unidades</th><th>Min netos</th><th>U/H</th><th>Acción</th></tr></thead>
+                <tbody id="recordsArmadoBody"><tr><td colspan="7">Sin cargar</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div id="view-reporte" class="supView card">
+            <div class="sectionTitle">
+              <h2>📋 Reporte diario</h2>
+              <span class="small">Formato listo para copiar al correo</span>
+            </div>
+
+            <div class="dailyReportToolbar">
+              <div class="field">
+                <label>Fecha</label>
+                <input id="dailyReportDate" type="date">
+              </div>
+              <div class="field">
+                <label>Proceso</label>
+                <select id="dailyReportProcess">
+                  <option value="etiquetado">🏷️ Etiquetado</option>
+                  <option value="armado">📦 Armado</option>
+                  <option value="todos">Todos</option>
+                </select>
+              </div>
+              <div class="dailyReportActions">
+                <button id="loadDailyReport" class="btn ghost">🔄 Cargar</button>
+                <button id="copyDailyReport" class="btn secondary">📋 Copiar tabla</button>
+                <button id="downloadDailyReport" class="btn primary">📥 Descargar Excel</button>
+              </div>
+            </div>
+
+            <div class="reportSummary">
+              <div class="miniKpi"><span>Registros</span><strong id="dailyReportCount">—</strong></div>
+              <div class="miniKpi"><span>Total unidades</span><strong id="dailyReportUnits">—</strong></div>
+              <div class="miniKpi"><span>Trabajadores</span><strong id="dailyReportWorkers">—</strong></div>
+            </div>
+
+            <div class="tableWrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Nombre</th>
+                    <th>Código</th>
+                    <th>Total unidades</th>
+                    <th>H. Inicio</th>
+                    <th>H. Fin</th>
+                  </tr>
+                </thead>
+                <tbody id="dailyReportBody">
+                  <tr><td colspan="5">Selecciona una fecha y carga el reporte.</td></tr>
+                </tbody>
               </table>
             </div>
           </div>
@@ -589,7 +692,7 @@
   import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
   import {
     getFirestore, doc, getDoc, setDoc, updateDoc, addDoc, collection, getDocs,
-    query, where, orderBy, limit, serverTimestamp, writeBatch, getCountFromServer
+    query, where, orderBy, limit, serverTimestamp, writeBatch, getCountFromServer, deleteDoc
   } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -902,10 +1005,6 @@
 
         <div id="productInfo">${s.product?productHTML(s):'<div class="small">Digite un código y valide.</div>'}</div>
 
-        ${s.state==='idle'?`
-          <div class="sessionActions">
-            <button id="closeDaySession" class="btn ghost">🚪 Cerrar sesión del día</button>
-          </div>`:''}
       </div>
 
       <div class="card timerCard compactTimer">
@@ -936,7 +1035,11 @@
             </div>`:''}
         </div>
       </div>
-    </div>`;
+    </div>
+    ${s.state==='idle'?`
+      <div class="operatorSessionFooter">
+        <button id="closeDaySession" class="btn ghost">🚪 Cerrar sesión del día</button>
+      </div>`:''}`;
 
     $("validateCode")?.addEventListener('click',()=>validateProduct(s));
     $("codeInput")?.addEventListener('keydown',e=>{if(e.key==='Enter')validateProduct(s)});
@@ -1181,6 +1284,7 @@
 
     if(b.dataset.view==='operarios') await loadUsersTable();
     if(b.dataset.view==='registros') await loadRecords();
+    if(b.dataset.view==='reporte') await loadDailyReport();
     if(b.dataset.view==='productividad') await loadProductivity();
     if(b.dataset.view==='categorias') await loadCategories();
     if(b.dataset.view==='metas') await loadEvaluation();
@@ -1418,6 +1522,32 @@
     $("recordsEtiquetadoWrap").classList.add('hidden');
   };
 
+  async function deleteSupervisorRecord(id){
+    const rec=supervisorRecordsCache.find(x=>x.id===id);
+    if(!rec) return;
+
+    const label=`${rec.operario||'Operario'} · ${rec.codigo||'sin código'} · ${rec.fecha_local||''}`;
+    if(!confirm(`¿Borrar este registro?\n\n${label}\n\nEsta acción eliminará este dato de Firebase.`)) return;
+
+    try{
+      await deleteDoc(doc(db,'registros_etiquetado',id));
+      supervisorRecordsCache=supervisorRecordsCache.filter(x=>x.id!==id);
+      toast('🗑️ Registro eliminado');
+      await loadRecords(false);
+
+      // Refrescar vistas que reutilizan la misma caché.
+      if($("view-dashboard")?.classList.contains('active')) await loadDashboard(false);
+    }catch(e){
+      toast('❌ No se pudo borrar: '+e.message);
+    }
+  }
+
+  function bindRecordDeleteButtons(){
+    document.querySelectorAll('.deleteRecordBtn').forEach(btn=>{
+      btn.onclick=()=>deleteSupervisorRecord(btn.dataset.id);
+    });
+  }
+
   async function loadRecords(force=false){
     try{
       const all=await getSupervisorRecords(force);
@@ -1425,18 +1555,151 @@
       const armado=all.filter(x=>x.proceso==='armado');
 
       $("recordsEtiquetadoBody").innerHTML=etiquetado.length
-        ? etiquetado.map(x=>`<tr><td>${x.fecha_local||''}</td><td>${x.operario||''}</td><td>${x.codigo||''}</td><td>${fmtInt(x.unidades)}</td><td>${Math.round((x.tiempo_neto_ms||0)/60000)}</td><td><b>${fmtInt(x.productividad_u_h||0)}</b></td><td>${x.meta_u_h?fmtInt(x.meta_u_h):'—'}</td></tr>`).join('')
-        : '<tr><td colspan="7">Sin registros de etiquetado</td></tr>';
+        ? etiquetado.map(x=>`<tr>
+            <td>${x.fecha_local||''}</td>
+            <td>${x.operario||''}</td>
+            <td>${x.codigo||''}</td>
+            <td>${fmtInt(x.unidades)}</td>
+            <td>${Math.round((x.tiempo_neto_ms||0)/60000)}</td>
+            <td><b>${fmtInt(x.productividad_u_h||0)}</b></td>
+            <td>${x.meta_u_h?fmtInt(x.meta_u_h):'—'}</td>
+            <td><button class="deleteRecordBtn" data-id="${x.id}">🗑️ Borrar</button></td>
+          </tr>`).join('')
+        : '<tr><td colspan="8">Sin registros de etiquetado</td></tr>';
 
       $("recordsArmadoBody").innerHTML=armado.length
-        ? armado.map(x=>`<tr><td>${x.fecha_local||''}</td><td>${x.operario||''}</td><td>${x.codigo||''}</td><td>${fmtInt(x.unidades)}</td><td>${Math.round((x.tiempo_neto_ms||0)/60000)}</td><td><b>${fmtInt(x.productividad_u_h||0)}</b></td></tr>`).join('')
-        : '<tr><td colspan="6">Sin registros de armado</td></tr>';
+        ? armado.map(x=>`<tr>
+            <td>${x.fecha_local||''}</td>
+            <td>${x.operario||''}</td>
+            <td>${x.codigo||''}</td>
+            <td>${fmtInt(x.unidades)}</td>
+            <td>${Math.round((x.tiempo_neto_ms||0)/60000)}</td>
+            <td><b>${fmtInt(x.productividad_u_h||0)}</b></td>
+            <td><button class="deleteRecordBtn" data-id="${x.id}">🗑️ Borrar</button></td>
+          </tr>`).join('')
+        : '<tr><td colspan="7">Sin registros de armado</td></tr>';
+
+      bindRecordDeleteButtons();
     }catch(e){
-      $("recordsEtiquetadoBody").innerHTML=`<tr><td colspan="7">${e.message}</td></tr>`;
-      $("recordsArmadoBody").innerHTML=`<tr><td colspan="6">${e.message}</td></tr>`;
+      $("recordsEtiquetadoBody").innerHTML=`<tr><td colspan="8">${e.message}</td></tr>`;
+      $("recordsArmadoBody").innerHTML=`<tr><td colspan="7">${e.message}</td></tr>`;
     }
   }
 
+
+  // ---------- REPORTE DIARIO ----------
+  let dailyReportRows=[];
+
+  function hhmm(value){
+    if(!value) return '';
+    const s=String(value);
+    const m=s.match(/T(\d{2}):(\d{2})/);
+    if(m) return `${m[1]}:${m[2]}`;
+    const d=new Date(value);
+    if(!Number.isNaN(d.getTime())){
+      return d.toLocaleTimeString('es-EC',{hour:'2-digit',minute:'2-digit',hour12:false});
+    }
+    return s;
+  }
+
+  async function loadDailyReport(){
+    const date=$("dailyReportDate").value || localISO().slice(0,10);
+    $("dailyReportDate").value=date;
+    const proc=$("dailyReportProcess").value;
+
+    try{
+      // Consulta solo el día seleccionado; evita leer meses completos.
+      const snap=await getDocs(
+        query(
+          collection(db,'registros_etiquetado'),
+          where('fecha_local','==',date)
+        )
+      );
+
+      let rows=snap.docs.map(d=>({id:d.id,...d.data()}));
+      rows=rows.filter(x=>proc==='todos'||(x.proceso||'etiquetado')===proc);
+
+      rows.sort((a,b)=>{
+        const na=String(a.operario||'').localeCompare(String(b.operario||''),'es');
+        if(na!==0) return na;
+        return String(a.inicio_local||'').localeCompare(String(b.inicio_local||''));
+      });
+
+      dailyReportRows=rows;
+
+      $("dailyReportCount").textContent=fmtInt(rows.length);
+      $("dailyReportUnits").textContent=fmtInt(rows.reduce((s,x)=>s+Number(x.unidades||0),0));
+      $("dailyReportWorkers").textContent=fmtInt(new Set(rows.map(x=>x.operario).filter(Boolean)).size);
+
+      $("dailyReportBody").innerHTML=rows.length
+        ? rows.map(x=>`<tr>
+            <td>${x.operario||''}</td>
+            <td>${x.codigo||''}</td>
+            <td>${fmtInt(x.unidades)}</td>
+            <td>${hhmm(x.inicio_local)}</td>
+            <td>${hhmm(x.fin_local)}</td>
+          </tr>`).join('')
+        : '<tr><td colspan="5">Sin registros para esa fecha y proceso.</td></tr>';
+    }catch(e){
+      dailyReportRows=[];
+      $("dailyReportBody").innerHTML=`<tr><td colspan="5">${e.message}</td></tr>`;
+    }
+  }
+
+  $("loadDailyReport").onclick=loadDailyReport;
+  $("dailyReportDate").value=localISO().slice(0,10);
+  $("dailyReportProcess").addEventListener('change',loadDailyReport);
+
+  $("copyDailyReport").onclick=async()=>{
+    if(!dailyReportRows.length) return toast('⚠️ No hay datos para copiar');
+
+    const lines=[
+      ['Nombre','Código','Total unidades','H. Inicio','H. Fin'],
+      ...dailyReportRows.map(x=>[
+        x.operario||'',
+        x.codigo||'',
+        Number(x.unidades||0),
+        hhmm(x.inicio_local),
+        hhmm(x.fin_local)
+      ])
+    ];
+
+    const text=lines.map(r=>r.join('\t')).join('\n');
+    try{
+      await navigator.clipboard.writeText(text);
+      toast('📋 Tabla copiada. Ya puedes pegarla en tu correo.');
+    }catch(e){
+      toast('❌ No se pudo copiar la tabla');
+    }
+  };
+
+  $("downloadDailyReport").onclick=()=>{
+    if(!dailyReportRows.length) return toast('⚠️ No hay datos para descargar');
+
+    const data=dailyReportRows.map(x=>({
+      'Nombre':x.operario||'',
+      'Código':x.codigo||'',
+      'Total unidades':Number(x.unidades||0),
+      'H. Inicio':hhmm(x.inicio_local),
+      'H. Fin':hhmm(x.fin_local)
+    }));
+
+    const ws=XLSX.utils.json_to_sheet(data,{header:['Nombre','Código','Total unidades','H. Inicio','H. Fin']});
+    ws['!cols']=[
+      {wch:28},
+      {wch:12},
+      {wch:16},
+      {wch:12},
+      {wch:12}
+    ];
+
+    const wb=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb,ws,'Reporte diario');
+
+    const date=$("dailyReportDate").value || localISO().slice(0,10);
+    const proc=$("dailyReportProcess").value;
+    XLSX.writeFile(wb,`Reporte_${proc}_${date}.xlsx`);
+  };
 
   async function saveProductRows(validRows, skipped=0, sourceLabel='datos pegados') {
     if(!validRows.length) throw new Error('No encontré productos válidos para guardar.');
