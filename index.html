@@ -76,6 +76,54 @@
       .opTab{min-width:118px}
       .operatorEntry{margin-bottom:3px}    }
 
+  
+    /* ===== Perfil activo más visible ===== */
+    .opTab{
+      transition:transform .15s ease, box-shadow .15s ease, background .15s ease, border-color .15s ease;
+    }
+    .opTab.active{
+      background:linear-gradient(180deg,#dff7ea,#c9edd9);
+      border-color:#37a96f;
+      box-shadow:0 0 0 2px rgba(55,169,111,.16),0 6px 16px rgba(24,112,77,.12);
+      transform:translateY(-1px);
+    }
+    .opTab.active::before{
+      content:"●";
+      color:#10a760;
+      font-size:12px;
+      margin-right:2px;
+      flex:0 0 auto;
+    }
+
+    /* ===== Selector de proceso ===== */
+    .processSelector{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:8px;
+      margin:0 0 10px;
+    }
+    .processBtn{
+      border:1px solid var(--border);
+      background:#fff;
+      border-radius:13px;
+      padding:11px 10px;
+      font-weight:900;
+      color:var(--muted);
+      text-align:center;
+    }
+    .processBtn.active{
+      background:var(--green);
+      color:#fff;
+      border-color:var(--green);
+      box-shadow:0 5px 14px rgba(20,113,74,.16);
+    }
+    .processHint{
+      font-size:11px;
+      color:var(--muted);
+      margin:-3px 0 8px;
+      text-align:center;
+    }
+
   </style>
 </head>
 <body>
@@ -153,7 +201,7 @@
 
           <div id="view-registros" class="supView card">
             <div class="sectionTitle"><h2>🧾 Últimos registros</h2><button id="loadRecords" class="btn ghost">🔄 Cargar</button></div>
-            <div class="tableWrap"><table><thead><tr><th>Fecha</th><th>Operario</th><th>Código</th><th>Unidades</th><th>Min netos</th><th>U/H</th><th>Meta</th></tr></thead><tbody id="recordsBody"><tr><td colspan="7">Sin cargar</td></tr></tbody></table></div>
+            <div class="tableWrap"><table><thead><tr><th>Fecha</th><th>Operario</th><th>Proceso</th><th>Código</th><th>Unidades</th><th>Min netos</th><th>U/H</th><th>Meta</th></tr></thead><tbody id="recordsBody"><tr><td colspan="8">Sin cargar</td></tr></tbody></table></div>
           </div>
 
           <div id="view-usuarios" class="supView card">
@@ -175,10 +223,10 @@
 
 <div id="productModal" class="modalBackdrop">
   <div class="modalCard">
-    <div class="modalHead"><h2>📦 Maestro de productos</h2><button id="closeProductModal" class="btn ghost">✕ Cerrar</button></div>
+    <div class="modalHead"><h2>📦 Data de productos</h2><button id="closeProductModal" class="btn ghost">✕ Cerrar</button></div>
     <div class="uploadBox">
       <div style="font-size:32px">📋</div>
-      <strong>Pegar maestro de productos</strong>
+      <strong>Pegar data de productos</strong>
       <div class="small" style="margin:6px 0 10px">Copia desde Excel las columnas <b>Código Producto</b> y <b>Descripción</b> y pégalas aquí.<br><span class="small">⚡ La nueva versión se carga aparte y solo se activa cuando termina y pasa la verificación. El maestro actual no se interrumpe.</span></div>
       <textarea id="productPaste" placeholder="Código Producto\tDescripción\n12760\tTender Care Natural Multi-purpose Balm" style="width:100%;min-height:180px;resize:vertical;padding:12px;border:1px solid var(--border);border-radius:12px;font:inherit"></textarea>
       <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:10px">
@@ -419,7 +467,7 @@
         toast(`⚠️ ${o.nombre} ya tiene una sesión activa`); return;
       }
     }catch(e){toast('⚠️ No se pudo validar simultaneidad: '+e.message);return;}
-    openOps.set(o.id,{operator:o,code:'',product:null,meta:null,state:'idle',startMs:null,pauseStart:null,pauseTotal:0,pauses:[],interval:null});
+    openOps.set(o.id,{operator:o,proceso:'etiquetado',code:'',product:null,meta:null,state:'idle',startMs:null,pauseStart:null,pauseTotal:0,pauses:[],interval:null});
     activeOpId=o.id; renderOpTabs(); renderWorkspace();
   }
   function closeOperator(id){
@@ -445,32 +493,84 @@
   }
   function currentElapsed(s){if(!s.startMs)return 0;const end=s.state==='running'?Date.now():(s.pauseStart||Date.now());return end-s.startMs-s.pauseTotal;}
   function renderWorkspace(){
-    const root=$("opWorkspace"); if(!activeOpId){root.innerHTML='<div class="message warn">👷 Escribe y selecciona un operario arriba para comenzar.</div>';return;}
+    const root=$("opWorkspace"); 
+    if(!activeOpId){
+      root.innerHTML='<div class="message warn">👷 Escribe y selecciona un operario arriba para comenzar.</div>';
+      return;
+    }
+
     const s=openOps.get(activeOpId);
+    const proceso=s.proceso||'etiquetado';
+
     root.innerHTML=`<div class="workGrid">
       <div class="card productCard">
+        <div class="processSelector">
+          <button id="processEtiquetado" class="processBtn ${proceso==='etiquetado'?'active':''}" ${s.state!=='idle'?'disabled':''}>🏷️ ETIQUETADO</button>
+          <button id="processArmado" class="processBtn ${proceso==='armado'?'active':''}" ${s.state!=='idle'?'disabled':''}>📦 ARMADO</button>
+        </div>
+        <div class="processHint">Proceso seleccionado: <b>${proceso==='etiquetado'?'Etiquetado':'Armado'}</b></div>
+
         <h3>📦 Producto</h3>
-        <div class="field"><label>Código</label><div style="display:flex;gap:8px"><input id="codeInput" inputmode="numeric" value="${s.code}" ${s.state!=='idle'?'disabled':''} placeholder="Digite el código"><button id="validateCode" class="btn blue" ${s.state!=='idle'?'disabled':''}>🔎 Validar</button></div></div>
+        <div class="field">
+          <label>Código</label>
+          <div style="display:flex;gap:8px">
+            <input id="codeInput" inputmode="numeric" value="${s.code}" ${s.state!=='idle'?'disabled':''} placeholder="Digite el código">
+            <button id="validateCode" class="btn blue" ${s.state!=='idle'?'disabled':''}>🔎 Validar</button>
+          </div>
+        </div>
         <div id="productInfo">${s.product?productHTML(s):'<div class="small">Digite un código y valide.</div>'}</div>
       </div>
+
       <div class="card timerCard">
-        <div><div class="timerLabel">⏱️ Tiempo productivo</div><div id="timer" class="timer">${fmtTimer(currentElapsed(s))}</div>
-        <div class="timerBtns">
-          ${s.state==='idle'?'<button id="startBtn" class="btn primary big" '+(!s.product?'disabled':'')+'>▶️ INICIAR</button>':''}
-          ${s.state==='running'?'<button id="pauseBtn" class="btn warn big">⏸️ PAUSAR</button><button id="finishBtn" class="btn danger big">⏹️ TERMINAR</button>':''}
-          ${s.state==='paused'?'<button id="resumeBtn" class="btn primary big">▶️ REANUDAR</button><button id="finishBtn" class="btn danger big">⏹️ TERMINAR</button>':''}
-        </div></div>
+        <div>
+          <div class="timerLabel">⏱️ Tiempo productivo</div>
+          <div id="timer" class="timer">${fmtTimer(currentElapsed(s))}</div>
+          <div class="timerBtns">
+            ${s.state==='idle'?'<button id="startBtn" class="btn primary big" '+(!s.product?'disabled':'')+'>▶️ INICIAR</button>':''}
+            ${s.state==='running'?'<button id="pauseBtn" class="btn warn big">⏸️ PAUSAR</button><button id="finishBtn" class="btn danger big">⏹️ TERMINAR</button>':''}
+            ${s.state==='paused'?'<button id="resumeBtn" class="btn primary big">▶️ REANUDAR</button><button id="finishBtn" class="btn danger big">⏹️ TERMINAR</button>':''}
+          </div>
+        </div>
       </div>
+
       <div class="card">
         <h3 style="margin-top:0">📌 Estado</h3>
-        <div class="productMeta"><div class="metric"><span>Operario</span><strong>${s.operator.nombre}</strong></div><div class="metric"><span>Estado</span><strong>${s.state==='running'?'Trabajando':s.state==='paused'?'Pausado':'Listo'}</strong></div><div class="metric"><span>Pausas</span><strong>${s.pauses.length}</strong></div><div class="metric"><span>Tiempo pausado</span><strong>${fmtTimer(s.pauseTotal+(s.state==='paused'&&s.pauseStart?Date.now()-s.pauseStart:0))}</strong></div></div>
-        <div id="finishBox" class="finishBox"><div class="field"><label>Unidades procesadas</label><input id="qtyInput" type="number" min="1" inputmode="numeric" placeholder="Ej. 1080"></div><button id="confirmFinish" class="btn primary">💾 Confirmar y guardar</button></div>
+        <div class="productMeta">
+          <div class="metric"><span>Operario</span><strong>${s.operator.nombre}</strong></div>
+          <div class="metric"><span>Proceso</span><strong>${proceso==='etiquetado'?'Etiquetado':'Armado'}</strong></div>
+          <div class="metric"><span>Estado</span><strong>${s.state==='running'?'Trabajando':s.state==='paused'?'Pausado':'Listo'}</strong></div>
+          <div class="metric"><span>Pausas</span><strong>${s.pauses.length}</strong></div>
+          <div class="metric"><span>Tiempo pausado</span><strong>${fmtTimer(s.pauseTotal+(s.state==='paused'&&s.pauseStart?Date.now()-s.pauseStart:0))}</strong></div>
+        </div>
+
+        <div id="finishBox" class="finishBox">
+          <div class="field"><label>Unidades procesadas</label><input id="qtyInput" type="number" min="1" inputmode="numeric" placeholder="Ej. 1080"></div>
+          <button id="confirmFinish" class="btn primary">💾 Confirmar y guardar</button>
+        </div>
+
         ${s.state==='idle'?'<div style="margin-top:16px;text-align:right"><button id="closeDaySession" class="btn ghost">🚪 Cerrar sesión del día</button></div>':''}
       </div>
     </div>`;
+
+    $("processEtiquetado")?.addEventListener('click',()=>{
+      if(s.state!=='idle') return;
+      s.proceso='etiquetado'; s.code=''; s.product=null; s.meta=null; renderWorkspace();
+    });
+
+    $("processArmado")?.addEventListener('click',()=>{
+      if(s.state!=='idle') return;
+      s.proceso='armado'; s.code=''; s.product=null; s.meta=null; renderWorkspace();
+    });
+
     $("validateCode")?.addEventListener('click',()=>validateProduct(s));
     $("codeInput")?.addEventListener('keydown',e=>{if(e.key==='Enter')validateProduct(s)});
-    $("startBtn")?.addEventListener('click',()=>startWork(s)); $("pauseBtn")?.addEventListener('click',()=>pauseWork(s)); $("resumeBtn")?.addEventListener('click',()=>resumeWork(s)); $("finishBtn")?.addEventListener('click',()=>showFinish(s)); $("confirmFinish")?.addEventListener('click',()=>confirmFinish(s)); $("closeDaySession")?.addEventListener('click',()=>closeOperator(s.operator.id));
+    $("startBtn")?.addEventListener('click',()=>startWork(s));
+    $("pauseBtn")?.addEventListener('click',()=>pauseWork(s));
+    $("resumeBtn")?.addEventListener('click',()=>resumeWork(s));
+    $("finishBtn")?.addEventListener('click',()=>showFinish(s));
+    $("confirmFinish")?.addEventListener('click',()=>confirmFinish(s));
+    $("closeDaySession")?.addEventListener('click',()=>closeOperator(s.operator.id));
+
     startTimerLoop(s);
   }
   function productHTML(s){return `<div class="message ok">✅ Código válido</div><div class="productMeta"><div class="metric"><span>Código</span><strong>${s.code}</strong></div><div class="metric"><span>Descripción</span><strong class="productDescription">${s.product.descripcion||s.product.descripcion_producto||s.product.nombre||'—'}</strong></div><div class="metric"><span>Categoría</span><strong>${s.product.categoria||'Sin categorizar'}</strong></div><div class="metric"><span>Meta</span><strong>${s.meta?Number(s.meta.meta_u_h).toLocaleString('es-EC')+' u/h':'En evaluación'}</strong></div></div>`}
@@ -551,7 +651,7 @@
         toast('⚠️ Este operario ya tiene una sesión activa');return;
       }
       const startMs=Date.now();
-      await setDoc(activeRef,{operarioId:s.operator.id,operario:s.operator.nombre,codigo:s.code,descripcion:s.product.descripcion||'',categoria:s.product.categoria||'',meta_u_h:s.meta?.meta_u_h||null,estado:'running',inicio_local:localISO(),inicio_ms:startMs,dispositivo:navigator.userAgent.slice(0,180)});
+      await setDoc(activeRef,{operarioId:s.operator.id,operario:s.operator.nombre,proceso:s.proceso||'etiquetado',codigo:s.code,descripcion:s.product.descripcion||'',categoria:s.product.categoria||'',meta_u_h:s.meta?.meta_u_h||null,estado:'running',inicio_local:localISO(),inicio_ms:startMs,dispositivo:navigator.userAgent.slice(0,180)});
       s.startMs=startMs;s.state='running';s.pauseTotal=0;s.pauses=[];s.pauseStart=null;
       renderOpTabs();renderWorkspace();
       toast('▶️ Proceso iniciado');
@@ -579,18 +679,18 @@
     const now=Date.now();
     if(s.state==='paused'&&s.pauseStart){const p=s.pauses[s.pauses.length-1];p.fin_ms=now;p.fin_local=localISO();p.duracion_ms=now-p.inicio_ms;s.pauseTotal+=p.duracion_ms;s.pauseStart=null;}
     const netMs=now-s.startMs-s.pauseTotal; const hours=netMs/3600000; const uph=hours>0?Math.round(qty/hours):0; const meta=s.meta?.meta_u_h||null; const compliance=meta?Math.round((uph/meta)*1000)/10:null;
-    const data={fecha_local:localISO().slice(0,10),fin_local:localISO(),inicio_local:new Date(s.startMs).toLocaleString('sv-SE').replace(' ','T'),operarioId:s.operator.id,operario:s.operator.nombre,tipo_personal:s.operator.tipo||'',codigo:s.code,descripcion:s.product.descripcion||'',categoria:s.product.categoria||'',unidades:qty,tiempo_neto_ms:netMs,tiempo_pausa_ms:s.pauseTotal,productividad_u_h:uph,meta_u_h:meta,cumplimiento_pct:compliance,pausas:s.pauses,creado_en:serverTimestamp()};
+    const data={fecha_local:localISO().slice(0,10),fin_local:localISO(),inicio_local:new Date(s.startMs).toLocaleString('sv-SE').replace(' ','T'),operarioId:s.operator.id,operario:s.operator.nombre,tipo_personal:s.operator.tipo||'',proceso:s.proceso||'etiquetado',codigo:s.code,descripcion:s.product.descripcion||'',categoria:s.product.categoria||'',unidades:qty,tiempo_neto_ms:netMs,tiempo_pausa_ms:s.pauseTotal,productividad_u_h:uph,meta_u_h:meta,cumplimiento_pct:compliance,pausas:s.pauses,creado_en:serverTimestamp()};
     try{
       await addDoc(collection(db,'registros_etiquetado'),data);
       await setDoc(doc(db,'sesiones_activas',s.operator.id),{...data,estado:'finalizada'});
       toast(`✅ Guardado: ${uph.toLocaleString('es-EC')} u/h`);
-      clearInterval(s.interval);openOps.set(s.operator.id,{operator:s.operator,code:'',product:null,meta:null,state:'idle',startMs:null,pauseStart:null,pauseTotal:0,pauses:[],interval:null});renderOpTabs();renderWorkspace();
+      clearInterval(s.interval);openOps.set(s.operator.id,{operator:s.operator,proceso:s.proceso||'etiquetado',code:'',product:null,meta:null,state:'idle',startMs:null,pauseStart:null,pauseTotal:0,pauses:[],interval:null});renderOpTabs();renderWorkspace();
     }catch(e){toast('❌ No se pudo guardar: '+e.message)}
   }
   function startTimerLoop(s){if(s.interval)clearInterval(s.interval);s.interval=setInterval(()=>{if(activeOpId!==s.operator.id)return;const el=$("timer");if(el)el.textContent=fmtTimer(currentElapsed(s));},500)}
 
 
-  // Maestro de productos oculto: Ctrl + Shift + O
+  // Data de productos oculta: Ctrl + Shift + O
   function openProductModal(){
     if(!supervisorUnlocked){
       toast('🔒 Ingresa primero como Supervisor');
@@ -658,7 +758,7 @@
 
   $("loadRecords").onclick=loadRecords;
   async function loadRecords(){
-    try{const snap=await getDocs(query(collection(db,'registros_etiquetado'),orderBy('creado_en','desc'),limit(100)));$("recordsBody").innerHTML=snap.empty?'<tr><td colspan="7">Sin registros</td></tr>':snap.docs.map(d=>{const x=d.data();return `<tr><td>${x.fecha_local||''}</td><td>${x.operario||''}</td><td>${x.codigo||''}</td><td>${Number(x.unidades||0).toLocaleString('es-EC')}</td><td>${Math.round((x.tiempo_neto_ms||0)/60000)}</td><td><b>${Number(x.productividad_u_h||0).toLocaleString('es-EC')}</b></td><td>${x.meta_u_h?Number(x.meta_u_h).toLocaleString('es-EC'):'—'}</td></tr>`}).join('');}catch(e){$("recordsBody").innerHTML=`<tr><td colspan="7">${e.message}</td></tr>`}
+    try{const snap=await getDocs(query(collection(db,'registros_etiquetado'),orderBy('creado_en','desc'),limit(100)));$("recordsBody").innerHTML=snap.empty?'<tr><td colspan="8">Sin registros</td></tr>':snap.docs.map(d=>{const x=d.data();return `<tr><td>${x.fecha_local||''}</td><td>${x.operario||''}</td><td>${x.proceso==='armado'?'Armado':'Etiquetado'}</td><td>${x.codigo||''}</td><td>${Number(x.unidades||0).toLocaleString('es-EC')}</td><td>${Math.round((x.tiempo_neto_ms||0)/60000)}</td><td><b>${Number(x.productividad_u_h||0).toLocaleString('es-EC')}</b></td><td>${x.meta_u_h?Number(x.meta_u_h).toLocaleString('es-EC'):'—'}</td></tr>`}).join('');}catch(e){$("recordsBody").innerHTML=`<tr><td colspan="8">${e.message}</td></tr>`}
   }
 
 
