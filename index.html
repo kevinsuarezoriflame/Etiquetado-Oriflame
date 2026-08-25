@@ -38,6 +38,63 @@
     @media (orientation:landscape) and (max-height:700px){
       body{overflow:hidden}.app{padding:6px 10px;height:100dvh;overflow:hidden}.topbar{margin-bottom:4px;height:44px}.logo{width:38px;height:38px;border-radius:12px;font-size:20px}.brand h1{font-size:18px}.status{padding:6px 9px;font-size:11px}.mainTabs{margin-bottom:6px;gap:8px}.mainTab{padding:7px 10px;border-radius:12px}.mainTab .emoji{font-size:20px}.mainTab b{font-size:14px}.profileBack{padding:7px 10px;font-size:12px}.card{padding:9px;border-radius:16px}.operatorEntry{grid-template-columns:minmax(250px,1fr) 120px;gap:7px;margin-bottom:6px}.operatorEntry .btn{height:40px;padding:8px 12px}.field{gap:3px;margin-bottom:6px}.field label{font-size:11px}.field input,.field select{padding:8px 10px;border-radius:10px}.opTabs{margin-bottom:5px;padding-bottom:2px}.opTab{padding:6px 9px;min-width:125px;border-radius:10px}.opTab b{font-size:12px}.opTab .miniStatus{font-size:9px}.workGrid{grid-template-columns:1.08fr .92fr;grid-template-rows:auto auto;gap:7px}.productCard h3,.workGrid h3{font-size:15px;margin-bottom:6px}.productMeta{grid-template-columns:repeat(4,1fr);gap:5px;margin-top:6px}.metric{padding:6px 8px;border-radius:10px}.metric span{font-size:8px}.metric strong{font-size:12px}.metric strong.productDescription{font-size:10px;line-height:1.15}.message{margin-top:5px;padding:6px 8px;font-size:10px}.timerCard{grid-row:span 2;min-height:0;height:calc(100dvh - 166px);padding:8px}.timerLabel{font-size:12px}.timer{font-size:48px}.timerBtns{margin-top:8px;gap:6px}.btn.big{padding:10px 14px;font-size:14px;min-width:130px}.finishBox{margin-top:7px}.workGrid>.card:not(.timerCard):last-child .productMeta{grid-template-columns:repeat(4,1fr)}.workGrid>.card:not(.timerCard):last-child{padding:8px}.workGrid>.card:not(.timerCard):last-child h3{margin:0 0 4px}.workGrid>.card:not(.timerCard):last-child #closeDaySession{padding:6px 9px;font-size:10px;margin-top:4px}.small{font-size:9px}
     }
+  
+    /* ===== UX móvil: autocompletado propio + perfiles fijos ===== */
+    .operatorSearchWrap{position:relative}
+    .operatorMatches{
+      position:absolute;left:0;right:0;top:calc(100% + 5px);
+      z-index:90;background:#fff;border:1px solid var(--border);
+      border-radius:13px;box-shadow:0 14px 32px rgba(20,55,40,.18);
+      padding:6px;max-height:190px;overflow:auto;
+    }
+    .operatorMatches.hidden{display:none}
+    .operatorMatch{
+      width:100%;border:0;background:#fff;padding:10px 12px;border-radius:9px;
+      display:flex;align-items:center;justify-content:space-between;gap:10px;
+      text-align:left;font-weight:800;color:var(--ink);
+    }
+    .operatorMatch:hover,.operatorMatch:active{background:var(--greenSoft)}
+    .operatorMatch small{font-size:11px;color:var(--muted);font-weight:600}
+
+    /* Las pestañas de los operarios quedan visibles al desplazarse */
+    .opTabs{
+      position:sticky;top:6px;z-index:45;
+      background:rgba(246,247,244,.96);
+      backdrop-filter:blur(8px);
+      padding:5px 4px 6px;
+      border-radius:12px;
+      box-shadow:0 5px 14px rgba(20,55,40,.05);
+    }
+
+    /* Cuando aparece el teclado, las sugerencias suben arriba del teclado
+       en vez de quedar ocultas debajo. */
+    body.keyboard-open .operatorMatches{
+      position:fixed;
+      top:54px;left:8px;right:8px;
+      max-height:82px;
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:4px;
+      padding:5px;
+    }
+    body.keyboard-open .operatorMatch{padding:7px 9px;font-size:12px}
+    body.keyboard-open .operatorMatch small{display:none}
+
+    @media (orientation:landscape) and (max-height:700px){
+      .opTabs{
+        top:2px;
+        padding:3px 4px 4px;
+        margin-bottom:4px;
+        min-height:40px;
+      }
+      .opTab{min-width:118px}
+      .operatorEntry{margin-bottom:3px}
+      body.keyboard-open .operatorMatches{
+        top:48px;
+        max-height:76px;
+      }
+    }
+
   </style>
 </head>
 <body>
@@ -58,10 +115,13 @@
       <div class="operatorShell">
         <div class="card">
           <div class="operatorEntry">
-            <div class="field"><label>👤 Operario</label><input id="operatorSearch" list="operatorSuggestions" autocomplete="off" placeholder="Escriba el nombre del operario"></div>
+            <div class="field operatorSearchWrap">
+              <label>👤 Operario</label>
+              <input id="operatorSearch" autocomplete="off" autocapitalize="words" placeholder="Escriba el nombre del operario">
+              <div id="operatorMatches" class="operatorMatches hidden"></div>
+            </div>
             <button id="openOperatorBtn" class="btn primary">➕ Abrir</button>
           </div>
-          <datalist id="operatorSuggestions"></datalist>
           <div id="opTabs" class="opTabs"></div>
           <div id="opWorkspace"></div>
         </div>
@@ -138,7 +198,7 @@
     <div class="uploadBox">
       <div style="font-size:32px">📋</div>
       <strong>Pegar maestro de productos</strong>
-      <div class="small" style="margin:6px 0 10px">Copia desde Excel las columnas <b>Código Producto</b> y <b>Descripción</b> y pégalas aquí.<br><span class="small">⚠️ Al guardar, el maestro anterior se elimina y se reemplaza completamente por esta nueva data.</span></div>
+      <div class="small" style="margin:6px 0 10px">Copia desde Excel las columnas <b>Código Producto</b> y <b>Descripción</b> y pégalas aquí.<br><span class="small">⚡ La nueva versión se carga aparte y solo se activa cuando termina y pasa la verificación. El maestro actual no se interrumpe.</span></div>
       <textarea id="productPaste" placeholder="Código Producto\tDescripción\n12760\tTender Care Natural Multi-purpose Balm" style="width:100%;min-height:180px;resize:vertical;padding:12px;border:1px solid var(--border);border-radius:12px;font:inherit"></textarea>
       <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:10px">
         <button id="importPastedProducts" class="btn blue">📥 Guardar datos pegados</button>
@@ -272,10 +332,51 @@
     operators=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>norm(a.nombre).localeCompare(norm(b.nombre)));
     renderOperatorPicker();
   }
+  function matchingOperators(){
+    const q=norm($("operatorSearch")?.value||'').toLocaleLowerCase('es');
+    if(!q) return [];
+    return operators
+      .filter(o=>norm(o.nombre).toLocaleLowerCase('es').includes(q))
+      .slice(0,6);
+  }
+
   function renderOperatorPicker(){
-    const list=$("operatorSuggestions");
-    if(!list) return;
-    list.innerHTML=operators.map(o=>`<option value="${o.nombre.replace(/"/g,'&quot;')}">${o.tipo||''}</option>`).join('');
+    renderOperatorMatches();
+  }
+
+  function renderOperatorMatches(){
+    const box=$("operatorMatches");
+    if(!box) return;
+
+    const matches=matchingOperators();
+    if(!matches.length){
+      box.innerHTML='';
+      box.classList.add('hidden');
+      return;
+    }
+
+    box.innerHTML=matches.map(o=>`
+      <button type="button" class="operatorMatch" data-op-id="${o.id}">
+        <span>👤 ${o.nombre}</span>
+        <small>${o.tipo||''}</small>
+      </button>
+    `).join('');
+
+    box.classList.remove('hidden');
+
+    box.querySelectorAll('.operatorMatch').forEach(btn=>{
+      btn.addEventListener('pointerdown',e=>{
+        // pointerdown evita que Android cierre el teclado antes de tomar la selección
+        e.preventDefault();
+        const o=operators.find(x=>x.id===btn.dataset.opId);
+        if(!o) return;
+        $("operatorSearch").value=o.nombre;
+        box.classList.add('hidden');
+        openOperator(o);
+        $("operatorSearch").value='';
+        $("operatorSearch").blur();
+      });
+    });
   }
 
   function openOperatorFromSearch(){
@@ -283,12 +384,60 @@
     if(!typed) return toast('⚠️ Escribe el nombre del operario');
     const key=typed.toLocaleLowerCase('es');
     const exact=operators.find(o=>norm(o.nombre).toLocaleLowerCase('es')===key);
-    if(!exact) return toast('⚠️ Selecciona un operario válido del autocompletado');
+    if(!exact){
+      const matches=matchingOperators();
+      if(matches.length===1){
+        openOperator(matches[0]);
+        $("operatorSearch").value='';
+        $("operatorMatches").classList.add('hidden');
+        $("operatorSearch").blur();
+        return;
+      }
+      renderOperatorMatches();
+      return toast('⚠️ Toca uno de los nombres sugeridos');
+    }
     openOperator(exact);
     $("operatorSearch").value='';
+    $("operatorMatches").classList.add('hidden');
+    $("operatorSearch").blur();
   }
+
   $("openOperatorBtn").onclick=openOperatorFromSearch;
-  $("operatorSearch").addEventListener('keydown',e=>{if(e.key==='Enter')openOperatorFromSearch()});
+
+  $("operatorSearch").addEventListener('input',()=>{
+    renderOperatorMatches();
+    // Mantiene el selector en la parte superior cuando Android abre el teclado
+    setTimeout(()=>$("operatorSearch").scrollIntoView({block:'start',behavior:'smooth'}),40);
+  });
+
+  $("operatorSearch").addEventListener('focus',()=>{
+    renderOperatorMatches();
+    setTimeout(()=>$("operatorSearch").scrollIntoView({block:'start',behavior:'smooth'}),80);
+  });
+
+  $("operatorSearch").addEventListener('keydown',e=>{
+    if(e.key==='Enter'){
+      e.preventDefault();
+      openOperatorFromSearch();
+    }
+  });
+
+  document.addEventListener('pointerdown',e=>{
+    if(!e.target.closest('.operatorSearchWrap')){
+      $("operatorMatches")?.classList.add('hidden');
+    }
+  });
+
+  // Detecta el teclado móvil con Visual Viewport.
+  if(window.visualViewport){
+    const updateKeyboardState=()=>{
+      const visible=window.visualViewport.height;
+      const full=window.innerHeight;
+      document.body.classList.toggle('keyboard-open', visible < full * .72);
+    };
+    window.visualViewport.addEventListener('resize',updateKeyboardState);
+    window.visualViewport.addEventListener('scroll',updateKeyboardState);
+  }
 
   async function openOperator(o){
     if(openOps.has(o.id)){activeOpId=o.id;renderOpTabs();renderWorkspace();return;}
@@ -354,12 +503,67 @@
     startTimerLoop(s);
   }
   function productHTML(s){return `<div class="message ok">✅ Código válido</div><div class="productMeta"><div class="metric"><span>Código</span><strong>${s.code}</strong></div><div class="metric"><span>Descripción</span><strong class="productDescription">${s.product.descripcion||s.product.descripcion_producto||s.product.nombre||'—'}</strong></div><div class="metric"><span>Categoría</span><strong>${s.product.categoria||'Sin categorizar'}</strong></div><div class="metric"><span>Meta</span><strong>${s.meta?Number(s.meta.meta_u_h).toLocaleString('es-EC')+' u/h':'En evaluación'}</strong></div></div>`}
+
+  // ---------- MAESTRO VERSIONADO Y OPTIMIZADO ----------
+  let activeMasterConfig = null;
+  const masterBucketCache = new Map();
+  const MASTER_BUCKETS = 64;
+
+  function masterBucketId(code){
+    const s = String(code || '');
+    let h = 0;
+    for(let i=0;i<s.length;i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+    return String(h % MASTER_BUCKETS).padStart(2,'0');
+  }
+
+  async function getActiveMasterConfig(force=false){
+    if(activeMasterConfig && !force) return activeMasterConfig;
+
+    const cfgSnap = await getDoc(doc(db,'configuracion','maestro_productos'));
+
+    if(cfgSnap.exists() && cfgSnap.data().version_activa){
+      activeMasterConfig = {
+        mode:'versioned',
+        ...cfgSnap.data()
+      };
+    }else{
+      activeMasterConfig = {mode:'legacy', total_productos:null};
+    }
+
+    return activeMasterConfig;
+  }
+
+  async function getProductByCode(code){
+    const cfg = await getActiveMasterConfig();
+
+    // Compatibilidad temporal con el maestro antiguo
+    if(cfg.mode === 'legacy'){
+      const ps = await getDoc(doc(db,'productos',code));
+      return ps.exists() ? ps.data() : null;
+    }
+
+    const bucketId = masterBucketId(code);
+    const cacheKey = `${cfg.version_activa}:${bucketId}`;
+
+    let bucket = masterBucketCache.get(cacheKey);
+
+    if(!bucket){
+      const snap = await getDoc(
+        doc(db,'maestros_productos',cfg.version_activa,'buckets',bucketId)
+      );
+      bucket = snap.exists() ? (snap.data().items || {}) : {};
+      masterBucketCache.set(cacheKey,bucket);
+    }
+
+    return bucket[code] || null;
+  }
+
   async function validateProduct(s){
     const code=norm($("codeInput").value); if(!code)return toast('⚠️ Digita un código');
     try{
-      const ps=await getDoc(doc(db,'productos',code));
-      if(!ps.exists()){s.product=null;s.code=code;$("productInfo").innerHTML='<div class="message err">❌ Código no encontrado en el maestro.</div>';return;}
-      s.code=code;s.product=ps.data();
+      const product = await getProductByCode(code);
+      if(!product){s.product=null;s.code=code;$("productInfo").innerHTML='<div class="message err">❌ Código no encontrado en el maestro.</div>';return;}
+      s.code=code;s.product=product;
       if(!s.product.descripcion && s.product.description) s.product.descripcion=s.product.description;
       const ms=await getDoc(doc(db,'metas',code));s.meta=ms.exists()?ms.data():null;
       $("productInfo").innerHTML=productHTML(s); renderWorkspace();
@@ -439,9 +643,26 @@
 
   async function loadDashboard(){
     try{
-      const [p,m,r,s]=await Promise.all([getDocs(collection(db,'productos')),getDocs(collection(db,'metas')),getDocs(collection(db,'registros_etiquetado')),getDocs(collection(db,'sesiones_activas'))]);
-      $("kpiProductos").textContent=p.size.toLocaleString('es-EC'); $("kpiMetas").textContent=m.size.toLocaleString('es-EC');
-      const today=localISO().slice(0,10); $("kpiRegistros").textContent=r.docs.filter(x=>x.data().fecha_local===today).length; $("kpiSesiones").textContent=s.docs.filter(x=>['running','paused'].includes(x.data().estado)).length;
+      const cfg = await getActiveMasterConfig();
+      const [m,r,s]=await Promise.all([
+        getDocs(collection(db,'metas')),
+        getDocs(collection(db,'registros_etiquetado')),
+        getDocs(collection(db,'sesiones_activas'))
+      ]);
+
+      let totalProductos = 0;
+      if(cfg.mode === 'versioned'){
+        totalProductos = Number(cfg.total_productos || 0);
+      }else{
+        const p = await getDocs(collection(db,'productos'));
+        totalProductos = p.size;
+      }
+
+      $("kpiProductos").textContent=totalProductos.toLocaleString('es-EC');
+      $("kpiMetas").textContent=m.size.toLocaleString('es-EC');
+      const today=localISO().slice(0,10);
+      $("kpiRegistros").textContent=r.docs.filter(x=>x.data().fecha_local===today).length;
+      $("kpiSesiones").textContent=s.docs.filter(x=>['running','paused'].includes(x.data().estado)).length;
     }catch(e){toast('⚠️ Dashboard: '+e.message)}
   }
   $("refreshDashboard").onclick=loadDashboard;
@@ -475,108 +696,153 @@
     if(!auth.currentUser) await ensureFirebaseSession();
 
     const msg=$("importMsg");
-    const BATCH_SIZE=100;
 
     const withTimeout=(promise,ms,label)=>Promise.race([
       promise,
       new Promise((_,reject)=>setTimeout(
-        ()=>reject(new Error(`${label} tardó más de ${Math.round(ms/1000)} s. Revisa conexión o reglas de Firestore.`)),
+        ()=>reject(new Error(`${label} tardó más de ${Math.round(ms/1000)} s.`)),
         ms
       ))
     ]);
 
-    // 1) BORRAR COMPLETAMENTE EL MAESTRO ANTERIOR
-    msg.innerHTML='<div class="message warn">🧹 Preparando reemplazo del maestro anterior…</div>';
-    const oldSnap = await withTimeout(
-      getDocs(collection(db,'productos')),
-      20000,
-      'La lectura del maestro anterior'
-    );
+    // La versión anterior NO se toca hasta que la nueva esté completa.
+    const now = new Date();
+    const pad=n=>String(n).padStart(2,'0');
+    const version =
+      `v_${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}_`+
+      `${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
 
-    const oldDocs = oldSnap.docs;
-    let deleted = 0;
+    msg.innerHTML=`<div class="message warn">
+      🆕 Preparando nueva versión <b>${version}</b>…<br>
+      <span class="small">El maestro actual seguirá funcionando hasta terminar la carga.</span>
+    </div>`;
 
-    if(oldDocs.length){
-      const totalDeleteBatches = Math.ceil(oldDocs.length / BATCH_SIZE);
+    // Agrupar miles de productos en solo 64 documentos.
+    const buckets = new Map();
+    for(const {code,descripcion} of validRows){
+      const bucketId = masterBucketId(code);
+      if(!buckets.has(bucketId)) buckets.set(bucketId,{});
 
-      for(let i=0;i<oldDocs.length;i+=BATCH_SIZE){
-        const chunk = oldDocs.slice(i,i+BATCH_SIZE);
-        const batch = writeBatch(db);
-
-        chunk.forEach(d => batch.delete(d.ref));
-
-        const lote = Math.floor(i/BATCH_SIZE)+1;
-        msg.innerHTML=`<div class="message warn">🗑️ Borrando maestro anterior: <b>${lote} / ${totalDeleteBatches}</b> · ${deleted.toLocaleString('es-EC')} de ${oldDocs.length.toLocaleString('es-EC')}</div>`;
-
-        await withTimeout(batch.commit(),20000,`El borrado del lote ${lote}`);
-        deleted += chunk.length;
-
-        msg.innerHTML=`<div class="message warn">🗑️ Maestro anterior eliminado: <b>${deleted.toLocaleString('es-EC')} / ${oldDocs.length.toLocaleString('es-EC')}</b></div>`;
-        await new Promise(r=>setTimeout(r,20));
-      }
+      buckets.get(bucketId)[code] = {
+        codigo:code,
+        descripcion,
+        categoria:categorize(descripcion),
+        activo:true
+      };
     }
 
-    // 2) CARGAR EL NUEVO MAESTRO DESDE CERO
-    let processed=0;
+    const bucketEntries=[...buckets.entries()];
+    const GROUP=16; // 16 documentos por commit: normalmente 4 commits para todo el maestro.
+    let written=0;
 
-    for(let i=0;i<validRows.length;i+=BATCH_SIZE){
-      const chunk=validRows.slice(i,i+BATCH_SIZE);
+    for(let i=0;i<bucketEntries.length;i+=GROUP){
+      const group=bucketEntries.slice(i,i+GROUP);
       const batch=writeBatch(db);
 
-      chunk.forEach(({code,descripcion})=>{
-        batch.set(doc(db,'productos',code),{
-          codigo:code,
-          descripcion,
-          categoria:categorize(descripcion),
-          activo:true,
-          actualizado_local:localISO(),
-          actualizado_en:serverTimestamp()
-        });
-      });
+      for(const [bucketId,items] of group){
+        batch.set(
+          doc(db,'maestros_productos',version,'buckets',bucketId),
+          {
+            items,
+            cantidad:Object.keys(items).length,
+            version,
+            actualizado_local:localISO()
+          }
+        );
+      }
 
-      const lote=Math.floor(i/BATCH_SIZE)+1;
-      const totalLotes=Math.ceil(validRows.length/BATCH_SIZE);
+      const lote=Math.floor(i/GROUP)+1;
+      const totalLotes=Math.ceil(bucketEntries.length/GROUP);
 
-      msg.innerHTML=`<div class="message warn">⬆️ Cargando nuevo maestro: <b>${lote} / ${totalLotes}</b> · ${processed.toLocaleString('es-EC')} de ${validRows.length.toLocaleString('es-EC')}</div>`;
+      msg.innerHTML=`<div class="message warn">
+        ⬆️ Cargando nueva versión: <b>${lote} / ${totalLotes}</b><br>
+        ${written.toLocaleString('es-EC')} de ${validRows.length.toLocaleString('es-EC')} productos preparados
+      </div>`;
 
-      await withTimeout(batch.commit(),20000,`La carga del lote ${lote}`);
-      processed+=chunk.length;
+      await withTimeout(batch.commit(),30000,`La carga del bloque ${lote}`);
 
-      const pct=Math.round((processed/validRows.length)*100);
-      msg.innerHTML=`<div class="message warn">⬆️ Nuevo maestro en Firebase: <b>${processed.toLocaleString('es-EC')} / ${validRows.length.toLocaleString('es-EC')}</b> (${pct}%)</div>`;
+      written += group.reduce((acc,[,items])=>acc+Object.keys(items).length,0);
+
+      const pct=Math.round((written/validRows.length)*100);
+      msg.innerHTML=`<div class="message warn">
+        ⬆️ Nueva versión: <b>${written.toLocaleString('es-EC')} / ${validRows.length.toLocaleString('es-EC')}</b> (${pct}%)
+      </div>`;
 
       await new Promise(r=>setTimeout(r,20));
     }
 
-    // 3) VERIFICAR QUE REALMENTE SE REEMPLAZÓ
-    const sample=validRows[0];
-    const verify=await withTimeout(
-      getDoc(doc(db,'productos',sample.code)),
-      15000,
-      'La verificación final'
+    // Guardar metadatos de la versión ya terminada.
+    await withTimeout(
+      setDoc(doc(db,'maestros_productos',version),{
+        version,
+        total_productos:validRows.length,
+        buckets:bucketEntries.length,
+        estado:'lista',
+        origen:sourceLabel,
+        filas_omitidas:skipped,
+        creado_local:localISO(),
+        creado_en:serverTimestamp()
+      }),
+      20000,
+      'El guardado de metadatos'
     );
 
-    if(!verify.exists()){
-      throw new Error('La carga terminó, pero no pude verificar el nuevo maestro en Firebase.');
+    // Verificar un producto ANTES de activar.
+    const sample=validRows[0];
+    const sampleBucket=masterBucketId(sample.code);
+    const verifyBucket=await withTimeout(
+      getDoc(doc(db,'maestros_productos',version,'buckets',sampleBucket)),
+      20000,
+      'La verificación de la nueva versión'
+    );
+
+    const verified = verifyBucket.exists() &&
+      verifyBucket.data().items &&
+      verifyBucket.data().items[sample.code];
+
+    if(!verified){
+      throw new Error('La nueva versión se cargó, pero no pasó la verificación final.');
     }
+
+    // Solo ahora activar la nueva versión.
+    await withTimeout(
+      setDoc(doc(db,'configuracion','maestro_productos'),{
+        version_activa:version,
+        total_productos:validRows.length,
+        bucket_count:bucketEntries.length,
+        actualizado_local:localISO(),
+        actualizado_en:serverTimestamp()
+      }),
+      20000,
+      'La activación del nuevo maestro'
+    );
+
+    activeMasterConfig = {
+      mode:'versioned',
+      version_activa:version,
+      total_productos:validRows.length,
+      bucket_count:bucketEntries.length
+    };
+    masterBucketCache.clear();
 
     if(activeOpId){
       const active=openOps.get(activeOpId);
       if(active?.code){
-        const refreshed=await getDoc(doc(db,'productos',active.code));
-        active.product = refreshed.exists() ? refreshed.data() : null;
+        active.product = await getProductByCode(active.code);
         renderWorkspace();
       }
     }
 
-    msg.innerHTML=`<div class="message ok">✅ <b>Maestro reemplazado correctamente</b><br>
-      🗑️ ${deleted.toLocaleString('es-EC')} productos anteriores eliminados<br>
-      📦 ${processed.toLocaleString('es-EC')} productos nuevos cargados
+    msg.innerHTML=`<div class="message ok">
+      ✅ <b>Nueva versión activada correctamente</b><br>
+      📦 ${validRows.length.toLocaleString('es-EC')} productos<br>
+      ⚡ Guardados en ${bucketEntries.length} bloques optimizados
       ${skipped?`<br>⚠️ ${skipped.toLocaleString('es-EC')} filas omitidas`:''}
-      <br><span class="small">Verificado: ${sample.code} — ${verify.data().descripcion||'sin descripción'}</span>
+      <br><span class="small">Versión activa: ${version}<br>
+      Verificado: ${sample.code} — ${verified.descripcion||'sin descripción'}</span>
     </div>`;
 
-    toast(`✅ Maestro reemplazado: ${processed.toLocaleString('es-EC')} productos`);
+    toast(`✅ Maestro activado: ${validRows.length.toLocaleString('es-EC')} productos`);
     await loadDashboard();
   }
 
