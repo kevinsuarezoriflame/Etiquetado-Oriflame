@@ -438,6 +438,17 @@
       .reportSummary{grid-template-columns:1fr}
     }
 
+  
+    /* ===== Recuperación por dispositivo + selector limpio ===== */
+    .processChoiceBtn{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      min-height:88px;
+    }
+    .processChoiceBtn .sub{display:none!important}
+
   </style>
 </head>
 <body>
@@ -784,7 +795,7 @@
     $("firebaseStatus").textContent='Firebase: conectado';
     $("operatorApp").classList.remove('hidden');
     renderSupervisorAccess();
-    try{ await loadOperators(); }catch(e){ toast('⚠️ No se pudo cargar operarios: '+e.message); }
+    try{ await loadOperators(); await restoreDeviceSessions(); }catch(e){ toast('⚠️ No se pudo cargar operarios: '+e.message); }
   });
 
   ensureFirebaseSession().catch(e=>{
@@ -795,6 +806,127 @@
 
   // ---------- OPERARIOS ----------
   let operators=[]; const openOps=new Map(); let activeOpId=null;
+  const DEVICE_ID_KEY='etiquetado_device_id_v1';
+  const DEVICE_OPEN_OPS_KEY='etiquetado_open_ops_v2';
+
+  function getDeviceId(){
+    let id=localStorage.getItem(DEVICE_ID_KEY);
+    if(!id){
+      id='dev_'+crypto.randomUUID();
+      localStorage.setItem(DEVICE_ID_KEY,id);
+    }
+    return id;
+  }
+  const deviceId=getDeviceId();
+
+  function saveDeviceOpenOps(){
+    const state=[...openOps.entries()].map(([id,s])=>({
+      id,
+      proceso:s?.proceso||null
+    }));
+    localStorage.setItem(DEVICE_OPEN_OPS_KEY,JSON.stringify(state));
+  }
+
+  function getSavedDeviceOpenOps(){
+    try{
+      const raw=JSON.parse(localStorage.getItem(DEVICE_OPEN_OPS_KEY)||'[]');
+      if(!Array.isArray(raw)) return [];
+      return raw.map(x=>typeof x==='string'?{id:x,proceso:null}:x).filter(x=>x&&x.id);
+    }catch{
+      return [];
+    }
+  }
+
+  function buildIdleSession(op, proceso=null){
+    return {
+      operator:op,
+      proceso:proceso||null,
+      code:'',
+      product:null,
+      meta:null,
+      state:'idle',
+      startMs:null,
+      finishMs:null,
+      pauseStart:null,
+      pauseTotal:0,
+      pauses:[],
+      interval:null
+    };
+  }
+
+  async function hydrateSessionProduct(s){
+    if(!s?.code) return;
+    try{
+      s.product=await getProductByCode(s.code);
+      if(s.proceso==='etiquetado'){
+        const ms=await getDoc(doc(db,'metas',s.code));
+        s.meta=ms.exists()?ms.data():null;
+      }else{
+        s.meta=null;
+      }
+    }catch(e){
+      console.warn('No se pudo recuperar producto de sesión',e);
+    }
+  }
+
+  async function restoreDeviceSessions(){
+    const saved=getSavedDeviceOpenOps();
+    if(!saved.length || !operators.length) return;
+
+    let restored=0;
+
+    for(const savedOp of saved.slice(0,3)){
+      const op=operators.find(o=>o.id===savedOp.id);
+      if(!op) continue;
+
+      let session=buildIdleSession(op,savedOp.proceso);
+
+      try{
+        const snap=await getDoc(doc(db,'sesiones_activas',op.id));
+        if(snap.exists()){
+          const x=snap.data()||{};
+
+          // Una sesión activa solo se reconstruye en el mismo celular que la inició.
+          if(x.deviceId===deviceId && ['running','paused','finishing'].includes(x.estado)){
+            session={
+              operator:op,
+              proceso:x.proceso||savedOp.proceso||'etiquetado',
+              code:String(x.codigo||''),
+              product:null,
+              meta:null,
+              state:x.estado,
+              startMs:Number(x.inicio_ms||0)||null,
+              finishMs:Number(x.fin_ms||0)||null,
+              pauseStart:null,
+              pauseTotal:Number(x.pausa_total_ms||0),
+              pauses:Array.isArray(x.pausas)?x.pausas:[],
+              interval:null
+            };
+
+            if(session.state==='paused'){
+              const openPause=[...session.pauses].reverse().find(p=>p&&p.inicio_ms&&!p.fin_ms);
+              session.pauseStart=openPause?Number(openPause.inicio_ms):null;
+            }
+
+            await hydrateSessionProduct(session);
+          }
+        }
+      }catch(e){
+        console.warn('No se pudo consultar sesión activa',op.id,e);
+      }
+
+      openOps.set(op.id,session);
+      restored++;
+    }
+
+    if(restored){
+      activeOpId=saved.find(x=>openOps.has(x.id))?.id || [...openOps.keys()][0] || null;
+      saveDeviceOpenOps();
+      renderOpTabs();
+      renderWorkspace();
+    }
+  }
+
 
   async function loadOperators(){
     const snap=await getDocs(query(collection(db,'operarios'),where('activo','==',true)));
@@ -899,22 +1031,77 @@
 
 
   async function openOperator(o){
-    if(openOps.has(o.id)){activeOpId=o.id;renderOpTabs();renderWorkspace();return;}
-    if(openOps.size>=3){toast('⚠️ Máximo 3 operarios por celular');return;}
+    if(openOps.has(o.id)){
+      activeOpId=o.id;
+      renderOpTabs();
+      renderWorkspace();
+      return;
+    }
+    if(openOps.size>=3){
+      toast('⚠️ Máximo 3 operarios por celular');
+      return;
+    }
+
     try{
-      const s=await getDoc(doc(db,'sesiones_activas',o.id));
-      if(s.exists() && s.data().estado && s.data().estado!=='finalizada'){
-        toast(`⚠️ ${o.nombre} ya tiene una sesión activa`); return;
+      const snap=await getDoc(doc(db,'sesiones_activas',o.id));
+
+      if(snap.exists()){
+        const x=snap.data()||{};
+
+        if(['running','paused','finishing'].includes(x.estado)){
+          // Si la sesión fue creada por este mismo celular, recuperarla.
+          if(x.deviceId===deviceId){
+            const s={
+              operator:o,
+              proceso:x.proceso||'etiquetado',
+              code:String(x.codigo||''),
+              product:null,
+              meta:null,
+              state:x.estado,
+              startMs:Number(x.inicio_ms||0)||null,
+              finishMs:Number(x.fin_ms||0)||null,
+              pauseStart:null,
+              pauseTotal:Number(x.pausa_total_ms||0),
+              pauses:Array.isArray(x.pausas)?x.pausas:[],
+              interval:null
+            };
+
+            if(s.state==='paused'){
+              const openPause=[...s.pauses].reverse().find(p=>p&&p.inicio_ms&&!p.fin_ms);
+              s.pauseStart=openPause?Number(openPause.inicio_ms):null;
+            }
+
+            await hydrateSessionProduct(s);
+            openOps.set(o.id,s);
+            activeOpId=o.id;
+            saveDeviceOpenOps();
+            renderOpTabs();
+            renderWorkspace();
+            toast('↩️ Sesión recuperada en este celular');
+            return;
+          }
+
+          toast(`⚠️ ${o.nombre} ya está trabajando en otro celular`);
+          return;
+        }
       }
-    }catch(e){toast('⚠️ No se pudo validar simultaneidad: '+e.message);return;}
-    openOps.set(o.id,{operator:o,proceso:null,code:'',product:null,meta:null,state:'idle',startMs:null,finishMs:null,pauseStart:null,pauseTotal:0,pauses:[],interval:null});
-    activeOpId=o.id; renderOpTabs(); renderWorkspace();
+    }catch(e){
+      toast('⚠️ No se pudo validar simultaneidad: '+e.message);
+      return;
+    }
+
+    openOps.set(o.id,buildIdleSession(o,null));
+    activeOpId=o.id;
+    saveDeviceOpenOps();
+    renderOpTabs();
+    renderWorkspace();
   }
   function closeOperator(id){
     const x=openOps.get(id);
     if(x?.state==='running'||x?.state==='paused'||x?.state==='finishing'){toast('⚠️ Guarda el trabajo antes de cerrar la sesión');return;}
     if(!confirm(`¿Cerrar la sesión del día de ${x?.operator?.nombre||'este operario'}?`)) return;
     openOps.delete(id);
+    saveDeviceOpenOps();
     activeOpId=[...openOps.keys()][0]||null;
     renderOpTabs();
     renderWorkspace();
@@ -959,12 +1146,10 @@
             <button id="chooseEtiquetado" class="processChoiceBtn">
               <span class="emoji">🏷️</span>
               <span class="title">ETIQUETADO</span>
-              <span class="sub">Queda seleccionado para los siguientes códigos</span>
             </button>
             <button id="chooseArmado" class="processChoiceBtn">
               <span class="emoji">📦</span>
               <span class="title">ARMADO</span>
-              <span class="sub">Queda seleccionado para los siguientes códigos</span>
             </button>
           </div>
 
@@ -975,11 +1160,13 @@
 
       $("chooseEtiquetado").onclick=()=>{
         s.proceso='etiquetado';
+        saveDeviceOpenOps();
         renderOpTabs();
         renderWorkspace();
       };
       $("chooseArmado").onclick=()=>{
         s.proceso='armado';
+        saveDeviceOpenOps();
         renderOpTabs();
         renderWorkspace();
       };
@@ -1143,12 +1330,15 @@
     try{
       const activeRef=doc(db,'sesiones_activas',s.operator.id);
       const existing=await getDoc(activeRef);
-      if(existing.exists()&&['running','paused'].includes(existing.data().estado)){
-        if(btn){btn.disabled=false;btn.textContent='▶️ INICIAR';}
-        toast('⚠️ Este operario ya tiene una sesión activa');return;
+      if(existing.exists()&&['running','paused','finishing'].includes(existing.data().estado)){
+        const ex=existing.data();
+        if(ex.deviceId!==deviceId){
+          if(btn){btn.disabled=false;btn.textContent='▶️ INICIAR';}
+          toast('⚠️ Este operario ya tiene una sesión activa en otro celular');return;
+        }
       }
       const startMs=Date.now();
-      await setDoc(activeRef,{operarioId:s.operator.id,operario:s.operator.nombre,proceso:s.proceso||'etiquetado',codigo:s.code,descripcion:s.product.descripcion||'',categoria:s.product.categoria||'',meta_u_h:s.meta?.meta_u_h||null,estado:'running',inicio_local:localISO(),inicio_ms:startMs,dispositivo:navigator.userAgent.slice(0,180)});
+      await setDoc(activeRef,{operarioId:s.operator.id,operario:s.operator.nombre,deviceId,proceso:s.proceso||'etiquetado',codigo:s.code,descripcion:s.product.descripcion||'',categoria:s.product.categoria||'',meta_u_h:s.meta?.meta_u_h||null,estado:'running',inicio_local:localISO(),inicio_ms:startMs,dispositivo:navigator.userAgent.slice(0,180)});
       s.startMs=startMs;s.finishMs=null;s.state='running';s.pauseTotal=0;s.pauses=[];s.pauseStart=null;
       renderOpTabs();renderWorkspace();
       toast('▶️ Proceso iniciado');
@@ -1161,13 +1351,13 @@
   async function pauseWork(s){
     const motivo=prompt('Motivo de pausa:\n- Falta de etiquetas\n- Falta de producto\n- Break\n- Calidad\n- Reproceso\n- Cambio operativo\n- Otro','Falta de etiquetas'); if(!motivo)return;
     s.pauseStart=Date.now();s.state='paused';s.pauses.push({motivo,inicio_local:localISO(),inicio_ms:s.pauseStart,fin_local:null,fin_ms:null,duracion_ms:null});
-    try{await updateDoc(doc(db,'sesiones_activas',s.operator.id),{estado:'paused',pausas:s.pauses,ultima_actualizacion_local:localISO()});}catch(e){toast('⚠️ '+e.message)}
+    try{await updateDoc(doc(db,'sesiones_activas',s.operator.id),{deviceId,estado:'paused',pausas:s.pauses,ultima_actualizacion_local:localISO()});}catch(e){toast('⚠️ '+e.message)}
     renderOpTabs();renderWorkspace();
   }
   async function resumeWork(s){
     const now=Date.now(); const p=s.pauses[s.pauses.length-1]; if(p&&!p.fin_ms){p.fin_ms=now;p.fin_local=localISO();p.duracion_ms=now-p.inicio_ms;s.pauseTotal+=p.duracion_ms}
     s.pauseStart=null;s.state='running';
-    try{await updateDoc(doc(db,'sesiones_activas',s.operator.id),{estado:'running',pausas:s.pauses,pausa_total_ms:s.pauseTotal,ultima_actualizacion_local:localISO()});}catch(e){toast('⚠️ '+e.message)}
+    try{await updateDoc(doc(db,'sesiones_activas',s.operator.id),{deviceId,estado:'running',pausas:s.pauses,pausa_total_ms:s.pauseTotal,ultima_actualizacion_local:localISO()});}catch(e){toast('⚠️ '+e.message)}
     renderOpTabs();renderWorkspace();
   }
   async function showFinish(s){
@@ -1193,6 +1383,7 @@
 
     try{
       await updateDoc(doc(db,'sesiones_activas',s.operator.id),{
+        deviceId,
         estado:'finishing',
         fin_local:localISO(),
         fin_ms:s.finishMs,
@@ -1216,9 +1407,9 @@
     const data={fecha_local:new Date(now).toLocaleDateString('sv-SE'),fin_local:new Date(now).toLocaleString('sv-SE').replace(' ','T'),inicio_local:new Date(s.startMs).toLocaleString('sv-SE').replace(' ','T'),operarioId:s.operator.id,operario:s.operator.nombre,tipo_personal:s.operator.tipo||'',proceso:s.proceso||'etiquetado',codigo:s.code,descripcion:s.product.descripcion||'',categoria:s.product.categoria||'',unidades:qty,tiempo_neto_ms:netMs,tiempo_pausa_ms:s.pauseTotal,productividad_u_h:uph,meta_u_h:meta,cumplimiento_pct:compliance,pausas:s.pauses,creado_en:serverTimestamp()};
     try{
       await addDoc(collection(db,'registros_etiquetado'),data);
-      await setDoc(doc(db,'sesiones_activas',s.operator.id),{...data,estado:'finalizada'});
+      await setDoc(doc(db,'sesiones_activas',s.operator.id),{...data,deviceId,estado:'finalizada'});
       toast(`✅ Guardado: ${uph.toLocaleString('es-EC')} u/h`);
-      clearInterval(s.interval);openOps.set(s.operator.id,{operator:s.operator,proceso:s.proceso,code:'',product:null,meta:null,state:'idle',startMs:null,finishMs:null,pauseStart:null,pauseTotal:0,pauses:[],interval:null});renderOpTabs();renderWorkspace();
+      clearInterval(s.interval);openOps.set(s.operator.id,buildIdleSession(s.operator,s.proceso));saveDeviceOpenOps();renderOpTabs();renderWorkspace();
     }catch(e){toast('❌ No se pudo guardar: '+e.message)}
   }
   function startTimerLoop(s){if(s.interval)clearInterval(s.interval);s.interval=setInterval(()=>{if(activeOpId!==s.operator.id)return;const el=$("timer");if(el)el.textContent=fmtTimer(currentElapsed(s));},500)}
