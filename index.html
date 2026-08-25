@@ -9,7 +9,7 @@
     :root{
       --bg:#f6f7f4; --card:#ffffff; --ink:#15231d; --muted:#66756d;
       --green:#0f6b45; --green2:#1d855c; --greenSoft:#e6f4ed;
-      --blue:#315efb; --blueSoft:#edf2ff; --amber:#b7791f; --amberSoft:#fff6df;
+      --blue:#2fc3a3; --blueSoft:#edf2ff; --amber:#b7791f; --amberSoft:#fff6df;
       --red:#c73737; --redSoft:#ffebeb; --border:#dfe6e1; --shadow:0 12px 30px rgba(20,55,40,.08);
       --radius:22px;
     }
@@ -82,14 +82,14 @@
       transition:transform .15s ease, box-shadow .15s ease, background .15s ease, border-color .15s ease;
     }
     .opTab.active{
-      background:linear-gradient(180deg,#dff7ea,#c9edd9);
-      border-color:#37a96f;
+      background:linear-gradient(180deg,#e7faf5,#d3f2e9);
+      border-color:#2fb892;
       box-shadow:0 0 0 2px rgba(55,169,111,.16),0 6px 16px rgba(24,112,77,.12);
       transform:translateY(-1px);
     }
     .opTab.active::before{
       content:"●";
-      color:#10a760;
+      color:#20b88f;
       font-size:12px;
       margin-right:2px;
       flex:0 0 auto;
@@ -202,6 +202,188 @@
     }
     @media(max-width:560px){
       .filterGrid,.miniKpis,.splitCards,.dataSummary{grid-template-columns:1fr}
+    }
+
+  
+    /* ===== Operación compacta v3 ===== */
+    .opTab .processMini{
+      font-size:10px;
+      font-weight:900;
+      color:var(--green);
+      margin-top:2px;
+    }
+    .workGrid.compactWork{
+      grid-template-columns:minmax(0,1.1fr) minmax(280px,.9fr);
+      align-items:stretch;
+    }
+    .compactProductCard{padding:14px}
+    .compactProductCard h3{margin:0 0 9px;font-size:16px}
+    .compactProductCard .field{margin-bottom:8px}
+    .compactProductCard .message{margin-top:7px}
+    .compactProductMeta{
+      display:grid;
+      grid-template-columns:110px 1fr 120px 120px;
+      gap:8px;
+      margin-top:8px;
+    }
+    .compactProductMeta .metric{padding:9px 10px}
+    .compactProductMeta .metric strong{font-size:13px}
+    .compactProductMeta .metric strong.productDescription{font-size:12px}
+    .timerCard.compactTimer{
+      min-height:250px;
+      padding:14px;
+      grid-row:auto;
+    }
+    .timerCard.compactTimer .timer{font-size:54px}
+    .timerQuickStatus{
+      display:flex;
+      justify-content:center;
+      flex-wrap:wrap;
+      gap:7px;
+      margin-top:8px;
+    }
+    .finishInline{
+      width:min(420px,100%);
+      margin:14px auto 0;
+      padding:12px;
+      border:1px solid #bfe5d8;
+      background:#f0faf7;
+      border-radius:14px;
+    }
+    .finishInline .field{margin-bottom:8px}
+    .finishInline .field input{
+      text-align:center;
+      font-size:22px;
+      font-weight:900;
+    }
+    .sessionActions{
+      display:flex;
+      justify-content:flex-end;
+      margin-top:8px;
+    }
+    .liveTimer{
+      font-variant-numeric:tabular-nums;
+      font-weight:900;
+      font-size:15px;
+    }
+    @media(max-width:900px){
+      .workGrid.compactWork{grid-template-columns:1fr}
+      .compactProductMeta{grid-template-columns:1fr 1fr}
+      .timerCard.compactTimer{min-height:260px}
+    }
+    @media(max-width:560px){
+      .app{padding:10px}
+      .operatorEntry{margin-bottom:7px}
+      .opTabs{margin-bottom:8px}
+      .opTab{padding:8px 10px;min-width:145px}
+      .compactProductCard{padding:12px}
+      .compactProductMeta{grid-template-columns:1fr 1fr;gap:6px}
+      .compactProductMeta .metric{padding:8px}
+      .timerCard.compactTimer{min-height:235px;padding:12px}
+      .timerCard.compactTimer .timer{font-size:44px}
+      .timerBtns{margin-top:12px}
+      .btn.big{min-width:135px;padding:13px 15px;font-size:16px}
+    }
+
+  
+    /* ===== Paleta visual unificada: menta / turquesa ===== */
+    body{
+      background:
+        linear-gradient(180deg,#f8fbfa 0%,#f3f8f6 100%);
+    }
+
+    .roleBar,
+    .card,
+    .supNav{
+      border-color:#cfe7df;
+    }
+
+    .btn.primary,
+    .btn.blue{
+      background:#2fc3a3;
+      border-color:#2fc3a3;
+      color:#0b2b23;
+      box-shadow:0 5px 14px rgba(47,195,163,.16);
+    }
+
+    .btn.primary:hover,
+    .btn.blue:hover{
+      background:#26b596;
+      border-color:#26b596;
+    }
+
+    .btn.secondary,
+    .btn.ghost{
+      border-color:#b9e2d6;
+    }
+
+    .supNavBtn.active{
+      background:#11886f!important;
+      color:#fff!important;
+      border-color:#11886f!important;
+    }
+
+    .processChoiceBtn:active,
+    .operatorMatch:hover,
+    .operatorMatch:active{
+      background:#e9f8f4;
+      border-color:#8bd7c5;
+    }
+
+    .processBadge,
+    .statusPill.ok{
+      background:#e9f8f4;
+      border-color:#bce6da;
+      color:#14785f;
+    }
+
+    .message.ok{
+      background:#edf9f5;
+      border-color:#bce6da;
+      color:#176c58;
+    }
+
+    .kpi,
+    .miniKpi,
+    .subCard{
+      background:#fcfffe;
+      border-color:#d5ebe4;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus{
+      outline:none;
+      border-color:#2fc3a3;
+      box-shadow:0 0 0 3px rgba(47,195,163,.12);
+    }
+
+    .opTab.active{
+      background:linear-gradient(180deg,#e7faf5,#d3f2e9);
+      border-color:#2fb892;
+      box-shadow:0 0 0 2px rgba(47,184,146,.14),0 6px 16px rgba(17,136,111,.10);
+    }
+
+    .opTab.active::before{
+      color:#20b88f;
+    }
+
+    .finishInline{
+      background:#f0faf7;
+      border-color:#bfe5d8;
+    }
+
+    #openDataModalBtn,
+    #validateCode{
+      background:#2fc3a3;
+      border-color:#2fc3a3;
+      color:#0b2b23;
+    }
+
+    #openDataModalBtn:hover,
+    #validateCode:hover{
+      background:#26b596;
+      border-color:#26b596;
     }
 
   </style>
@@ -622,12 +804,12 @@
         toast(`⚠️ ${o.nombre} ya tiene una sesión activa`); return;
       }
     }catch(e){toast('⚠️ No se pudo validar simultaneidad: '+e.message);return;}
-    openOps.set(o.id,{operator:o,proceso:null,code:'',product:null,meta:null,state:'idle',startMs:null,pauseStart:null,pauseTotal:0,pauses:[],interval:null});
+    openOps.set(o.id,{operator:o,proceso:null,code:'',product:null,meta:null,state:'idle',startMs:null,finishMs:null,pauseStart:null,pauseTotal:0,pauses:[],interval:null});
     activeOpId=o.id; renderOpTabs(); renderWorkspace();
   }
   function closeOperator(id){
     const x=openOps.get(id);
-    if(x?.state==='running'||x?.state==='paused'){toast('⚠️ Finaliza el trabajo antes de cerrar la sesión');return;}
+    if(x?.state==='running'||x?.state==='paused'||x?.state==='finishing'){toast('⚠️ Guarda el trabajo antes de cerrar la sesión');return;}
     if(!confirm(`¿Cerrar la sesión del día de ${x?.operator?.nombre||'este operario'}?`)) return;
     openOps.delete(id);
     activeOpId=[...openOps.keys()][0]||null;
@@ -640,13 +822,19 @@
     openOps.forEach((s,id)=>{
       const b=document.createElement('button');
       b.className='opTab '+(id===activeOpId?'active':'');
-      const st=s.state==='running'?'🟢 TRABAJANDO':s.state==='paused'?'🟡 PAUSA':'⚪ LISTO';
-      b.innerHTML=`<span><b>${s.operator.nombre}</b><div class="miniStatus">${st}</div></span>`;
+      const st=s.state==='running'?'🟢 TRABAJANDO':s.state==='paused'?'🟡 PAUSA':s.state==='finishing'?'🔵 FINALIZANDO':'⚪ LISTO';
+      const proc=s.proceso?(s.proceso==='armado'?'📦 ARMADO':'🏷️ ETIQUETADO'):'⚙️ SIN PROCESO';
+      b.innerHTML=`<span><b>${s.operator.nombre}</b><div class="processMini">${proc}</div><div class="miniStatus">${st}</div></span>`;
       b.onclick=()=>{activeOpId=id;renderOpTabs();renderWorkspace()};
       box.appendChild(b)
     });
   }
-  function currentElapsed(s){if(!s.startMs)return 0;const end=s.state==='running'?Date.now():(s.pauseStart||Date.now());return end-s.startMs-s.pauseTotal;}
+  function currentElapsed(s){
+    if(!s.startMs)return 0;
+    if(s.state==='finishing' && s.finishMs) return Math.max(0,s.finishMs-s.startMs-s.pauseTotal);
+    const end=s.state==='running'?Date.now():(s.pauseStart||Date.now());
+    return Math.max(0,end-s.startMs-s.pauseTotal);
+  }
   function renderWorkspace(){
     const root=$("opWorkspace");
 
@@ -657,37 +845,39 @@
 
     const s=openOps.get(activeOpId);
 
-    // Primero se elige el proceso. No mostramos códigos hasta seleccionar uno.
+    // El proceso se elige una sola vez para la sesión/jornada de ese perfil.
     if(!s.proceso){
       root.innerHTML=`
-        <div class="card" style="max-width:760px;margin:12px auto">
-          <h3 style="margin:0 0 5px">⚙️ Seleccione el proceso</h3>
-          <div class="small">Operario: <b>${s.operator.nombre}</b></div>
+        <div class="card" style="max-width:700px;margin:8px auto">
+          <h3 style="margin:0 0 5px">⚙️ ¿Qué proceso realizará hoy?</h3>
+          <div class="small"><b>${s.operator.nombre}</b> selecciona una opción una sola vez para esta sesión.</div>
 
           <div class="processChoice">
             <button id="chooseEtiquetado" class="processChoiceBtn">
               <span class="emoji">🏷️</span>
               <span class="title">ETIQUETADO</span>
-              <span class="sub">Etiquetas, tiempos, pausas y unidades</span>
+              <span class="sub">Queda seleccionado para los siguientes códigos</span>
             </button>
             <button id="chooseArmado" class="processChoiceBtn">
               <span class="emoji">📦</span>
               <span class="title">ARMADO</span>
-              <span class="sub">Armados, tiempos, pausas y unidades</span>
+              <span class="sub">Queda seleccionado para los siguientes códigos</span>
             </button>
           </div>
 
-          <div style="margin-top:14px;text-align:right">
+          <div class="sessionActions">
             <button id="closeDaySession" class="btn ghost">🚪 Cerrar sesión del día</button>
           </div>
         </div>`;
 
       $("chooseEtiquetado").onclick=()=>{
         s.proceso='etiquetado';
+        renderOpTabs();
         renderWorkspace();
       };
       $("chooseArmado").onclick=()=>{
         s.proceso='armado';
+        renderOpTabs();
         renderWorkspace();
       };
       $("closeDaySession").onclick=()=>closeOperator(s.operator.id);
@@ -695,10 +885,11 @@
     }
 
     const proceso=s.proceso;
+    const stateLabel=s.state==='running'?'Trabajando':s.state==='paused'?'Pausado':s.state==='finishing'?'Finalizando':'Listo';
+    const pauseMs=s.pauseTotal+(s.state==='paused'&&s.pauseStart?Date.now()-s.pauseStart:0);
 
-    root.innerHTML=`<div class="workGrid">
-      <div class="card productCard">
-        <div class="processBadge">${proceso==='etiquetado'?'🏷️ Etiquetado':'📦 Armado'}</div>
+    root.innerHTML=`<div class="workGrid compactWork">
+      <div class="card productCard compactProductCard">
         <h3>📦 Producto</h3>
 
         <div class="field">
@@ -710,45 +901,40 @@
         </div>
 
         <div id="productInfo">${s.product?productHTML(s):'<div class="small">Digite un código y valide.</div>'}</div>
+
+        ${s.state==='idle'?`
+          <div class="sessionActions">
+            <button id="closeDaySession" class="btn ghost">🚪 Cerrar sesión del día</button>
+          </div>`:''}
       </div>
 
-      <div class="card timerCard">
-        <div>
+      <div class="card timerCard compactTimer">
+        <div style="width:100%;text-align:center">
           <div class="timerLabel">⏱️ Tiempo productivo</div>
           <div id="timer" class="timer">${fmtTimer(currentElapsed(s))}</div>
+
+          <div class="timerQuickStatus">
+            <span class="statusPill ${s.state==='paused'?'warn':s.state==='finishing'?'ok':'ok'}">${stateLabel}</span>
+            <span class="statusPill">Pausas: ${s.pauses.length}</span>
+            ${pauseMs>0?`<span class="statusPill">Pausa: ${fmtTimer(pauseMs)}</span>`:''}
+          </div>
 
           <div class="timerBtns">
             ${s.state==='idle'?'<button id="startBtn" class="btn primary big" '+(!s.product?'disabled':'')+'>▶️ INICIAR</button>':''}
             ${s.state==='running'?'<button id="pauseBtn" class="btn warn big">⏸️ PAUSAR</button><button id="finishBtn" class="btn danger big">⏹️ TERMINAR</button>':''}
             ${s.state==='paused'?'<button id="resumeBtn" class="btn primary big">▶️ REANUDAR</button><button id="finishBtn" class="btn danger big">⏹️ TERMINAR</button>':''}
           </div>
+
+          ${s.state==='finishing'?`
+            <div class="finishInline">
+              <div style="font-weight:900;margin-bottom:7px">✅ Tiempo detenido en ${fmtTimer(currentElapsed(s))}</div>
+              <div class="field">
+                <label>Unidades procesadas</label>
+                <input id="qtyInput" type="number" min="1" inputmode="numeric" placeholder="Ej. 1080" autofocus>
+              </div>
+              <button id="confirmFinish" class="btn primary" style="width:100%">💾 GUARDAR REGISTRO</button>
+            </div>`:''}
         </div>
-      </div>
-
-      <div class="card">
-        <h3 style="margin-top:0">📌 Estado</h3>
-
-        <div class="productMeta">
-          <div class="metric"><span>Operario</span><strong>${s.operator.nombre}</strong></div>
-          <div class="metric"><span>Proceso</span><strong>${proceso==='etiquetado'?'Etiquetado':'Armado'}</strong></div>
-          <div class="metric"><span>Estado</span><strong>${s.state==='running'?'Trabajando':s.state==='paused'?'Pausado':'Listo'}</strong></div>
-          <div class="metric"><span>Pausas</span><strong>${s.pauses.length}</strong></div>
-          <div class="metric"><span>Tiempo pausado</span><strong>${fmtTimer(s.pauseTotal+(s.state==='paused'&&s.pauseStart?Date.now()-s.pauseStart:0))}</strong></div>
-        </div>
-
-        <div id="finishBox" class="finishBox">
-          <div class="field">
-            <label>Unidades procesadas</label>
-            <input id="qtyInput" type="number" min="1" inputmode="numeric" placeholder="Ej. 1080">
-          </div>
-          <button id="confirmFinish" class="btn primary">💾 Confirmar y guardar</button>
-        </div>
-
-        ${s.state==='idle'?`
-          <div style="margin-top:16px;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">
-            <button id="changeProcess" class="btn ghost">🔁 Cambiar proceso</button>
-            <button id="closeDaySession" class="btn ghost">🚪 Cerrar sesión del día</button>
-          </div>`:''}
       </div>
     </div>`;
 
@@ -759,15 +945,7 @@
     $("resumeBtn")?.addEventListener('click',()=>resumeWork(s));
     $("finishBtn")?.addEventListener('click',()=>showFinish(s));
     $("confirmFinish")?.addEventListener('click',()=>confirmFinish(s));
-
-    $("changeProcess")?.addEventListener('click',()=>{
-      s.proceso=null;
-      s.code='';
-      s.product=null;
-      s.meta=null;
-      renderWorkspace();
-    });
-
+    $("qtyInput")?.addEventListener('keydown',e=>{if(e.key==='Enter')confirmFinish(s)});
     $("closeDaySession")?.addEventListener('click',()=>closeOperator(s.operator.id));
 
     startTimerLoop(s);
@@ -778,7 +956,7 @@
       : (s.meta ? Number(s.meta.meta_u_h).toLocaleString('es-EC')+' u/h' : 'En evaluación');
 
     return `<div class="message ok">✅ Código válido</div>
-      <div class="productMeta">
+      <div class="compactProductMeta">
         <div class="metric"><span>Código</span><strong>${s.code}</strong></div>
         <div class="metric"><span>Descripción</span><strong class="productDescription">${s.product.descripcion||s.product.descripcion_producto||s.product.nombre||'—'}</strong></div>
         <div class="metric"><span>Categoría</span><strong>${s.product.categoria||'Sin categorizar'}</strong></div>
@@ -868,11 +1046,11 @@
       }
       const startMs=Date.now();
       await setDoc(activeRef,{operarioId:s.operator.id,operario:s.operator.nombre,proceso:s.proceso||'etiquetado',codigo:s.code,descripcion:s.product.descripcion||'',categoria:s.product.categoria||'',meta_u_h:s.meta?.meta_u_h||null,estado:'running',inicio_local:localISO(),inicio_ms:startMs,dispositivo:navigator.userAgent.slice(0,180)});
-      s.startMs=startMs;s.state='running';s.pauseTotal=0;s.pauses=[];s.pauseStart=null;
+      s.startMs=startMs;s.finishMs=null;s.state='running';s.pauseTotal=0;s.pauses=[];s.pauseStart=null;
       renderOpTabs();renderWorkspace();
       toast('▶️ Proceso iniciado');
     }catch(e){
-      s.startMs=null;s.state='idle';s.pauseTotal=0;s.pauses=[];s.pauseStart=null;
+      s.startMs=null;s.finishMs=null;s.state='idle';s.pauseTotal=0;s.pauses=[];s.pauseStart=null;
       renderOpTabs();renderWorkspace();
       toast('❌ No se pudo iniciar: '+e.message);
     }
@@ -889,18 +1067,55 @@
     try{await updateDoc(doc(db,'sesiones_activas',s.operator.id),{estado:'running',pausas:s.pauses,pausa_total_ms:s.pauseTotal,ultima_actualizacion_local:localISO()});}catch(e){toast('⚠️ '+e.message)}
     renderOpTabs();renderWorkspace();
   }
-  function showFinish(s){ if(s.state==='paused') resumeWork(s).then(()=>{s.state='paused';renderWorkspace();setTimeout(()=>$("finishBox")?.classList.add('show'),0)}); else $("finishBox")?.classList.add('show'); }
+  async function showFinish(s){
+    if(!['running','paused'].includes(s.state)) return;
+
+    const now=Date.now();
+
+    // Si estaba pausado, cerramos esa pausa aquí. NO reanudamos el reloj.
+    if(s.state==='paused' && s.pauseStart){
+      const p=s.pauses[s.pauses.length-1];
+      if(p && !p.fin_ms){
+        p.fin_ms=now;
+        p.fin_local=localISO();
+        p.duracion_ms=now-p.inicio_ms;
+        s.pauseTotal+=p.duracion_ms;
+      }
+      s.pauseStart=null;
+    }
+
+    s.finishMs=now;
+    s.state='finishing';
+    if(s.interval){clearInterval(s.interval);s.interval=null;}
+
+    try{
+      await updateDoc(doc(db,'sesiones_activas',s.operator.id),{
+        estado:'finishing',
+        fin_local:localISO(),
+        fin_ms:s.finishMs,
+        pausas:s.pauses,
+        pausa_total_ms:s.pauseTotal,
+        ultima_actualizacion_local:localISO()
+      });
+    }catch(e){
+      // La captura local ya queda congelada aunque falle esta actualización.
+      toast('⚠️ Tiempo detenido; no se pudo actualizar estado en Firebase: '+e.message);
+    }
+
+    renderOpTabs();
+    renderWorkspace();
+    setTimeout(()=>$("qtyInput")?.focus(),80);
+  }
   async function confirmFinish(s){
     const qty=Math.floor(safeNum($("qtyInput").value)); if(qty<=0)return toast('⚠️ Ingresa las unidades procesadas');
-    const now=Date.now();
-    if(s.state==='paused'&&s.pauseStart){const p=s.pauses[s.pauses.length-1];p.fin_ms=now;p.fin_local=localISO();p.duracion_ms=now-p.inicio_ms;s.pauseTotal+=p.duracion_ms;s.pauseStart=null;}
-    const netMs=now-s.startMs-s.pauseTotal; const hours=netMs/3600000; const uph=hours>0?Math.round(qty/hours):0; const meta=s.meta?.meta_u_h||null; const compliance=meta?Math.round((uph/meta)*1000)/10:null;
-    const data={fecha_local:localISO().slice(0,10),fin_local:localISO(),inicio_local:new Date(s.startMs).toLocaleString('sv-SE').replace(' ','T'),operarioId:s.operator.id,operario:s.operator.nombre,tipo_personal:s.operator.tipo||'',proceso:s.proceso||'etiquetado',codigo:s.code,descripcion:s.product.descripcion||'',categoria:s.product.categoria||'',unidades:qty,tiempo_neto_ms:netMs,tiempo_pausa_ms:s.pauseTotal,productividad_u_h:uph,meta_u_h:meta,cumplimiento_pct:compliance,pausas:s.pauses,creado_en:serverTimestamp()};
+    const now=s.finishMs||Date.now();
+    const netMs=Math.max(0,now-s.startMs-s.pauseTotal); const hours=netMs/3600000; const uph=hours>0?Math.round(qty/hours):0; const meta=s.meta?.meta_u_h||null; const compliance=meta?Math.round((uph/meta)*1000)/10:null;
+    const data={fecha_local:new Date(now).toLocaleDateString('sv-SE'),fin_local:new Date(now).toLocaleString('sv-SE').replace(' ','T'),inicio_local:new Date(s.startMs).toLocaleString('sv-SE').replace(' ','T'),operarioId:s.operator.id,operario:s.operator.nombre,tipo_personal:s.operator.tipo||'',proceso:s.proceso||'etiquetado',codigo:s.code,descripcion:s.product.descripcion||'',categoria:s.product.categoria||'',unidades:qty,tiempo_neto_ms:netMs,tiempo_pausa_ms:s.pauseTotal,productividad_u_h:uph,meta_u_h:meta,cumplimiento_pct:compliance,pausas:s.pauses,creado_en:serverTimestamp()};
     try{
       await addDoc(collection(db,'registros_etiquetado'),data);
       await setDoc(doc(db,'sesiones_activas',s.operator.id),{...data,estado:'finalizada'});
       toast(`✅ Guardado: ${uph.toLocaleString('es-EC')} u/h`);
-      clearInterval(s.interval);openOps.set(s.operator.id,{operator:s.operator,proceso:null,code:'',product:null,meta:null,state:'idle',startMs:null,pauseStart:null,pauseTotal:0,pauses:[],interval:null});renderOpTabs();renderWorkspace();
+      clearInterval(s.interval);openOps.set(s.operator.id,{operator:s.operator,proceso:s.proceso,code:'',product:null,meta:null,state:'idle',startMs:null,finishMs:null,pauseStart:null,pauseTotal:0,pauses:[],interval:null});renderOpTabs();renderWorkspace();
     }catch(e){toast('❌ No se pudo guardar: '+e.message)}
   }
   function startTimerLoop(s){if(s.interval)clearInterval(s.interval);s.interval=setInterval(()=>{if(activeOpId!==s.operator.id)return;const el=$("timer");if(el)el.textContent=fmtTimer(currentElapsed(s));},500)}
@@ -959,6 +1174,10 @@
     document.querySelectorAll('.supNavBtn').forEach(x=>x.classList.remove('active'));
     $("view-"+b.dataset.view).classList.add('active');
     b.classList.add('active');
+    if(b.dataset.view!=='dashboard' && dashboardLiveInterval){
+      clearInterval(dashboardLiveInterval);
+      dashboardLiveInterval=null;
+    }
 
     if(b.dataset.view==='operarios') await loadUsersTable();
     if(b.dataset.view==='registros') await loadRecords();
@@ -968,6 +1187,44 @@
     if(b.dataset.view==='supervision') await loadSupervision();
     if(b.dataset.view==='data') await loadDataSummary();
   });
+
+  let dashboardLiveInterval=null;
+  let dashboardLiveSessions=[];
+
+  function activeSessionElapsed(x){
+    const start=Number(x.inicio_ms||0);
+    if(!start) return 0;
+    const pauses=Array.isArray(x.pausas)?x.pausas:[];
+    let closedPause=0;
+    let ongoingPauseStart=null;
+
+    pauses.forEach(p=>{
+      if(Number(p.duracion_ms)>0) closedPause+=Number(p.duracion_ms);
+      else if(p.inicio_ms && !p.fin_ms) ongoingPauseStart=Number(p.inicio_ms);
+    });
+
+    if(x.estado==='paused' && ongoingPauseStart){
+      return Math.max(0,ongoingPauseStart-start-closedPause);
+    }
+    if(x.estado==='finishing' && x.fin_ms){
+      return Math.max(0,Number(x.fin_ms)-start-closedPause);
+    }
+    return Math.max(0,Date.now()-start-closedPause);
+  }
+
+  function startDashboardLiveClock(sessions){
+    dashboardLiveSessions=sessions||[];
+    if(dashboardLiveInterval) clearInterval(dashboardLiveInterval);
+
+    const tick=()=>{
+      dashboardLiveSessions.forEach((x,i)=>{
+        const el=document.querySelector(`[data-live-index="${i}"]`);
+        if(el) el.textContent=fmtTimer(activeSessionElapsed(x));
+      });
+    };
+    tick();
+    dashboardLiveInterval=setInterval(tick,1000);
+  }
 
   async function loadDashboard(force=false){
     try{
@@ -983,7 +1240,7 @@
       const todayRecords=records.filter(x=>x.fecha_local===today);
       const et=todayRecords.filter(x=>(x.proceso||'etiquetado')==='etiquetado');
       const ar=todayRecords.filter(x=>x.proceso==='armado');
-      const active=sessionsSnap.docs.map(d=>d.data()).filter(x=>['running','paused'].includes(x.estado));
+      const active=sessionsSnap.docs.map(d=>d.data()).filter(x=>['running','paused','finishing'].includes(x.estado));
 
       $("kpiProductos").textContent=fmtInt(totalProductos);
       $("kpiEtiquetadoHoy").textContent=fmtInt(et.length);
@@ -1004,8 +1261,9 @@
       $("dashArmadoResumen").innerHTML=summary(ar,'Armados');
 
       $("dashActiveSessions").innerHTML=active.length
-        ? `<div class="tableWrap"><table style="min-width:620px"><thead><tr><th>Operario</th><th>Proceso</th><th>Código</th><th>Estado</th><th>Inicio</th></tr></thead><tbody>${active.map(x=>`<tr><td>${x.operario||'—'}</td><td>${processName(x.proceso)}</td><td>${x.codigo||'—'}</td><td><span class="statusPill ${x.estado==='paused'?'warn':'ok'}">${x.estado==='paused'?'⏸️ Pausado':'▶️ Trabajando'}</span></td><td>${x.inicio_local||'—'}</td></tr>`).join('')}</tbody></table></div>`
+        ? `<div class="tableWrap"><table style="min-width:720px"><thead><tr><th>Operario</th><th>Proceso</th><th>Código</th><th>Estado</th><th>⏱️ Tiempo en vivo</th><th>Inicio</th></tr></thead><tbody>${active.map((x,i)=>`<tr><td><b>${x.operario||'—'}</b></td><td>${processName(x.proceso)}</td><td>${x.codigo||'—'}</td><td><span class="statusPill ${x.estado==='paused'?'warn':'ok'}">${x.estado==='paused'?'⏸️ Pausado':x.estado==='finishing'?'✅ Finalizando':'▶️ Trabajando'}</span></td><td><span class="liveTimer" data-live-index="${i}">00:00:00</span></td><td>${x.inicio_local||'—'}</td></tr>`).join('')}</tbody></table></div>`
         : '<div class="emptyState">No hay procesos activos.</div>';
+      startDashboardLiveClock(active);
     }catch(e){toast('⚠️ Dashboard: '+e.message)}
   }
   $("refreshDashboard").onclick=()=>loadDashboard(true);
