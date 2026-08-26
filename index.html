@@ -1596,32 +1596,51 @@
             <div class="finishInline">
               <div style="font-weight:900;margin-bottom:7px">✅ Tiempo detenido en ${fmtTimer(currentElapsed(s))}</div>
 
-              <div class="qtyModeToggle">
-                <button id="qtyModeTotal" class="qtyModeBtn ${(s.qtyMode||'total')==='total'?'active':''}">🔢 Total unidades</button>
-                <button id="qtyModeBoxes" class="qtyModeBtn ${s.qtyMode==='boxes'?'active':''}">📦 Cajas</button>
+              <div class="finishSection" style="margin-top:0;padding-top:0;border-top:0">
+                <div class="finishSectionTitle">1️⃣ ⚠️ Novedad</div>
+                <div class="noveltyToggle">
+                  <button id="noveltyNone" class="noveltyBtn ${s.noveltyType==='none'?'active':''}">✅ Sin novedad</button>
+                  <button id="noveltyOver" class="noveltyBtn ${s.noveltyType==='sobrante'?'active':''}">➕ Sobrante</button>
+                  <button id="noveltyShort" class="noveltyBtn ${s.noveltyType==='faltante'?'active':''}">➖ Faltante</button>
+                </div>
+                ${['sobrante','faltante'].includes(s.noveltyType)?`
+                  <div class="field noveltyQty">
+                    <label>Cantidad ${s.noveltyType}</label>
+                    <input id="noveltyQty" type="number" min="1" inputmode="numeric" placeholder="Ej. 2">
+                  </div>
+                `:''}
               </div>
 
-              ${(s.qtyMode||'total')==='total'?`
-                <div class="field">
-                  <label>Unidades procesadas</label>
-                  <input id="qtyInput" type="number" min="1" inputmode="numeric" placeholder="Ej. 1080" autofocus>
+              <div class="finishSection">
+                <div class="finishSectionTitle">2️⃣ 🔢 Unidades</div>
+
+                <div class="qtyModeToggle">
+                  <button id="qtyModeTotal" class="qtyModeBtn ${(s.qtyMode||'total')==='total'?'active':''}">🔢 Total unidades</button>
+                  <button id="qtyModeBoxes" class="qtyModeBtn ${s.qtyMode==='boxes'?'active':''}">📦 Cajas</button>
                 </div>
-              `:`
-                <div class="qtyBoxesGrid">
+
+                ${(s.qtyMode||'total')==='total'?`
                   <div class="field">
-                    <label>N.º cajas</label>
-                    <input id="qtyBoxes" type="number" min="1" inputmode="numeric" placeholder="Ej. 12">
+                    <label>Unidades procesadas</label>
+                    <input id="qtyInput" type="number" min="1" inputmode="numeric" placeholder="Ej. 1080">
                   </div>
-                  <div class="field">
-                    <label>Unidades/caja</label>
-                    <input id="qtyPerBox" type="number" min="1" inputmode="numeric" placeholder="Ej. 90">
+                `:`
+                  <div class="qtyBoxesGrid">
+                    <div class="field">
+                      <label>N.º cajas</label>
+                      <input id="qtyBoxes" type="number" min="1" inputmode="numeric" placeholder="Ej. 12">
+                    </div>
+                    <div class="field">
+                      <label>Unidades/caja</label>
+                      <input id="qtyPerBox" type="number" min="1" inputmode="numeric" placeholder="Ej. 90">
+                    </div>
                   </div>
-                </div>
-                <div id="qtyCalculated" class="qtyCalculated">0 unidades</div>
-              `}
+                  <div id="qtyCalculated" class="qtyCalculated">0 unidades</div>
+                `}
+              </div>
 
               <div class="finishSection">
-                <div class="finishSectionTitle">📅 Caducidad</div>
+                <div class="finishSectionTitle">3️⃣ 📅 Caducidad</div>
                 <div class="expiryGrid">
                   <div class="field">
                     <label>Mes</label>
@@ -1644,21 +1663,6 @@
                     </select>
                   </div>
                 </div>
-              </div>
-
-              <div class="finishSection">
-                <div class="finishSectionTitle">⚠️ Novedad</div>
-                <div class="noveltyToggle">
-                  <button id="noveltyNone" class="noveltyBtn ${s.noveltyType==='none'?'active':''}">✅ Sin novedad</button>
-                  <button id="noveltyOver" class="noveltyBtn ${s.noveltyType==='sobrante'?'active':''}">➕ Sobrante</button>
-                  <button id="noveltyShort" class="noveltyBtn ${s.noveltyType==='faltante'?'active':''}">➖ Faltante</button>
-                </div>
-                ${['sobrante','faltante'].includes(s.noveltyType)?`
-                  <div class="field noveltyQty">
-                    <label>Cantidad ${s.noveltyType}</label>
-                    <input id="noveltyQty" type="number" min="1" inputmode="numeric" placeholder="Ej. 2">
-                  </div>
-                `:''}
               </div>
 
               <button id="confirmFinish" class="btn primary" style="width:100%">💾 GUARDAR REGISTRO</button>
