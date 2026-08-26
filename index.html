@@ -1334,6 +1334,7 @@
       pauseTotal:0,
       pauses:[],
       qtyMode:'total',
+      expiryMode:'date',
       expiryMonth:'',
       expiryYear:'',
       noveltyType:'',
@@ -1434,6 +1435,7 @@
               pauseTotal:Number(x.pausa_total_ms||0),
               pauses:Array.isArray(x.pausas)?x.pausas:[],
               qtyMode:'total',
+              expiryMode:'date',
               expiryMonth:'',
               expiryYear:'',
               noveltyType:'',
@@ -1805,28 +1807,38 @@
 
               <div class="finishSection">
                 <div class="finishSectionTitle">3️⃣ 📅 Caducidad</div>
-                <div class="expiryGrid">
-                  <div class="field">
-                    <label>Mes</label>
-                    <select id="expiryMonth">
-                      <option value="">Mes</option>
-                      ${Array.from({length:12},(_,i)=>{
-                        const v=String(i+1).padStart(2,'0');
-                        return `<option value="${v}" ${s.expiryMonth===v?'selected':''}>${v}</option>`;
-                      }).join('')}
-                    </select>
-                  </div>
-                  <div class="field">
-                    <label>Año</label>
-                    <select id="expiryYear">
-                      <option value="">Año</option>
-                      ${Array.from({length:12},(_,i)=>{
-                        const y=new Date().getFullYear()+i;
-                        return `<option value="${y}" ${String(s.expiryYear)===String(y)?'selected':''}>${y}</option>`;
-                      }).join('')}
-                    </select>
-                  </div>
+
+                <div class="qtyModeToggle" style="margin-bottom:8px">
+                  <button id="expiryModeDate" class="qtyModeBtn ${s.expiryMode!=='none'?'active':''}">📅 Caduca</button>
+                  <button id="expiryModeNone" class="qtyModeBtn ${s.expiryMode==='none'?'active':''}">♾️ No caduca</button>
                 </div>
+
+                ${s.expiryMode==='none'?`
+                  <div class="qtyCalculated">♾️ No caduca</div>
+                `:`
+                  <div class="expiryGrid">
+                    <div class="field">
+                      <label>Mes</label>
+                      <select id="expiryMonth">
+                        <option value="">Mes</option>
+                        ${Array.from({length:12},(_,i)=>{
+                          const v=String(i+1).padStart(2,'0');
+                          return `<option value="${v}" ${s.expiryMonth===v?'selected':''}>${v}</option>`;
+                        }).join('')}
+                      </select>
+                    </div>
+                    <div class="field">
+                      <label>Año</label>
+                      <select id="expiryYear">
+                        <option value="">Año</option>
+                        ${Array.from({length:12},(_,i)=>{
+                          const y=new Date().getFullYear()+i;
+                          return `<option value="${y}" ${String(s.expiryYear)===String(y)?'selected':''}>${y}</option>`;
+                        }).join('')}
+                      </select>
+                    </div>
+                  </div>
+                `}
               </div>
 
               <div class="finishSection finishComment">
@@ -1874,6 +1886,17 @@
     $("qtyInput")?.addEventListener('keydown',e=>{if(e.key==='Enter')confirmFinish(s)});
     $("qtyBoxes")?.addEventListener('keydown',e=>{if(e.key==='Enter')$("qtyPerBox")?.focus()});
     $("qtyPerBox")?.addEventListener('keydown',e=>{if(e.key==='Enter')confirmFinish(s)});
+    $("expiryModeDate")?.addEventListener('click',()=>{
+      s.expiryMode='date';
+      renderWorkspace();
+    });
+    $("expiryModeNone")?.addEventListener('click',()=>{
+      s.expiryMode='none';
+      s.expiryMonth='';
+      s.expiryYear='';
+      renderWorkspace();
+    });
+
     $("expiryMonth")?.addEventListener('change',e=>{s.expiryMonth=e.target.value});
     $("expiryYear")?.addEventListener('change',e=>{s.expiryYear=e.target.value});
 
@@ -2082,9 +2105,10 @@
       if(qty<=0)return toast('⚠️ Ingresa las unidades procesadas');
     }
 
-    const expiryMonth=s.expiryMonth||$("expiryMonth")?.value||'';
-    const expiryYear=s.expiryYear||$("expiryYear")?.value||'';
-    if(!expiryMonth||!expiryYear)return toast('⚠️ Selecciona mes y año de caducidad');
+    const expiryMode=s.expiryMode||'date';
+    const expiryMonth=expiryMode==='none'?'':(s.expiryMonth||$("expiryMonth")?.value||'');
+    const expiryYear=expiryMode==='none'?'':(s.expiryYear||$("expiryYear")?.value||'');
+    if(expiryMode!=='none' && (!expiryMonth||!expiryYear))return toast('⚠️ Selecciona mes y año de caducidad');
 
     const noveltyType=s.noveltyType||'';
     if(!noveltyType)return toast('⚠️ Selecciona si existe novedad');
@@ -2096,7 +2120,7 @@
     }
     const now=s.finishMs||Date.now();
     const netMs=Math.max(0,now-s.startMs-s.pauseTotal); const hours=netMs/3600000; const uph=hours>0?Math.round(qty/hours):0; const meta=s.meta?.meta_u_h||null; const compliance=meta?Math.round((uph/meta)*1000)/10:null;
-    const data={fecha_local:new Date(now).toLocaleDateString('sv-SE'),fin_local:new Date(now).toLocaleString('sv-SE').replace(' ','T'),inicio_local:new Date(s.startMs).toLocaleString('sv-SE').replace(' ','T'),operarioId:s.operator.id,operario:s.operator.nombre,tipo_personal:s.operator.tipo||'',proceso:s.proceso||'etiquetado',codigo:s.code,descripcion:s.product.descripcion||'',categoria:s.product.categoria||'',unidades:qty,modo_registro_unidades:(s.qtyMode||'total'),cajas,unidades_por_caja:unidadesPorCaja,caducidad_mes:expiryMonth,caducidad_anio:Number(expiryYear),novedad_tipo:noveltyType,novedad_cantidad:noveltyQty,comentario:(s.comment||$("finishComment")?.value||'').trim(),tiempo_neto_ms:netMs,tiempo_pausa_ms:s.pauseTotal,productividad_u_h:uph,meta_u_h:meta,cumplimiento_pct:compliance,pausas:s.pauses,creado_en:serverTimestamp()};
+    const data={fecha_local:new Date(now).toLocaleDateString('sv-SE'),fin_local:new Date(now).toLocaleString('sv-SE').replace(' ','T'),inicio_local:new Date(s.startMs).toLocaleString('sv-SE').replace(' ','T'),operarioId:s.operator.id,operario:s.operator.nombre,tipo_personal:s.operator.tipo||'',proceso:s.proceso||'etiquetado',codigo:s.code,descripcion:s.product.descripcion||'',categoria:s.product.categoria||'',unidades:qty,modo_registro_unidades:(s.qtyMode||'total'),cajas,unidades_por_caja:unidadesPorCaja,caducidad_tipo:expiryMode==='none'?'no_caduca':'fecha',caducidad_mes:expiryMonth,caducidad_anio:expiryYear?Number(expiryYear):null,novedad_tipo:noveltyType,novedad_cantidad:noveltyQty,comentario:(s.comment||$("finishComment")?.value||'').trim(),tiempo_neto_ms:netMs,tiempo_pausa_ms:s.pauseTotal,productividad_u_h:uph,meta_u_h:meta,cumplimiento_pct:compliance,pausas:s.pauses,creado_en:serverTimestamp()};
     try{
       await addDoc(collection(db,'registros_etiquetado'),data);
       await setDoc(doc(db,'sesiones_activas',s.operator.id),{...data,deviceId,estado:'finalizada'});
@@ -2729,6 +2753,7 @@
   }
 
   function expiryLabel(x){
+    if(x.caducidad_tipo==='no_caduca') return '♾️ No caduca';
     if(!x.caducidad_mes || !x.caducidad_anio) return '—';
     return `${x.caducidad_mes}/${x.caducidad_anio}`;
   }
