@@ -855,6 +855,213 @@
       .workspaceActiveBanner .name{font-size:15px}
     }
 
+
+
+    /* ===== Consolidado operativo Supervisor / Operarios ===== */
+    .operatorEntry{grid-template-columns:1fr!important}
+    .operatorEntry .field{margin:0}
+    .operatorEntry #openOperatorBtn{display:none!important}
+
+    .processSwitchBtn{
+      margin-left:auto;border:1px solid #91dac8;background:#fff;color:#0d6a59;
+      border-radius:999px;padding:6px 10px;font-weight:900;font-size:11px;white-space:nowrap;
+    }
+    .quickProcessMenu{
+      display:flex;gap:7px;flex-wrap:wrap;padding:8px 10px;margin:-4px 0 10px;
+      border:1px solid #ccebe2;border-radius:12px;background:#fbfffe;
+    }
+    .quickProcessMenu .btn{padding:8px 11px;font-size:12px}
+
+    .editRecordBtn,.operatorDeactivateBtn,.operatorReactivateBtn,.operatorDeleteBtn{
+      border-radius:9px;padding:6px 9px;font-weight:850;cursor:pointer;white-space:nowrap;
+    }
+    .editRecordBtn{border:1px solid #a9ddcf;background:#effaf7;color:#126b58}
+    .operatorDeactivateBtn{border:1px solid #e5c875;background:#fff8df;color:#7b5d00}
+    .operatorReactivateBtn{border:1px solid #a9ddcf;background:#effaf7;color:#126b58}
+    .operatorDeleteBtn{border:1px solid #efc4c1;background:#fff1f0;color:#9a2f29}
+    .rowActions{display:flex;gap:6px;flex-wrap:wrap}
+
+    .recordEditGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .recordEditGrid .full{grid-column:1/-1}
+    .recordEditMeta{padding:10px 12px;background:#f4faf7;border:1px solid var(--border);border-radius:12px;margin-bottom:12px;font-size:13px}
+    .recordEditMeta b{color:#0d5d4d}
+    .recordEditActions{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}
+
+    .prodFilters{grid-template-columns:repeat(5,minmax(0,1fr))!important}
+    .operatorDrillBtn{border:0;background:transparent;padding:0;font:inherit;font-weight:900;color:#0e6e5b;cursor:pointer;text-align:left}
+    .operatorDrillBtn:hover{text-decoration:underline}
+    .detailRow td{background:#f7fcfa!important;padding:0!important}
+    .operatorDetailBox{padding:12px 14px;border-top:1px solid #d8ece5;border-bottom:1px solid #d8ece5}
+    .operatorDetailBox .tableWrap{background:#fff}
+
+    .auditFilters{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+    .pauseReasons{white-space:normal;min-width:170px}
+
+    .chartCard{box-shadow:0 8px 25px rgba(20,55,40,.055)}
+    .chartCard h3{font-size:17px;margin-bottom:12px}
+    .chartCard p{display:none!important}
+    .chartCanvasWrap{min-height:270px}
+
+    .familyRefTitle{display:flex;align-items:center;justify-content:space-between;margin:18px 0 8px}
+    .familyRefTitle h3{margin:0}
+    .familyTag{display:inline-flex;padding:4px 8px;border-radius:999px;background:#eaf8f4;border:1px solid #bfe5d8;font-size:11px;font-weight:850;color:#126b58}
+
+    @media(max-width:1100px){.prodFilters{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
+    @media(max-width:760px){
+      .prodFilters,.auditFilters{grid-template-columns:1fr 1fr!important}
+      .recordEditGrid{grid-template-columns:1fr}
+      .recordEditGrid .full{grid-column:auto}
+      .processSwitchBtn{margin-left:0}
+      .workspaceActiveBanner{flex-wrap:wrap}
+    }
+    @media(max-width:520px){.prodFilters,.auditFilters{grid-template-columns:1fr!important}}
+
+  
+    /* ===== Supervisor: uso amplio y compacto de pantalla ===== */
+    .app.supervisor-wide{
+      width:calc(100% - 28px);
+      max-width:1800px;
+      padding:12px 0 18px;
+    }
+
+    .app.supervisor-wide .topbar{
+      margin-bottom:10px;
+    }
+
+    .app.supervisor-wide .mainTabs{
+      margin-bottom:12px;
+    }
+
+    .app.supervisor-wide .supGrid{
+      grid-template-columns:205px minmax(0,1fr);
+      gap:12px;
+    }
+
+    .app.supervisor-wide .supNav{
+      padding:12px;
+      gap:7px;
+    }
+
+    .app.supervisor-wide .supNav .btn{
+      padding:11px 12px;
+    }
+
+    .app.supervisor-wide .supView{
+      min-width:0;
+      padding:14px;
+    }
+
+    .app.supervisor-wide .sectionTitle{
+      margin-bottom:10px;
+    }
+
+    .app.supervisor-wide .kpis,
+    .app.supervisor-wide .miniKpis,
+    .app.supervisor-wide .chartTopKpis{
+      gap:8px;
+      margin-top:8px;
+      margin-bottom:10px;
+    }
+
+    .app.supervisor-wide .kpi,
+    .app.supervisor-wide .miniKpi{
+      padding:11px 12px;
+    }
+
+    .app.supervisor-wide .splitCards{
+      gap:10px;
+      margin-top:10px;
+    }
+
+    .app.supervisor-wide .subCard{
+      padding:11px;
+    }
+
+    .app.supervisor-wide .filterGrid{
+      gap:8px;
+      margin-bottom:10px;
+    }
+
+    .app.supervisor-wide .field{
+      margin-bottom:8px;
+    }
+
+    .app.supervisor-wide .field input,
+    .app.supervisor-wide .field select{
+      padding:10px 11px;
+    }
+
+    .app.supervisor-wide .tableWrap{
+      width:100%;
+      max-width:100%;
+    }
+
+    .app.supervisor-wide table{
+      width:100%;
+    }
+
+    .app.supervisor-wide th,
+    .app.supervisor-wide td{
+      padding:9px 10px;
+    }
+
+    .app.supervisor-wide .chartGrid{
+      gap:10px;
+    }
+
+    .app.supervisor-wide .chartCard{
+      padding:12px;
+      min-height:320px;
+    }
+
+    .app.supervisor-wide .chartCanvasWrap{
+      height:255px;
+    }
+
+    @media(max-width:1200px){
+      .app.supervisor-wide{
+        width:calc(100% - 20px);
+        padding-top:10px;
+      }
+      .app.supervisor-wide .supGrid{
+        grid-template-columns:190px minmax(0,1fr);
+        gap:10px;
+      }
+    }
+
+    @media(max-width:900px){
+      .app.supervisor-wide{
+        width:100%;
+        padding:10px;
+      }
+      .app.supervisor-wide .supGrid{
+        grid-template-columns:1fr;
+      }
+    }
+
+  
+    /* ===== Auditoría / metas / novedades ===== */
+    .compactActions{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+    .miniBtn{border:1px solid var(--border);background:#fff;border-radius:10px;padding:7px 10px;font-size:11px;font-weight:800;cursor:pointer}
+    .miniBtn.ok{border-color:#a9ddcf;background:#effaf7;color:#126b58}
+    .miniBtn.warn{border-color:#efd18b;background:#fff8e7;color:#7d5b00}
+    .miniBtn.bad{border-color:#efc4c1;background:#fff3f2;color:#9a2f29}
+    .noveltyTabs{display:flex;gap:7px;flex-wrap:wrap;margin:4px 0 10px}
+    .noveltyTab{border:1px solid var(--border);background:#fff;border-radius:11px;padding:8px 12px;font-weight:850;cursor:pointer}
+    .noveltyTab.active{background:var(--green);color:#fff;border-color:var(--green)}
+    .categoryToggle{border:0;background:transparent;font-weight:900;color:var(--ink);cursor:pointer;padding:0;text-align:left}
+    .categoryDetailRow td{background:#fbfefd;padding:8px 12px}
+    .categoryDetailBox{border:1px solid #d4e9e2;border-radius:12px;overflow:hidden}
+    .categorySelect{min-width:170px;padding:7px 8px;border:1px solid #cbdad4;border-radius:9px;background:#fff}
+    .historyList{display:grid;gap:10px}
+    .historyItem{border:1px solid #dce8e3;border-radius:14px;padding:12px;background:#fbfdfc}
+    .historyItemHead{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:6px}
+    .historyItem strong{font-size:14px}.historyMeta{font-size:11px;color:var(--muted)}
+    .historyChanges{display:grid;gap:4px;font-size:12px}
+    .historyChange{padding:5px 7px;border-radius:8px;background:#f3f7f5}
+    .managementPill{display:inline-flex;align-items:center;border-radius:999px;padding:4px 8px;font-size:11px;font-weight:850;border:1px solid var(--border)}
+    .managementPill.pending{background:#fff8e7;border-color:#efd18b;color:#7d5b00}.managementPill.done{background:#eaf8f3;border-color:#a9ddcf;color:#126b58}
+
 </style>
 </head>
 <body>
@@ -880,7 +1087,6 @@
               <input id="operatorSearch" autocomplete="off" autocapitalize="words" placeholder="Escriba el nombre del operario">
               <div id="operatorMatches" class="operatorMatches hidden"></div>
             </div>
-            <button id="openOperatorBtn" class="btn primary">➕ Abrir</button>
           </div>
           <div id="opTabs" class="opTabs"></div>
           <div id="opWorkspace"></div>
@@ -892,7 +1098,8 @@
   <section id="panel-supervisor" class="panel">
     <div id="supAuth" class="authBox card">
       <h2>🔒 Acceso Supervisor</h2>
-      <div class="field"><label>PIN</label><input id="supPin" type="password" inputmode="numeric" maxlength="8" placeholder="••••"></div>
+      <div class="field"><label>Usuario</label><input id="supUser" autocomplete="username" placeholder="Carlos"></div>
+      <div class="field"><label>Contraseña</label><input id="supPassword" type="password" autocomplete="current-password" placeholder="••••"></div>
       <button id="supLoginBtn" class="btn primary">👨‍💼 Ingresar</button>
       <div id="supAuthMsg"></div>
     </div>
@@ -913,7 +1120,6 @@
             <div class="supGroupChildren">
               <button class="btn secondary supNavBtn" data-view="productividad">Productividad</button>
               <button class="btn secondary supNavBtn" data-view="graficos">Gráficos</button>
-              <button class="btn secondary supNavBtn" data-view="categorias">Categorías</button>
               <button class="btn secondary supNavBtn" data-view="metas">Metas</button>
             </div>
           </div>
@@ -923,7 +1129,8 @@
             <div class="supGroupChildren">
               <button class="btn secondary supNavBtn" data-view="registros">Últimos registros</button>
               <button class="btn secondary supNavBtn" data-view="novedades">Novedades</button>
-              <button class="btn secondary supNavBtn" data-view="reporte">Reporte diario</button>
+              <button class="btn secondary supNavBtn" data-view="caducidad">Caducidad</button>
+              <button class="btn secondary supNavBtn" data-view="reporte">✉️ Reporte diario</button>
             </div>
           </div>
 
@@ -942,7 +1149,7 @@
           <div id="view-dashboard" class="supView active card">
             <div class="sectionTitle"><h2>📊 Dashboard operativo</h2><button id="refreshDashboard" class="btn ghost">🔄 Actualizar</button></div>
             <div class="kpis">
-              <div class="kpi"><span>Productos</span><strong id="kpiProductos">—</strong></div>
+              <div class="kpi"><span>Unidades hoy</span><strong id="kpiUnitsHoy">—</strong></div>
               <div class="kpi"><span>Etiquetados hoy</span><strong id="kpiEtiquetadoHoy">—</strong></div>
               <div class="kpi"><span>Armados hoy</span><strong id="kpiArmadoHoy">—</strong></div>
               <div class="kpi"><span>Sesiones activas</span><strong id="kpiSesiones">—</strong></div>
@@ -957,7 +1164,6 @@
           <div id="view-graficos" class="supView card">
             <div class="sectionTitle">
               <h2>📊 Gráficos del día</h2>
-              <span class="small">Vista visual de la jornada seleccionada</span>
             </div>
 
             <div class="chartFilterBar">
@@ -981,31 +1187,27 @@
             <div class="chartTopKpis">
               <div class="miniKpi"><span>Total unidades</span><strong id="chartsTotalUnits">—</strong></div>
               <div class="miniKpi"><span>Trabajadores</span><strong id="chartsWorkers">—</strong></div>
-              <div class="miniKpi"><span>Mediana productividad</span><strong id="chartsMedian">—</strong></div>
+              <div class="miniKpi"><span>Promedio productividad</span><strong id="chartsAvg">—</strong></div>
             </div>
 
             <div class="chartGrid">
               <div class="chartCard">
                 <h3>👷 Unidades por trabajador</h3>
-                <p>Compara el volumen procesado por cada persona durante el día.</p>
                 <div class="chartCanvasWrap"><canvas id="chartUnitsWorker"></canvas></div>
               </div>
 
               <div class="chartCard">
                 <h3>⚡ Productividad por trabajador</h3>
-                <p>Compara la productividad mediana en unidades por hora.</p>
                 <div class="chartCanvasWrap"><canvas id="chartProductivityWorker"></canvas></div>
               </div>
 
               <div class="chartCard">
                 <h3>🕐 Unidades por hora</h3>
-                <p>Muestra cómo se distribuyó la producción a lo largo de la jornada.</p>
                 <div class="chartCanvasWrap"><canvas id="chartUnitsHour"></canvas></div>
               </div>
 
               <div class="chartCard">
                 <h3>🧩 Productividad por categoría</h3>
-                <p>Permite comparar qué tipos de producto son más rápidos o lentos.</p>
                 <div class="chartCanvasWrap"><canvas id="chartCategoryProductivity"></canvas></div>
               </div>
             </div>
@@ -1013,40 +1215,42 @@
 
           <div id="view-productividad" class="supView card">
             <div class="sectionTitle"><h2>📈 Análisis de productividad</h2><button id="refreshProductivity" class="btn ghost">🔄 Actualizar</button></div>
-            <div class="filterGrid">
+            <div class="filterGrid prodFilters">
+              <div class="field"><label>Fecha</label><input id="prodDate" type="date"></div>
               <div class="field"><label>Proceso</label><select id="prodFilterProcess"><option value="etiquetado">🏷️ Etiquetado</option><option value="armado">📦 Armado</option><option value="todos">Todos</option></select></div>
               <div class="field"><label>Operario</label><select id="prodFilterOperator"><option value="">Todos</option></select></div>
               <div class="field"><label>Categoría</label><select id="prodFilterCategory"><option value="">Todas</option></select></div>
               <div class="field"><label>Agrupar por</label><select id="prodGroupBy"><option value="operario">Operario</option><option value="codigo">SKU / Código</option><option value="categoria">Categoría</option></select></div>
             </div>
-            <div class="miniKpis">
-              <div class="miniKpi"><span>Observaciones</span><strong id="prodObs">—</strong></div>
+            <div class="miniKpis" style="grid-template-columns:repeat(3,minmax(0,1fr))">
+              <div class="miniKpi"><span>Registros</span><strong id="prodObs">—</strong></div>
               <div class="miniKpi"><span>Unidades</span><strong id="prodUnits">—</strong></div>
               <div class="miniKpi"><span>Promedio u/h</span><strong id="prodAvg">—</strong></div>
-              <div class="miniKpi"><span>Mediana u/h</span><strong id="prodMedian">—</strong></div>
             </div>
-            <div class="tableWrap"><table><thead><tr><th id="prodGroupHeader">Operario</th><th>Registros</th><th>Unidades</th><th>Promedio u/h</th><th>Mediana u/h</th><th>Mejor u/h</th><th>Referencia</th></tr></thead><tbody id="productivityBody"><tr><td colspan="8">Sin cargar</td></tr></tbody></table></div>
-            <div class="small" style="margin-top:8px">ℹ️ Una sola carga reciente de registros se reutiliza entre las vistas para reducir lecturas en Firebase.</div>
+            <div class="tableWrap"><table><thead><tr><th id="prodGroupHeader">Operario</th><th>Registros</th><th>Unidades</th><th>Promedio u/h</th><th>Mejor u/h</th><th>Referencia</th></tr></thead><tbody id="productivityBody"><tr><td colspan="6">Sin cargar</td></tr></tbody></table></div>
           </div>
 
           <div id="view-categorias" class="supView card">
             <div class="sectionTitle"><h2>🧩 Productividad por categoría</h2><button id="refreshCategories" class="btn ghost">🔄 Actualizar</button></div>
             <div class="message warn">Las categorías se construyen desde la descripción del producto y el histórico real. Sirven como referencia inicial para productos con poca data propia.</div>
-            <div class="tableWrap" style="margin-top:12px"><table><thead><tr><th>Categoría</th><th>SKUs</th><th>Registros</th><th>Operarios</th><th>Unidades</th><th>Promedio u/h</th><th>Mediana u/h</th><th>Madurez</th></tr></thead><tbody id="categoriesBody"><tr><td colspan="8">Sin cargar</td></tr></tbody></table></div>
+            <div class="tableWrap" style="margin-top:12px"><table><thead><tr><th>Categoría</th><th>SKUs</th><th>Registros</th><th>Operarios</th><th>Unidades</th><th>Promedio u/h</th><th>Madurez</th></tr></thead><tbody id="categoriesBody"><tr><td colspan="7">Sin cargar</td></tr></tbody></table></div>
           </div>
 
           <div id="view-metas" class="supView card">
-            <div class="sectionTitle"><h2>🎯 Metas y productos en evaluación</h2><button id="refreshMetasAnalysis" class="btn ghost">🔄 Analizar</button></div><div class="message warn">🏷️ Las metas se aplican a Etiquetado. Armado se mantiene por ahora como recopilación de histórico.</div>
+            <div class="sectionTitle"><h2>🎯 Metas y referencias</h2><button id="refreshMetasAnalysis" class="btn ghost">🔄 Analizar</button></div>
             <div class="twoCols">
               <div class="field"><label>Código</label><input id="metaCode" placeholder="Ej. 46966"></div>
               <div class="field"><label>Meta u/h</label><input id="metaValue" type="number" min="1" placeholder="Ej. 700"></div>
             </div>
             <div class="field"><label>Motivo / observación</label><input id="metaReason" placeholder="Meta aprobada según histórico"></div>
-            <button id="saveMeta" class="btn primary">💾 Guardar meta</button>
+            <div class="compactActions"><button id="saveMeta" class="btn primary">💾 Guardar meta por código</button><button id="metaHistoryBtn" class="miniBtn">🕘 Historial del código</button></div>
             <div id="metaMsg"></div>
-            <div style="height:14px"></div>
-            <h3>🔬 Productos en evaluación</h3>
-            <div class="tableWrap"><table><thead><tr><th>Código</th><th>Descripción</th><th>Categoría</th><th>Registros</th><th>Operarios</th><th>Mediana u/h</th><th>Estado</th></tr></thead><tbody id="evaluationBody"><tr><td colspan="7">Presiona Analizar</td></tr></tbody></table></div>
+
+            <div class="familyRefTitle"><h3>🧩 Referencias por categoría</h3><span class="familyTag">Código → Categoría</span></div>
+            <div class="tableWrap"><table><thead><tr><th>Categoría</th><th>Registros</th><th>Operarios</th><th>Promedio u/h</th><th>Estado</th></tr></thead><tbody id="familyTargetsBody"><tr><td colspan="5">Presiona Analizar</td></tr></tbody></table></div>
+
+            <div class="familyRefTitle"><h3>🔬 Productos en evaluación</h3></div>
+            <div class="tableWrap"><table><thead><tr><th>Código</th><th>Descripción</th><th>Categoría</th><th>Registros</th><th>Operarios</th><th>Promedio u/h</th><th>Estado</th></tr></thead><tbody id="evaluationBody"><tr><td colspan="7">Presiona Analizar</td></tr></tbody></table></div>
           </div>
 
           <div id="view-registros" class="supView card">
@@ -1072,9 +1276,23 @@
             </div>
           </div>
 
+          <div id="view-caducidad" class="supView card">
+            <div class="sectionTitle"><h2>📅 Caducidad</h2><div class="compactActions"><button id="copyExpiryReport" class="miniBtn">📋 Copiar tabla</button><button id="downloadExpiryReport" class="miniBtn">📥 Descargar Excel</button><button id="loadExpiryReport" class="btn ghost">🔄 Actualizar</button></div></div>
+            <div class="filterGrid">
+              <div class="field"><label>Desde</label><input id="expiryFrom" type="date"></div>
+              <div class="field"><label>Hasta</label><input id="expiryTo" type="date"></div>
+              <div class="field"><label>Proceso</label><select id="expiryProcess"><option value="todos">Todos</option><option value="etiquetado">🏷️ Etiquetado</option><option value="armado">📦 Armado</option></select></div>
+              <div class="field"><label>Operario</label><select id="expiryOperator"><option value="">Todos</option></select></div>
+            </div>
+            <div class="filterGrid" style="grid-template-columns:minmax(180px,260px) 1fr">
+              <div class="field"><label>Tipo</label><select id="expiryTypeFilter"><option value="todos">Todos</option><option value="fecha">📅 Caduca</option><option value="no_caduca">♾️ No caduca</option></select></div>
+            </div>
+            <div class="tableWrap"><table><thead><tr><th>Fecha</th><th>Operario</th><th>Proceso</th><th>Código</th><th>Descripción</th><th>Categoría</th><th>Unidades</th><th>Caducidad</th></tr></thead><tbody id="expiryBody"><tr><td colspan="8">Sin cargar</td></tr></tbody></table></div>
+          </div>
+
           <div id="view-reporte" class="supView card">
             <div class="sectionTitle">
-              <h2>📋 Reporte diario</h2>
+              <h2>✉️ Reporte diario</h2>
               <span class="small">Formato listo para copiar al correo</span>
             </div>
 
@@ -1146,14 +1364,20 @@
                 <select id="noveltyOperator"><option value="">Todos</option></select>
               </div>
               <div class="field">
-                <label>Tipo</label>
-                <select id="noveltyTypeFilter">
-                  <option value="todos">Todas</option>
-                  <option value="sobrante">➕ Sobrantes</option>
-                  <option value="faltante">➖ Faltantes</option>
-                  <option value="danado">💥 Dañados</option>
+                <label>Gestión</label>
+                <select id="noveltyManagementFilter">
+                  <option value="todos">Todos</option>
+                  <option value="pendiente">🟡 Pendientes</option>
+                  <option value="gestionado">✅ Gestionados</option>
                 </select>
               </div>
+            </div>
+
+            <div class="noveltyTabs">
+              <button class="noveltyTab active" data-type="todos">Todos</button>
+              <button class="noveltyTab" data-type="sobrante">➕ Sobrantes</button>
+              <button class="noveltyTab" data-type="faltante">➖ Faltantes</button>
+              <button class="noveltyTab" data-type="danado">💥 Dañados</button>
             </div>
 
             <div class="miniKpis">
@@ -1176,10 +1400,13 @@
                     <th>Novedad</th>
                     <th>Cantidad</th>
                     <th>Comentario</th>
+                    <th>Gestión</th>
+                    <th>Gestión por / fecha</th>
+                    <th>Acción</th>
                   </tr>
                 </thead>
                 <tbody id="noveltyBody">
-                  <tr><td colspan="7">Sin cargar</td></tr>
+                  <tr><td colspan="11">Sin cargar</td></tr>
                 </tbody>
               </table>
             </div>
@@ -1187,13 +1414,18 @@
 
           <div id="view-supervision" class="supView card">
             <div class="sectionTitle"><h2>👀 Supervisión y auditoría</h2><button id="refreshSupervision" class="btn ghost">🔄 Revisar</button></div>
+            <div class="filterGrid auditFilters">
+              <div class="field"><label>Desde</label><input id="auditFrom" type="date"></div>
+              <div class="field"><label>Hasta</label><input id="auditTo" type="date"></div>
+              <div class="field"><label>Operario</label><select id="auditOperator"><option value="">Todos</option></select></div>
+            </div>
             <div class="miniKpis">
               <div class="miniKpi"><span>Registros revisados</span><strong id="auditReviewed">—</strong></div>
               <div class="miniKpi"><span>Alertas</span><strong id="auditAlerts">—</strong></div>
               <div class="miniKpi"><span>Pausas altas</span><strong id="auditPauses">—</strong></div>
               <div class="miniKpi"><span>Duraciones largas</span><strong id="auditLong">—</strong></div>
             </div>
-            <div class="tableWrap"><table><thead><tr><th>Fecha</th><th>Operario</th><th>Proceso</th><th>Código</th><th>U/H</th><th>Tiempo neto</th><th>Pausa</th><th>Alerta</th></tr></thead><tbody id="auditBody"><tr><td colspan="8">Sin revisar</td></tr></tbody></table></div>
+            <div class="tableWrap"><table><thead><tr><th>Fecha</th><th>Operario</th><th>Proceso</th><th>Código</th><th>U/H</th><th>Tiempo neto</th><th>Pausa</th><th>Motivo(s) pausa</th><th>Alerta</th></tr></thead><tbody id="auditBody"><tr><td colspan="9">Sin revisar</td></tr></tbody></table></div>
           </div>
 
           <div id="view-data" class="supView card">
@@ -1216,7 +1448,7 @@
             <button id="addOperator" class="btn primary">➕ Crear operario</button>
             <div id="userMsg"></div>
             <div style="height:12px"></div>
-            <div class="tableWrap"><table><thead><tr><th>Nombre</th><th>Tipo</th><th>Activo</th></tr></thead><tbody id="usersBody"><tr><td colspan="3">Sin cargar</td></tr></tbody></table></div>
+            <div class="tableWrap"><table><thead><tr><th>Nombre</th><th>Tipo</th><th>Estado</th><th>Acción</th></tr></thead><tbody id="usersBody"><tr><td colspan="4">Sin cargar</td></tr></tbody></table></div>
           </div>
         </section>
       </div>
@@ -1247,6 +1479,34 @@
     <div id="importMsg"></div>
   </div>
 </div>
+
+<div id="recordEditModal" class="modalBackdrop">
+  <div class="modalCard" style="width:min(660px,96vw)">
+    <div class="modalHead"><h2>✏️ Editar registro</h2><button id="closeRecordEditModal" class="btn ghost">✕ Cerrar</button></div>
+    <div id="recordEditMeta" class="recordEditMeta"></div>
+    <div class="recordEditGrid">
+      <div class="field"><label>Código</label><input id="editCode" inputmode="numeric"></div>
+      <div class="field"><label>Unidades procesadas</label><input id="editUnits" type="number" min="1" inputmode="numeric"></div>
+      <div class="field"><label>Caducidad</label><select id="editExpiryType"><option value="fecha">📅 Caduca</option><option value="no_caduca">♾️ No caduca</option></select></div>
+      <div id="editExpiryMonthWrap" class="field"><label>Mes</label><select id="editExpiryMonth"><option value="">Mes</option><option value="01">01</option><option value="02">02</option><option value="03">03</option><option value="04">04</option><option value="05">05</option><option value="06">06</option><option value="07">07</option><option value="08">08</option><option value="09">09</option><option value="10">10</option><option value="11">11</option><option value="12">12</option></select></div>
+      <div id="editExpiryYearWrap" class="field"><label>Año</label><select id="editExpiryYear"><option value="">Año</option><option value="2026">2026</option><option value="2027">2027</option><option value="2028">2028</option><option value="2029">2029</option><option value="2030">2030</option><option value="2031">2031</option><option value="2032">2032</option><option value="2033">2033</option><option value="2034">2034</option><option value="2035">2035</option><option value="2036">2036</option><option value="2037">2037</option><option value="2038">2038</option><option value="2039">2039</option><option value="2040">2040</option><option value="2041">2041</option><option value="2042">2042</option><option value="2043">2043</option><option value="2044">2044</option><option value="2045">2045</option></select></div>
+      <div class="field"><label>Novedad</label><select id="editNoveltyType"><option value="none">✅ Sin novedad</option><option value="sobrante">➕ Sobrante</option><option value="faltante">➖ Faltante</option><option value="danado">💥 Dañado</option></select></div>
+      <div id="editNoveltyQtyWrap" class="field"><label>Cantidad novedad</label><input id="editNoveltyQty" type="number" min="1" inputmode="numeric"></div>
+      <div class="field full"><label>Comentario</label><textarea id="editComment" maxlength="300" style="width:100%;min-height:82px;resize:vertical;padding:10px 12px;border:1px solid #ccd7d0;border-radius:12px;font:inherit"></textarea></div>
+    </div>
+    <div class="recordEditActions"><button id="saveRecordEdit" class="btn primary">💾 Guardar cambios</button></div>
+  </div>
+</div>
+
+
+<div id="historyModal" class="modalBackdrop">
+  <div class="modalCard" style="width:min(720px,96vw)">
+    <div class="modalHead"><h2>🕘 Historial de cambios</h2><button id="closeHistoryModal" class="btn ghost">✕ Cerrar</button></div>
+    <div id="historyMeta" class="recordEditMeta"></div>
+    <div id="historyBody" class="historyList"><div class="emptyState">Sin cargar</div></div>
+  </div>
+</div>
+
 <div id="toast" class="toast"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -1280,6 +1540,33 @@
   const slug=s=>norm(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
   const safeNum=v=>{const n=Number(String(v).replace(',','.'));return Number.isFinite(n)?n:0};
 
+  const manualCategoryCache=new Map();
+  const BASE_CATEGORIES=['PRODUCTOS CAPILARES','DESODORANTES','CUIDADO ORAL','PROTECCIÓN SOLAR','CUIDADO DE PIES','CUIDADO DE MANOS','CUIDADO CORPORAL','HIGIENE CORPORAL','CUIDADO FACIAL','MAQUILLAJE','UÑAS','PERFUMERÍA','BIENESTAR','ACCESORIOS','CUIDADO PERSONAL','OTROS'];
+
+  async function loadManualCategories(){
+    try{const snap=await getDocs(collection(db,'clasificaciones_productos'));manualCategoryCache.clear();snap.docs.forEach(d=>{const x=d.data();if(x.categoria)manualCategoryCache.set(d.id,x.categoria)});}catch(e){console.warn('Clasificaciones manuales',e)}
+  }
+  async function getManualCategory(code){
+    const c=String(code||'');if(manualCategoryCache.has(c))return manualCategoryCache.get(c);
+    try{const snap=await getDoc(doc(db,'clasificaciones_productos',c));if(snap.exists()&&snap.data().categoria){manualCategoryCache.set(c,snap.data().categoria);return snap.data().categoria}}catch{}
+    return '';
+  }
+  async function logAudit({accion,entidad,entidadId,detalle='',cambios=[]}){
+    try{await addDoc(collection(db,'historial_cambios'),{accion,entidad,entidad_id:String(entidadId||''),detalle,cambios,usuario:currentSupervisorUser(),fecha_local:localISO(),creado_en:serverTimestamp()})}catch(e){console.warn('Historial',e)}
+  }
+  function diffChange(field,oldValue,newValue){return String(oldValue??'')===String(newValue??'')?null:{campo:field,anterior:oldValue??'',nuevo:newValue??''}}
+  async function openHistory(entidad,id,label=''){
+    $("historyMeta").textContent=label||`${entidad} · ${id}`;$("historyBody").innerHTML='<div class="emptyState">Cargando…</div>';$("historyModal").classList.add('show');
+    try{const snap=await getDocs(query(collection(db,'historial_cambios'),where('entidad_id','==',String(id))));let rows=snap.docs.map(d=>d.data()).filter(x=>x.entidad===entidad);rows.sort((a,b)=>String(b.fecha_local||'').localeCompare(String(a.fecha_local||'')));$("historyBody").innerHTML=rows.length?rows.map(x=>`<div class="historyItem"><div class="historyItemHead"><strong>${x.accion||'Cambio'}</strong><span class="historyMeta">👤 ${x.usuario||'—'} · ${x.fecha_local||'—'}</span></div>${x.detalle?`<div class="historyMeta" style="margin-bottom:6px">${x.detalle}</div>`:''}<div class="historyChanges">${(Array.isArray(x.cambios)?x.cambios:[]).map(c=>`<div class="historyChange"><b>${c.campo}:</b> ${c.anterior??'—'} → ${c.nuevo??'—'}</div>`).join('')||'<div class="historyMeta">Sin detalle adicional.</div>'}</div></div>`).join(''):'<div class="emptyState">No hay cambios registrados.</div>'}catch(e){$("historyBody").innerHTML=`<div class="message err">${e.message}</div>`}
+  }
+
+
+  const syncSupervisorWidth=()=>{
+    const supActive=$("panel-supervisor")?.classList.contains('active');
+    document.querySelector('.app')?.classList.toggle('supervisor-wide',!!supActive);
+  };
+
+
 
   document.querySelectorAll('.mainTab').forEach(btn=>btn.addEventListener('click',()=>{
     document.querySelectorAll('.mainTab').forEach(x=>x.classList.remove('active'));
@@ -1287,21 +1574,29 @@
     document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
     $("panel-"+btn.dataset.main).classList.add('active');
     document.querySelector('.mainTabs').classList.add('profile-selected');
+
+    const appRoot=document.querySelector('.app');
+    if(btn.dataset.main==='supervisor') appRoot?.classList.add('supervisor-wide');
+    else appRoot?.classList.remove('supervisor-wide');
   }));
 
   $("changeProfile").onclick=()=>{
     document.querySelector('.mainTabs').classList.remove('profile-selected');
     document.querySelectorAll('.mainTab').forEach(x=>x.classList.remove('active'));
     document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
+    document.querySelector('.app')?.classList.remove('supervisor-wide');
   };
 
-  // Acceso visual del panel Supervisor. Cambia este PIN antes de publicar.
-  const SUPERVISOR_PIN = "8357";
-  let supervisorUnlocked = sessionStorage.getItem('supervisorUnlocked') === '1';
+  // Acceso interno del Supervisor.
+  const SUPERVISOR_USERS={carlos:'123',hugo:'123',kevin:'123'};
+  let supervisorUnlocked=sessionStorage.getItem('supervisorUnlocked')==='1';
+  let supervisorUser=sessionStorage.getItem('supervisorUser')||'';
+
+  function currentSupervisorUser(){return supervisorUser||'Supervisor'}
 
   async function ensureFirebaseSession(){
     if(auth.currentUser) return auth.currentUser;
-    const cred = await signInAnonymously(auth);
+    const cred=await signInAnonymously(auth);
     return cred.user;
   }
 
@@ -1309,6 +1604,7 @@
     if(supervisorUnlocked){
       $("supAuth").classList.add('hidden');
       $("supApp").classList.remove('hidden');
+      loadManualCategories().catch(()=>{});
       loadDashboard().catch(()=>{});
       loadUsersTable().catch(()=>{});
     }else{
@@ -1318,21 +1614,24 @@
   }
 
   $("supLoginBtn").onclick=async()=>{
-    const pin = $("supPin").value.trim();
-    if(pin === SUPERVISOR_PIN){
-      supervisorUnlocked = true;
+    const raw=norm($("supUser").value),key=raw.toLowerCase();
+    const pass=$("supPassword").value;
+    if(SUPERVISOR_USERS[key]&&SUPERVISOR_USERS[key]===pass){
+      supervisorUnlocked=true;
+      supervisorUser=key.charAt(0).toUpperCase()+key.slice(1);
       sessionStorage.setItem('supervisorUnlocked','1');
-      $("supPin").value='';
-      $("supAuthMsg").innerHTML='<div class="message ok">✅ Acceso autorizado.</div>';
+      sessionStorage.setItem('supervisorUser',supervisorUser);
+      $("supPassword").value='';
+      $("supAuthMsg").innerHTML=`<div class="message ok">✅ Bienvenido, ${supervisorUser}.</div>`;
       renderSupervisorAccess();
     }else{
-      $("supAuthMsg").innerHTML='<div class="message err">❌ PIN incorrecto.</div>';
+      $("supAuthMsg").innerHTML='<div class="message err">❌ Usuario o contraseña incorrectos.</div>';
     }
   };
 
   $("supLogout").onclick=()=>{
-    supervisorUnlocked=false;
-    sessionStorage.removeItem('supervisorUnlocked');
+    supervisorUnlocked=false;supervisorUser='';
+    sessionStorage.removeItem('supervisorUnlocked');sessionStorage.removeItem('supervisorUser');
     renderSupervisorAccess();
   };
 
@@ -1424,26 +1723,26 @@
 
       // Documento eliminado por Supervisor.
       if(!snap.exists()){
-        if(['running','paused','finishing'].includes(s.state)){
-          if(s.interval){clearInterval(s.interval);s.interval=null;}
-          openOps.set(operatorId,buildIdleSession(s.operator,s.proceso));
-          saveDeviceOpenOps();
-          renderOpTabs();
-          if(activeOpId===operatorId) renderWorkspace();
-          toast('⚠️ La sesión fue eliminada por Supervisor');
-        }
+        if(s.interval){clearInterval(s.interval);s.interval=null;}
+        openOps.delete(operatorId);
+        saveDeviceOpenOps();
+        activeOpId=[...openOps.keys()][0]||null;
+        renderOpTabs();
+        renderWorkspace();
+        toast('⚠️ La sesión fue eliminada por Supervisor');
         return;
       }
 
       const x=snap.data()||{};
 
       // Cierre forzado por Supervisor.
-      if(x.estado==='cerrada_supervisor' && ['running','paused','finishing'].includes(s.state)){
+      if(x.estado==='cerrada_supervisor'){
         if(s.interval){clearInterval(s.interval);s.interval=null;}
-        openOps.set(operatorId,buildIdleSession(s.operator,s.proceso));
+        openOps.delete(operatorId);
         saveDeviceOpenOps();
+        activeOpId=[...openOps.keys()][0]||null;
         renderOpTabs();
-        if(activeOpId===operatorId) renderWorkspace();
+        renderWorkspace();
         toast('🔒 La sesión fue cerrada por Supervisor');
       }
     },(err)=>console.warn('Listener sesión activa',err));
@@ -1457,6 +1756,38 @@
       try{unsub()}catch{}
       activeSessionListeners.delete(operatorId);
     }
+  }
+
+  async function syncIdleSession(s){
+    if(!s?.operator?.id || s.state!=='idle') return;
+    try{
+      await setDoc(doc(db,'sesiones_activas',s.operator.id),{
+        operarioId:s.operator.id,
+        operario:s.operator.nombre,
+        tipo_personal:s.operator.tipo||'',
+        deviceId,
+        proceso:s.proceso||null,
+        codigo:null,
+        descripcion:null,
+        estado:'idle',
+        sesion_abierta:true,
+        inicio_ms:null,
+        fin_ms:null,
+        pausas:[],
+        pausa_total_ms:0,
+        ultima_actualizacion_local:localISO()
+      },{merge:true});
+    }catch(e){console.warn('No se pudo sincronizar sesión disponible',e)}
+  }
+
+  async function changeOperatorProcess(s,newProcess){
+    if(!s || s.state!=='idle') return toast('⚠️ Solo puedes cambiar de actividad cuando el perfil está listo');
+    s.proceso=newProcess;
+    s.code='';s.product=null;s.meta=null;s.processMenuOpen=false;
+    saveDeviceOpenOps();
+    await syncIdleSession(s);
+    renderOpTabs();
+    renderWorkspace();
   }
 
   async function hydrateSessionProduct(s){
@@ -1548,10 +1879,10 @@
   }
   function matchingOperators(){
     const q=norm($("operatorSearch")?.value||'').toLocaleLowerCase('es');
-    if(!q) return [];
+    if(!q) return operators.slice(0,8);
     return operators
       .filter(o=>norm(o.nombre).toLocaleLowerCase('es').includes(q))
-      .slice(0,6);
+      .slice(0,8);
   }
 
   function renderOperatorPicker(){
@@ -1616,7 +1947,7 @@
     $("operatorSearch").blur();
   }
 
-  $("openOperatorBtn").onclick=openOperatorFromSearch;
+  $("openOperatorBtn")?.addEventListener('click',openOperatorFromSearch);
 
   $("operatorSearch").addEventListener('input',()=>{
     renderOperatorMatches();
@@ -1661,9 +1992,19 @@
       if(snap.exists()){
         const x=snap.data()||{};
 
-        if(['running','paused','finishing'].includes(x.estado)){
+        if(['idle','running','paused','finishing'].includes(x.estado)){
           // Si la sesión fue creada por este mismo celular, recuperarla.
           if(x.deviceId===deviceId){
+            if(x.estado==='idle'){
+              const idle=buildIdleSession(o,x.proceso||null);
+              openOps.set(o.id,idle);
+              attachActiveSessionListener(o.id);
+              activeOpId=o.id;
+              saveDeviceOpenOps();
+              renderOpTabs();
+              renderWorkspace();
+              return;
+            }
             const s={
               operator:o,
               proceso:x.proceso||'etiquetado',
@@ -1696,7 +2037,7 @@
             return;
           }
 
-          toast(`⚠️ ${o.nombre} ya está trabajando en otro celular`);
+          toast(`⚠️ ${o.nombre} ya tiene una sesión abierta en otro celular`);
           return;
         }
       }
@@ -1706,18 +2047,20 @@
     }
 
     openOps.set(o.id,buildIdleSession(o,null));
+    await syncIdleSession(openOps.get(o.id));
     attachActiveSessionListener(o.id);
     activeOpId=o.id;
     saveDeviceOpenOps();
     renderOpTabs();
     renderWorkspace();
   }
-  function closeOperator(id){
+  async function closeOperator(id){
     const x=openOps.get(id);
     if(x?.state==='running'||x?.state==='paused'||x?.state==='finishing'){toast('⚠️ Guarda el trabajo antes de cerrar la sesión');return;}
     if(!confirm(`¿Cerrar la sesión del día de ${x?.operator?.nombre||'este operario'}?`)) return;
-    openOps.delete(id);
     detachActiveSessionListener(id);
+    try{await deleteDoc(doc(db,'sesiones_activas',id));}catch{}
+    openOps.delete(id);
     saveDeviceOpenOps();
     activeOpId=[...openOps.keys()][0]||null;
     renderOpTabs();
@@ -1753,7 +2096,8 @@
 
     const s=openOps.get(activeOpId);
 
-    const activeBanner=`<div class="workspaceActiveBanner"><span class="badge">🟢 Perfil activo</span><span class="name">${s.operator.nombre}</span></div>`;
+    const processSwitch=s.proceso&&s.state==='idle'?`<button id="changeProcessBtn" class="processSwitchBtn">${s.proceso==='armado'?'📦 Armado':'🏷️ Etiquetado'} ▾</button>`:'';
+    const activeBanner=`<div class="workspaceActiveBanner"><span class="badge">🟢 Perfil activo</span><span class="name">${s.operator.nombre}</span>${processSwitch}</div>${s.processMenuOpen?`<div class="quickProcessMenu"><button id="switchEtiquetado" class="btn ghost">🏷️ Etiquetado</button><button id="switchArmado" class="btn ghost">📦 Armado</button></div>`:''}`;
 
     // El proceso se elige una sola vez para la sesión/jornada de ese perfil.
     if(!s.proceso){
@@ -1779,18 +2123,8 @@
           </div>
         </div>`;
 
-      $("chooseEtiquetado").onclick=()=>{
-        s.proceso='etiquetado';
-        saveDeviceOpenOps();
-        renderOpTabs();
-        renderWorkspace();
-      };
-      $("chooseArmado").onclick=()=>{
-        s.proceso='armado';
-        saveDeviceOpenOps();
-        renderOpTabs();
-        renderWorkspace();
-      };
+      $("chooseEtiquetado").onclick=()=>changeOperatorProcess(s,'etiquetado');
+      $("chooseArmado").onclick=()=>changeOperatorProcess(s,'armado');
       $("closeDaySession").onclick=()=>closeOperator(s.operator.id);
       return;
     }
@@ -1931,6 +2265,9 @@
         <button id="closeDaySession" class="btn ghost">🚪 Cerrar sesión del día</button>
       </div>`:''}`;
 
+    $("changeProcessBtn")?.addEventListener('click',()=>{s.processMenuOpen=!s.processMenuOpen;renderWorkspace()});
+    $("switchEtiquetado")?.addEventListener('click',()=>changeOperatorProcess(s,'etiquetado'));
+    $("switchArmado")?.addEventListener('click',()=>changeOperatorProcess(s,'armado'));
     $("validateCode")?.addEventListener('click',()=>validateProduct(s));
     $("codeInput")?.addEventListener('keydown',e=>{if(e.key==='Enter')validateProduct(s)});
     $("startBtn")?.addEventListener('click',()=>startWork(s));
@@ -2014,7 +2351,7 @@
       <div class="compactProductMeta">
         <div class="metric"><span>Código</span><strong>${s.code}</strong></div>
         <div class="metric"><span>Descripción</span><strong class="productDescription">${s.product.descripcion||s.product.descripcion_producto||s.product.nombre||'—'}</strong></div>
-        <div class="metric"><span>Categoría</span><strong>${s.product.categoria||'Sin categorizar'}</strong></div>
+        <div class="metric"><span>Categoría</span><strong>${s.product.categoria||'Sin clasificar'}</strong></div>
         <div class="metric"><span>${s.proceso==='armado'?'Histórico':'Meta'}</span><strong>${metaText}</strong></div>
       </div>`;
   }
@@ -2080,6 +2417,8 @@
       if(!product){s.product=null;s.code=code;$("productInfo").innerHTML='<div class="message err">❌ Código no encontrado en el maestro.</div>';return;}
       s.code=code;s.product=product;
       if(!s.product.descripcion && s.product.description) s.product.descripcion=s.product.description;
+      const hierarchy=classifyProduct(s.product.descripcion||s.product.descripcion_producto||s.product.nombre||'');
+      s.product.categoria=(await getManualCategory(code))||hierarchy.categoria;
       if(s.proceso==='etiquetado'){
         const ms=await getDoc(doc(db,'metas',code));
         s.meta=ms.exists()?ms.data():null;
@@ -2198,9 +2537,10 @@
     const data={fecha_local:new Date(now).toLocaleDateString('sv-SE'),fin_local:new Date(now).toLocaleString('sv-SE').replace(' ','T'),inicio_local:new Date(s.startMs).toLocaleString('sv-SE').replace(' ','T'),operarioId:s.operator.id,operario:s.operator.nombre,tipo_personal:s.operator.tipo||'',proceso:s.proceso||'etiquetado',codigo:s.code,descripcion:s.product.descripcion||'',categoria:s.product.categoria||'',unidades:qty,modo_registro_unidades:(s.qtyMode||'total'),cajas,unidades_por_caja:unidadesPorCaja,caducidad_tipo:expiryMode==='none'?'no_caduca':'fecha',caducidad_mes:expiryMonth,caducidad_anio:expiryYear?Number(expiryYear):null,novedad_tipo:noveltyType,novedad_cantidad:noveltyQty,comentario:(s.comment||$("finishComment")?.value||'').trim(),tiempo_neto_ms:netMs,tiempo_pausa_ms:s.pauseTotal,productividad_u_h:uph,meta_u_h:meta,cumplimiento_pct:compliance,pausas:s.pauses,creado_en:serverTimestamp()};
     try{
       await addDoc(collection(db,'registros_etiquetado'),data);
+    invalidateRecordCaches();
       await setDoc(doc(db,'sesiones_activas',s.operator.id),{...data,deviceId,estado:'finalizada'});
       toast(`✅ Guardado: ${uph.toLocaleString('es-EC')} u/h`);
-      clearInterval(s.interval);openOps.set(s.operator.id,buildIdleSession(s.operator,s.proceso));saveDeviceOpenOps();renderOpTabs();renderWorkspace();
+      clearInterval(s.interval);openOps.set(s.operator.id,buildIdleSession(s.operator,s.proceso));saveDeviceOpenOps();await syncIdleSession(openOps.get(s.operator.id));renderOpTabs();renderWorkspace();
     }catch(e){toast('❌ No se pudo guardar: '+e.message)}
   }
   function startTimerLoop(s){if(s.interval)clearInterval(s.interval);s.interval=setInterval(()=>{if(activeOpId!==s.operator.id)return;const el=$("timer");if(el)el.textContent=fmtTimer(currentElapsed(s));},500)}
@@ -2243,6 +2583,44 @@
   };
   const fmtInt=(n)=>Math.round(Number(n)||0).toLocaleString('es-EC');
   const processName=(v)=>(v||'etiquetado')==='armado'?'Armado':'Etiquetado';
+  const dailyRecordsCache=new Map();
+  const recordLookup=new Map();
+  let currentProductivityRecords=[];
+  let productivityExpandedOperator='';
+
+  function weightedUph(rows){
+    const units=rows.reduce((a,x)=>a+Number(x.unidades||0),0);
+    const ms=rows.reduce((a,x)=>a+Number(x.tiempo_neto_ms||0),0);
+    return ms>0?units/(ms/3600000):0;
+  }
+  function recordCategory(x){
+    const manual=manualCategoryCache.get(String(x.codigo||''));if(manual)return manual;
+    const inferred=classifyProduct(x.descripcion||'').categoria;
+    const stored=norm(x.categoria||'');
+    if(inferred && inferred!=='OTROS') return inferred;
+    return stored||'OTROS';
+  }
+  function shortDescription(desc){
+    const words=norm(desc).split(/\s+/).filter(Boolean);
+    return words.slice(0,3).join(' ') || '—';
+  }
+  function indexRecords(rows){rows.forEach(x=>{if(x?.id)recordLookup.set(x.id,x)})}
+  async function getRecordsByDate(date,force=false){
+    if(!force&&dailyRecordsCache.has(date))return dailyRecordsCache.get(date);
+    const snap=await getDocs(query(collection(db,'registros_etiquetado'),where('fecha_local','==',date)));
+    const rows=snap.docs.map(d=>({id:d.id,...d.data()}));
+    dailyRecordsCache.set(date,rows);indexRecords(rows);return rows;
+  }
+  async function getRecordsByRange(from,to){
+    let q;
+    if(from===to) q=query(collection(db,'registros_etiquetado'),where('fecha_local','==',from));
+    else q=query(collection(db,'registros_etiquetado'),where('fecha_local','>=',from),where('fecha_local','<=',to),limit(1000));
+    const snap=await getDocs(q);const rows=snap.docs.map(d=>({id:d.id,...d.data()}));indexRecords(rows);return rows;
+  }
+  function invalidateRecordCaches(){
+    supervisorRecordsCache=[];supervisorRecordsLoadedAt=0;dailyRecordsCache.clear();recordLookup.clear();
+  }
+
 
   async function getSupervisorRecords(force=false){
     if(!force && supervisorRecordsCache.length && (Date.now()-supervisorRecordsLoadedAt)<SUP_CACHE_MS){
@@ -2267,10 +2645,10 @@
     if(b.dataset.view==='operarios') await loadUsersTable();
     if(b.dataset.view==='registros') await loadRecords();
     if(b.dataset.view==='novedades') await loadNoveltyReport();
+    if(b.dataset.view==='caducidad') await loadExpiryReport();
     if(b.dataset.view==='reporte') await loadDailyReport();
     if(b.dataset.view==='productividad') await loadProductivity();
     if(b.dataset.view==='graficos') await loadCharts();
-    if(b.dataset.view==='categorias') await loadCategories();
     if(b.dataset.view==='metas') await loadEvaluation();
     if(b.dataset.view==='supervision') await loadSupervision();
     if(b.dataset.view==='data') await loadDataSummary();
@@ -2393,55 +2771,62 @@
 
   async function loadDashboard(force=false){
     try{
-      const cfg=await getActiveMasterConfig(force);
-      const records=await getSupervisorRecords(force);
-      const sessionsSnap=await getDocs(collection(db,'sesiones_activas'));
-
-      let totalProductos=0;
-      if(cfg.mode==='versioned') totalProductos=Number(cfg.total_productos||0);
-      else totalProductos=(await getCountFromServer(collection(db,'productos'))).data().count;
-
       const today=localISO().slice(0,10);
-      const todayRecords=records.filter(x=>x.fecha_local===today);
+      const [todayRecords,sessionsSnap,opsSnap]=await Promise.all([
+        getRecordsByDate(today,force),
+        getDocs(collection(db,'sesiones_activas')),
+        getDocs(collection(db,'operarios'))
+      ]);
+
       const et=todayRecords.filter(x=>(x.proceso||'etiquetado')==='etiquetado');
       const ar=todayRecords.filter(x=>x.proceso==='armado');
-      const active=sessionsSnap.docs.map(d=>d.data()).filter(x=>['running','paused','finishing'].includes(x.estado));
+      const totalUnits=todayRecords.reduce((a,x)=>a+Number(x.unidades||0),0);
+      const activeOperators=opsSnap.docs.map(d=>({id:d.id,...d.data()})).filter(x=>x.activo!==false).sort((a,b)=>norm(a.nombre).localeCompare(norm(b.nombre)));
+      const sessionMap=new Map(sessionsSnap.docs.map(d=>[d.id,{operarioId:d.id,...d.data()}]));
+      const openStates=new Set(['idle','running','paused','finishing']);
+      const openSessions=[...sessionMap.values()].filter(x=>openStates.has(x.estado));
 
-      $("kpiProductos").textContent=fmtInt(totalProductos);
+      $("kpiUnitsHoy").textContent=fmtInt(totalUnits);
       $("kpiEtiquetadoHoy").textContent=fmtInt(et.length);
       $("kpiArmadoHoy").textContent=fmtInt(ar.length);
-      $("kpiSesiones").textContent=fmtInt(active.length);
+      $("kpiSesiones").textContent=fmtInt(openSessions.length);
 
       const summary=(arr,label)=>{
         if(!arr.length) return `<div class="emptyState">Sin ${label.toLowerCase()} registrados hoy.</div>`;
-        const units=arr.reduce((s,x)=>s+Number(x.unidades||0),0);
-        const speeds=arr.map(x=>Number(x.productividad_u_h||0)).filter(v=>v>0);
+        const units=arr.reduce((a,x)=>a+Number(x.unidades||0),0);
         return `<div class="miniKpis" style="grid-template-columns:repeat(3,1fr);margin:0">
           <div class="miniKpi"><span>Registros</span><strong>${fmtInt(arr.length)}</strong></div>
           <div class="miniKpi"><span>Unidades</span><strong>${fmtInt(units)}</strong></div>
-          <div class="miniKpi"><span>Mediana u/h</span><strong>${fmtInt(median(speeds))}</strong></div>
+          <div class="miniKpi"><span>Promedio u/h</span><strong>${fmtInt(weightedUph(arr))}</strong></div>
         </div>`;
       };
       $("dashEtiquetadoResumen").innerHTML=summary(et,'Etiquetados');
       $("dashArmadoResumen").innerHTML=summary(ar,'Armados');
 
-      $("dashActiveSessions").innerHTML=active.length
-        ? `<div class="tableWrap"><table style="min-width:880px"><thead><tr><th>Operario</th><th>Proceso</th><th>Código</th><th>Estado</th><th>⏱️ Tiempo en vivo</th><th>Dispositivo</th><th>Acción</th></tr></thead><tbody>${active.map((x,i)=>`<tr>
-            <td><b>${x.operario||'—'}</b></td>
-            <td>${processName(x.proceso)}</td>
-            <td>${x.codigo||'—'}</td>
-            <td><span class="statusPill ${x.estado==='paused'?'warn':'ok'}">${x.estado==='paused'?'⏸️ Pausado':x.estado==='finishing'?'✅ Finalizando':'▶️ Trabajando'}</span></td>
-            <td><span class="liveTimer" data-live-index="${i}">00:00:00</span></td>
-            <td><span class="small">${x.deviceId?String(x.deviceId).slice(-8):'Sin ID'}</span></td>
-            <td>
-              <div class="sessionActionBtns">
-                <button class="sessionCloseBtn" data-id="${x.operarioId}">🔒 Cerrar</button>
-                <button class="sessionDeleteBtn" data-id="${x.operarioId}">🗑️ Eliminar</button>
-              </div>
-            </td>
-          </tr>`).join('')}</tbody></table></div>`
-        : '<div class="emptyState">No hay procesos activos.</div>';
-      startDashboardLiveClock(active);
+      const statusOrder={running:0,paused:1,finishing:2,idle:3,no_session:4};
+      const rows=activeOperators.map(op=>{
+        const ss=sessionMap.get(op.id);
+        const isOpen=ss&&openStates.has(ss.estado);
+        const estado=!isOpen?'no_session':ss.estado;
+        return {operarioId:op.id,operario:op.nombre,tipo:op.tipo||'',...(ss||{}),estado,isOpen};
+      }).sort((a,b)=>(statusOrder[a.estado]??9)-(statusOrder[b.estado]??9)||norm(a.operario).localeCompare(norm(b.operario),'es'));
+      dashboardLiveSessions=rows;
+
+      const statusInfo=x=>{
+        if(x.estado==='running')return ['ok','▶️ Trabajando'];
+        if(x.estado==='paused')return ['warn','⏸️ Pausa'];
+        if(x.estado==='finishing')return ['ok','🔵 Finalizando'];
+        if(x.estado==='idle')return ['','⚪ Disponible'];
+        return ['','⚫ Sin sesión'];
+      };
+
+      $("dashActiveSessions").innerHTML=rows.length?`<div class="tableWrap"><table style="min-width:940px"><thead><tr><th>Operario</th><th>Estado</th><th>Proceso</th><th>Código</th><th>⏱️ Tiempo</th><th>Dispositivo</th><th>Acción</th></tr></thead><tbody>${rows.map((x,i)=>{
+        const [klass,label]=statusInfo(x);
+        const action=x.isOpen?`<div class="sessionActionBtns"><button class="sessionCloseBtn" data-id="${x.operarioId}">🔒 Cerrar</button><button class="sessionDeleteBtn" data-id="${x.operarioId}">🗑️ Eliminar</button></div>`:'—';
+        const time=['running','paused','finishing'].includes(x.estado)?`<span class="liveTimer" data-live-index="${i}">00:00:00</span>`:'—';
+        return `<tr><td><b>${x.operario}</b></td><td><span class="statusPill ${klass}">${label}</span></td><td>${x.isOpen&&x.proceso?processName(x.proceso):'—'}</td><td>${['running','paused','finishing'].includes(x.estado)?(x.codigo||'—'):'—'}</td><td>${time}</td><td><span class="small">${x.isOpen&&x.deviceId?String(x.deviceId).slice(-8):'—'}</span></td><td>${action}</td></tr>`;
+      }).join('')}</tbody></table></div>`:'<div class="emptyState">Sin operarios activos configurados.</div>';
+      startDashboardLiveClock(rows);
       bindSupervisorSessionActions();
     }catch(e){toast('⚠️ Dashboard: '+e.message)}
   }
@@ -2449,305 +2834,212 @@
 
   function fillProductivityFilters(records){
     const ops=[...new Set(records.map(x=>x.operario).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
-    const cats=[...new Set(records.map(x=>x.categoria||'OTROS').filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+    const fams=[...new Set(records.map(x=>recordCategory(x)).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
     const opSel=$("prodFilterOperator"),catSel=$("prodFilterCategory");
     const opCurrent=opSel.value,catCurrent=catSel.value;
     opSel.innerHTML='<option value="">Todos</option>'+ops.map(v=>`<option>${v}</option>`).join('');
-    catSel.innerHTML='<option value="">Todas</option>'+cats.map(v=>`<option>${v}</option>`).join('');
+    catSel.innerHTML='<option value="">Todas</option>'+fams.map(v=>`<option>${v}</option>`).join('');
     if(ops.includes(opCurrent))opSel.value=opCurrent;
-    if(cats.includes(catCurrent))catSel.value=catCurrent;
+    if(fams.includes(catCurrent))catSel.value=catCurrent;
   }
 
   async function loadProductivity(force=false){
     try{
-      const records=await getSupervisorRecords(force);
+      const date=$("prodDate").value||localISO().slice(0,10);$("prodDate").value=date;
+      const records=await getRecordsByDate(date,force);
+      currentProductivityRecords=records;indexRecords(records);
       fillProductivityFilters(records);
       renderProductivity(records);
-    }catch(e){$("productivityBody").innerHTML=`<tr><td colspan="7">${e.message}</td></tr>`}
+    }catch(e){$("productivityBody").innerHTML=`<tr><td colspan="6">${e.message}</td></tr>`}
   }
 
-  function renderProductivity(records=supervisorRecordsCache){
-    const proc=$("prodFilterProcess").value,op=$("prodFilterOperator").value,cat=$("prodFilterCategory").value,groupBy=$("prodGroupBy").value;
+  function renderProductivity(records=currentProductivityRecords){
+    const proc=$("prodFilterProcess").value,op=$("prodFilterOperator").value,fam=$("prodFilterCategory").value,groupBy=$("prodGroupBy").value;
     const rows=records.filter(x=>{
-      const p=x.proceso||'etiquetado';
-      return (proc==='todos'||p===proc)&&(!op||x.operario===op)&&(!cat||(x.categoria||'OTROS')===cat)&&Number(x.productividad_u_h||0)>0;
+      const p=x.proceso||'etiquetado',cat=recordCategory(x);
+      return (proc==='todos'||p===proc)&&(!op||x.operario===op)&&(!fam||cat===fam)&&Number(x.productividad_u_h||0)>0;
     });
 
     $("prodObs").textContent=fmtInt(rows.length);
-    $("prodUnits").textContent=fmtInt(rows.reduce((s,x)=>s+Number(x.unidades||0),0));
-    $("prodAvg").textContent=fmtInt(avg(rows.map(x=>x.productividad_u_h)));
-    $("prodMedian").textContent=fmtInt(median(rows.map(x=>x.productividad_u_h)));
+    $("prodUnits").textContent=fmtInt(rows.reduce((a,x)=>a+Number(x.unidades||0),0));
+    $("prodAvg").textContent=fmtInt(weightedUph(rows));
 
-    const keyOf=x=>groupBy==='codigo'?(x.codigo||'SIN CÓDIGO'):groupBy==='categoria'?(x.categoria||'OTROS'):(x.operario||'SIN OPERARIO');
-    $("prodGroupHeader").textContent=groupBy==='codigo'?'SKU / Código':groupBy==='categoria'?'Categoría':'Operario';
+    const keyOf=x=>{
+      if(groupBy==='codigo')return x.codigo||'SIN CÓDIGO';
+      if(groupBy==='categoria')return recordCategory(x);
+      return x.operario||'SIN OPERARIO';
+    };
+    const labels={codigo:'SKU / Código',categoria:'Categoría',operario:'Operario'};
+    $("prodGroupHeader").textContent=labels[groupBy]||'Operario';
 
-    const groups=new Map();
-    rows.forEach(x=>{const k=keyOf(x);if(!groups.has(k))groups.set(k,[]);groups.get(k).push(x)});
+    const groups=new Map();rows.forEach(x=>{const k=keyOf(x);if(!groups.has(k))groups.set(k,[]);groups.get(k).push(x)});
     const data=[...groups.entries()].map(([key,arr])=>{
-      const speeds=arr.map(x=>Number(x.productividad_u_h||0)).filter(v=>v>0);
-      const units=arr.reduce((s,x)=>s+Number(x.unidades||0),0);
-      const ref=proc==='armado'?'<span class="statusPill ok">Histórico</span>':median(speeds)>=500?'<span class="statusPill ok">≥ 500</span>':'<span class="statusPill warn">&lt; 500</span>';
-      return {key,records:arr.length,units,avg:avg(speeds),med:median(speeds),best:Math.max(...speeds,0),ref};
-    }).sort((a,b)=>b.med-a.med);
+      const units=arr.reduce((a,x)=>a+Number(x.unidades||0),0),average=weightedUph(arr),best=Math.max(...arr.map(x=>Number(x.productividad_u_h||0)),0);
+      let ref='<span class="statusPill ok">Histórico</span>';
+      if(proc!=='armado'&&groupBy==='codigo'){
+        const manual=arr.map(x=>Number(x.meta_u_h||0)).find(v=>v>0);
+        ref=manual?`<span class="statusPill ok">Meta ${fmtInt(manual)}</span>`:'<span class="statusPill">Referencia por categoría</span>';
+      }else if(proc!=='armado'&&groupBy==='operario')ref='<span class="statusPill">Variable por SKU</span>';
+      return {key,arr,records:arr.length,units,average,best,ref};
+    }).sort((a,b)=>b.average-a.average);
 
-    $("productivityBody").innerHTML=data.length?data.map(x=>`<tr><td><b>${x.key}</b></td><td>${fmtInt(x.records)}</td><td>${fmtInt(x.units)}</td><td>${fmtInt(x.avg)}</td><td><b>${fmtInt(x.med)}</b></td><td>${fmtInt(x.best)}</td><td>${x.ref}</td></tr>`).join(''):'<tr><td colspan="7">Sin datos para los filtros seleccionados.</td></tr>';
+    let html='';
+    data.forEach(g=>{
+      const clickable=groupBy==='operario';
+      html+=`<tr><td>${clickable?`<button class="operatorDrillBtn" data-operator="${g.key}">${productivityExpandedOperator===g.key?'▾':'▸'} ${g.key}</button>`:`<b>${g.key}</b>`}</td><td>${fmtInt(g.records)}</td><td>${fmtInt(g.units)}</td><td><b>${fmtInt(g.average)}</b></td><td>${fmtInt(g.best)}</td><td>${g.ref}</td></tr>`;
+      if(clickable&&productivityExpandedOperator===g.key){
+        const details=[...g.arr].sort((a,b)=>String(a.inicio_local||'').localeCompare(String(b.inicio_local||'')));
+        html+=`<tr class="detailRow"><td colspan="6"><div class="operatorDetailBox"><div class="tableWrap"><table style="min-width:880px"><thead><tr><th>Código</th><th>Descripción</th><th>Categoría</th><th>Unidades</th><th>Min netos</th><th>U/H</th><th>Novedad</th><th>Comentario</th></tr></thead><tbody>${details.map(x=>`<tr><td>${x.codigo||'—'}</td><td title="${x.descripcion||''}">${shortDescription(x.descripcion)}</td><td>${recordCategory(x)}</td><td>${fmtInt(x.unidades)}</td><td>${Math.round(Number(x.tiempo_neto_ms||0)/60000)}</td><td><b>${fmtInt(x.productividad_u_h||0)}</b></td><td>${noveltyLabel(x)}</td><td>${x.comentario||'—'}</td></tr>`).join('')}</tbody></table></div></div></td></tr>`;
+      }
+    });
+    $("productivityBody").innerHTML=html||'<tr><td colspan="6">Sin datos para los filtros seleccionados.</td></tr>';
+    document.querySelectorAll('.operatorDrillBtn').forEach(btn=>btn.onclick=()=>{productivityExpandedOperator=productivityExpandedOperator===btn.dataset.operator?'':btn.dataset.operator;renderProductivity(records)});
   }
 
-  ["prodFilterProcess","prodFilterOperator","prodFilterCategory","prodGroupBy"].forEach(id=>$(id)?.addEventListener('change',()=>renderProductivity()));
+  ["prodFilterProcess","prodFilterOperator","prodFilterCategory","prodGroupBy"].forEach(id=>$(id)?.addEventListener('change',()=>{productivityExpandedOperator='';renderProductivity()}));
+  $("prodDate").value=localISO().slice(0,10);
+  $("prodDate").addEventListener('change',()=>{productivityExpandedOperator='';loadProductivity(false)});
   $("refreshProductivity").onclick=()=>loadProductivity(true);
 
   async function loadCategories(force=false){
     try{
       const records=(await getSupervisorRecords(force)).filter(x=>(x.proceso||'etiquetado')==='etiquetado'&&Number(x.productividad_u_h||0)>0);
-      const groups=new Map();
-      records.forEach(x=>{const k=x.categoria||'OTROS';if(!groups.has(k))groups.set(k,[]);groups.get(k).push(x)});
+      const groups=new Map();records.forEach(x=>{const k=recordCategory(x);if(!groups.has(k))groups.set(k,[]);groups.get(k).push(x)});
       const data=[...groups.entries()].map(([cat,arr])=>{
         const skus=new Set(arr.map(x=>x.codigo).filter(Boolean)),ops=new Set(arr.map(x=>x.operario).filter(Boolean));
-        const speeds=arr.map(x=>Number(x.productividad_u_h||0)).filter(v=>v>0);
-        let maturity='<span class="statusPill warn">En evaluación</span>';
-        if(arr.length>=5&&ops.size>=2)maturity='<span class="statusPill ok">Base útil</span>';
-        if(arr.length>=12&&ops.size>=3)maturity='<span class="statusPill ok">Base sólida</span>';
-        return {cat,skus:skus.size,records:arr.length,ops:ops.size,units:arr.reduce((s,x)=>s+Number(x.unidades||0),0),avg:avg(speeds),med:median(speeds),maturity};
+        let maturity='<span class="statusPill warn">En evaluación</span>';if(arr.length>=5&&ops.size>=2)maturity='<span class="statusPill ok">Base útil</span>';if(arr.length>=12&&ops.size>=3)maturity='<span class="statusPill ok">Base sólida</span>';
+        return {cat,skus:skus.size,records:arr.length,ops:ops.size,units:arr.reduce((a,x)=>a+Number(x.unidades||0),0),avg:weightedUph(arr),maturity};
       }).sort((a,b)=>b.records-a.records);
-      $("categoriesBody").innerHTML=data.length?data.map(x=>`<tr><td><b>${x.cat}</b></td><td>${x.skus}</td><td>${x.records}</td><td>${x.ops}</td><td>${fmtInt(x.units)}</td><td>${fmtInt(x.avg)}</td><td><b>${fmtInt(x.med)}</b></td><td>${x.maturity}</td></tr>`).join(''):'<tr><td colspan="8">Aún no hay histórico suficiente.</td></tr>';
-    }catch(e){$("categoriesBody").innerHTML=`<tr><td colspan="8">${e.message}</td></tr>`}
+      $("categoriesBody").innerHTML=data.length?data.map(x=>`<tr><td><b>${x.cat}</b></td><td>${x.skus}</td><td>${x.records}</td><td>${x.ops}</td><td>${fmtInt(x.units)}</td><td>${fmtInt(x.avg)}</td><td>${x.maturity}</td></tr>`).join(''):'<tr><td colspan="7">Aún no hay histórico suficiente.</td></tr>';
+    }catch(e){$("categoriesBody").innerHTML=`<tr><td colspan="7">${e.message}</td></tr>`}
   }
-  $("refreshCategories").onclick=()=>loadCategories(true);
+  $("refreshCategories")?.addEventListener('click',()=>loadCategories(true));
+
+  let expandedMetaCategory='';
+  let metaEvaluationRecords=[];
+  let metaByCode=new Map();
+
+  function categoryOptions(selected){
+    const cats=[...new Set([...BASE_CATEGORIES,...metaEvaluationRecords.map(recordCategory),...manualCategoryCache.values()])].sort((a,b)=>a.localeCompare(b,'es'));
+    return cats.map(c=>`<option value="${c}" ${c===selected?'selected':''}>${c}</option>`).join('');
+  }
+
+  function renderMetaCategoryTable(){
+    const records=metaEvaluationRecords;
+    const categoryGroups=new Map();records.forEach(x=>{const cat=recordCategory(x);if(!categoryGroups.has(cat))categoryGroups.set(cat,[]);categoryGroups.get(cat).push(x)});
+    const data=[...categoryGroups.entries()].map(([categoria,arr])=>{const ops=new Set(arr.map(x=>x.operario).filter(Boolean));let state='<span class="statusPill warn">En evaluación</span>';if(arr.length>=5&&ops.size>=2)state='<span class="statusPill ok">Base útil</span>';if(arr.length>=12&&ops.size>=3)state='<span class="statusPill ok">Base sólida</span>';return {categoria,arr,records:arr.length,ops:ops.size,avg:weightedUph(arr),state}}).sort((a,b)=>a.categoria.localeCompare(b.categoria));
+    let html='';
+    data.forEach(g=>{
+      html+=`<tr><td><button class="categoryToggle" data-cat="${g.categoria}">${expandedMetaCategory===g.categoria?'⌄':'›'} ${g.categoria}</button></td><td>${g.records}</td><td>${g.ops}</td><td><b>${fmtInt(g.avg)}</b></td><td>${g.state}</td></tr>`;
+      if(expandedMetaCategory===g.categoria){
+        const codeGroups=new Map();g.arr.forEach(x=>{const c=x.codigo||'';if(!c)return;if(!codeGroups.has(c))codeGroups.set(c,[]);codeGroups.get(c).push(x)});
+        const rows=[...codeGroups.entries()].map(([code,arr])=>({code,arr,desc:arr[0]?.descripcion||'—',ops:new Set(arr.map(x=>x.operario).filter(Boolean)).size,avg:weightedUph(arr),meta:metaByCode.get(code)||null})).sort((a,b)=>a.code.localeCompare(b.code));
+        html+=`<tr class="categoryDetailRow"><td colspan="5"><div class="categoryDetailBox"><table style="min-width:980px"><thead><tr><th>Código</th><th>Descripción</th><th>Registros</th><th>Operarios</th><th>Promedio u/h</th><th>Meta propia</th><th>Categoría</th><th>Acción</th></tr></thead><tbody>${rows.map(r=>`<tr><td><b>${r.code}</b></td><td>${shortDescription(r.desc)}</td><td>${r.arr.length}</td><td>${r.ops}</td><td><b>${fmtInt(r.avg)}</b></td><td>${r.meta?fmtInt(r.meta.meta_u_h):'—'}</td><td><select class="categorySelect" data-code="${r.code}">${categoryOptions(g.categoria)}</select></td><td><div class="compactActions"><button class="miniBtn ok saveCategoryBtn" data-code="${r.code}">💾 Cambiar</button><button class="miniBtn historyCategoryBtn" data-code="${r.code}">🕘</button></div></td></tr>`).join('')}</tbody></table></div></td></tr>`;
+      }
+    });
+    $("familyTargetsBody").innerHTML=html||'<tr><td colspan="5">Aún no hay histórico suficiente.</td></tr>';
+    document.querySelectorAll('.categoryToggle').forEach(b=>b.onclick=()=>{expandedMetaCategory=expandedMetaCategory===b.dataset.cat?'':b.dataset.cat;renderMetaCategoryTable()});
+    document.querySelectorAll('.saveCategoryBtn').forEach(b=>b.onclick=()=>saveManualCategory(b.dataset.code));
+    document.querySelectorAll('.historyCategoryBtn').forEach(b=>b.onclick=()=>openHistory('categoria_producto',b.dataset.code,`Código ${b.dataset.code}`));
+  }
+
+  async function saveManualCategory(code){
+    const sel=document.querySelector(`.categorySelect[data-code="${code}"]`);if(!sel)return;const newCat=sel.value,oldCat=manualCategoryCache.get(code)||recordCategory(metaEvaluationRecords.find(x=>String(x.codigo)===String(code))||{});if(newCat===oldCat)return toast('ℹ️ La categoría ya es la seleccionada');
+    try{await setDoc(doc(db,'clasificaciones_productos',code),{codigo:code,categoria:newCat,manual:true,actualizado_por:currentSupervisorUser(),actualizado_local:localISO(),actualizado_en:serverTimestamp()},{merge:true});manualCategoryCache.set(code,newCat);await logAudit({accion:'Categoría modificada',entidad:'categoria_producto',entidadId:code,detalle:`Clasificación manual del código ${code}`,cambios:[{campo:'Categoría',anterior:oldCat,nuevo:newCat}]});toast('✅ Categoría actualizada');renderMetaCategoryTable();if($("view-productividad")?.classList.contains('active'))loadProductivity(true)}catch(e){toast('❌ '+e.message)}
+  }
 
   async function loadEvaluation(force=false){
     try{
-      const records=(await getSupervisorRecords(force)).filter(x=>(x.proceso||'etiquetado')==='etiquetado'&&Number(x.productividad_u_h||0)>0);
-      const groups=new Map();
-      records.forEach(x=>{const code=x.codigo||'';if(!code)return;if(!groups.has(code))groups.set(code,[]);groups.get(code).push(x)});
-      const data=[...groups.entries()].map(([code,arr])=>{
-        const ops=new Set(arr.map(x=>x.operario).filter(Boolean)),speeds=arr.map(x=>Number(x.productividad_u_h||0)).filter(v=>v>0);
-        let state='<span class="statusPill warn">En evaluación</span>';
-        if(arr.length>=3&&ops.size>=2)state='<span class="statusPill ok">Meta provisional</span>';
-        if(arr.length>=5&&ops.size>=2)state='<span class="statusPill ok">Apto para revisar meta</span>';
-        return {code,desc:arr[0].descripcion||'—',cat:arr[0].categoria||'OTROS',records:arr.length,ops:ops.size,med:median(speeds),state};
-      }).sort((a,b)=>b.records-a.records);
-      $("evaluationBody").innerHTML=data.length?data.map(x=>`<tr><td><b>${x.code}</b></td><td>${x.desc}</td><td>${x.cat}</td><td>${x.records}</td><td>${x.ops}</td><td>${fmtInt(x.med)}</td><td>${x.state}</td></tr>`).join(''):'<tr><td colspan="7">Aún no hay registros de etiquetado.</td></tr>';
-    }catch(e){$("evaluationBody").innerHTML=`<tr><td colspan="7">${e.message}</td></tr>`}
+      await loadManualCategories();
+      const records=(await getSupervisorRecords(force)).filter(x=>(x.proceso||'etiquetado')==='etiquetado'&&Number(x.productividad_u_h||0)>0);metaEvaluationRecords=records;
+      const metasSnap=await getDocs(collection(db,'metas'));metaByCode=new Map(metasSnap.docs.map(d=>[d.id,d.data()]));
+      renderMetaCategoryTable();
+      const groups=new Map();records.forEach(x=>{const code=x.codigo||'';if(!code)return;if(!groups.has(code))groups.set(code,[]);groups.get(code).push(x)});
+      const data=[...groups.entries()].map(([code,arr])=>{const ops=new Set(arr.map(x=>x.operario).filter(Boolean));let state='<span class="statusPill warn">En evaluación</span>';if(arr.length>=3&&ops.size>=2)state='<span class="statusPill ok">Meta provisional</span>';if(arr.length>=5&&ops.size>=2)state='<span class="statusPill ok">Apto para revisar meta</span>';return {code,desc:arr[0].descripcion||'—',categoria:recordCategory(arr[0]),records:arr.length,ops:ops.size,avg:weightedUph(arr),state}}).sort((a,b)=>b.records-a.records);
+      $("evaluationBody").innerHTML=data.length?data.map(x=>`<tr><td><b>${x.code}</b></td><td>${shortDescription(x.desc)}</td><td>${x.categoria}</td><td>${x.records}</td><td>${x.ops}</td><td><b>${fmtInt(x.avg)}</b></td><td>${x.state}</td></tr>`).join(''):'<tr><td colspan="7">Aún no hay registros de etiquetado.</td></tr>';
+    }catch(e){$("familyTargetsBody").innerHTML=`<tr><td colspan="5">${e.message}</td></tr>`;$("evaluationBody").innerHTML=`<tr><td colspan="7">${e.message}</td></tr>`}
   }
   $("refreshMetasAnalysis").onclick=()=>loadEvaluation(true);
 
+  function pauseReasonsLabel(x){
+    const reasons=[...new Set((Array.isArray(x.pausas)?x.pausas:[]).map(p=>norm(p?.motivo||'')).filter(Boolean))];
+    return reasons.length?reasons.join(' · '):'—';
+  }
+
   async function loadSupervision(force=false){
     try{
-      const records=await getSupervisorRecords(force);
+      const today=localISO().slice(0,10);const from=$("auditFrom").value||today,to=$("auditTo").value||today;$("auditFrom").value=from;$("auditTo").value=to;
+      if(from>to)return toast('⚠️ La fecha Desde no puede ser mayor que Hasta');
+      const all=await getRecordsByRange(from,to);
+      const ops=[...new Set(all.map(x=>x.operario).filter(Boolean))].sort((a,b)=>a.localeCompare(b));const sel=$("auditOperator"),cur=sel.value;sel.innerHTML='<option value="">Todos</option>'+ops.map(v=>`<option>${v}</option>`).join('');if(ops.includes(cur))sel.value=cur;
+      const op=sel.value;const records=all.filter(x=>!op||x.operario===op);
       const alerts=[];let pauseHigh=0,longCount=0;
       records.forEach(x=>{
-        const net=Number(x.tiempo_neto_ms||0),pause=Number(x.tiempo_pausa_ms||0),uph=Number(x.productividad_u_h||0),meta=Number(x.meta_u_h||0),proc=x.proceso||'etiquetado';
-        const reasons=[];
+        const net=Number(x.tiempo_neto_ms||0),pause=Number(x.tiempo_pausa_ms||0),uph=Number(x.productividad_u_h||0),meta=Number(x.meta_u_h||0),proc=x.proceso||'etiquetado';const reasons=[];
         if(net>=8*3600000){reasons.push('Duración neta ≥ 8 h');longCount++}
         if(pause>=60*60000){reasons.push('Pausa acumulada ≥ 60 min');pauseHigh++}
-        if(proc==='etiquetado'&&meta>0&&uph>0){
-          if(uph<meta*.35)reasons.push('Muy por debajo de meta');
-          if(uph>meta*2.5)reasons.push('Productividad atípicamente alta');
-        }
+        if(proc==='etiquetado'&&meta>0&&uph>0){if(uph<meta*.35)reasons.push('Muy por debajo de meta');if(uph>meta*2.5)reasons.push('Productividad atípicamente alta')}
         if(proc==='etiquetado'&&!meta&&uph>0&&uph<150)reasons.push('Productividad muy baja sin meta');
         if(reasons.length)alerts.push({x,reasons});
       });
       $("auditReviewed").textContent=fmtInt(records.length);$("auditAlerts").textContent=fmtInt(alerts.length);$("auditPauses").textContent=fmtInt(pauseHigh);$("auditLong").textContent=fmtInt(longCount);
-      $("auditBody").innerHTML=alerts.length?alerts.map(({x,reasons})=>`<tr><td>${x.fecha_local||'—'}</td><td>${x.operario||'—'}</td><td>${processName(x.proceso)}</td><td>${x.codigo||'—'}</td><td>${fmtInt(x.productividad_u_h||0)}</td><td>${fmtTimer(Number(x.tiempo_neto_ms||0))}</td><td>${fmtTimer(Number(x.tiempo_pausa_ms||0))}</td><td><span class="statusPill warn">⚠️ ${reasons.join(' · ')}</span></td></tr>`).join(''):'<tr><td colspan="8"><div class="emptyState">✅ No se detectaron alertas en los registros cargados.</div></td></tr>';
-    }catch(e){$("auditBody").innerHTML=`<tr><td colspan="8">${e.message}</td></tr>`}
+      $("auditBody").innerHTML=alerts.length?alerts.map(({x,reasons})=>`<tr><td>${x.fecha_local||'—'}</td><td>${x.operario||'—'}</td><td>${processName(x.proceso)}</td><td>${x.codigo||'—'}</td><td>${fmtInt(x.productividad_u_h||0)}</td><td>${fmtTimer(Number(x.tiempo_neto_ms||0))}</td><td>${fmtTimer(Number(x.tiempo_pausa_ms||0))}</td><td class="pauseReasons">${pauseReasonsLabel(x)}</td><td><span class="statusPill warn">⚠️ ${reasons.join(' · ')}</span></td></tr>`).join(''):'<tr><td colspan="9"><div class="emptyState">✅ No se detectaron alertas para los filtros seleccionados.</div></td></tr>';
+    }catch(e){$("auditBody").innerHTML=`<tr><td colspan="9">${e.message}</td></tr>`}
   }
+  const auditToday=localISO().slice(0,10);$("auditFrom").value=auditToday;$("auditTo").value=auditToday;
   $("refreshSupervision").onclick=()=>loadSupervision(true);
+  $("auditFrom").addEventListener('change',()=>loadSupervision(false));$("auditTo").addEventListener('change',()=>loadSupervision(false));$("auditOperator").addEventListener('change',()=>loadSupervision(false));
 
   // ---------- GRÁFICOS DEL DÍA ----------
-  let supervisorCharts={
-    unitsWorker:null,
-    productivityWorker:null,
-    unitsHour:null,
-    categoryProductivity:null
+  let supervisorCharts={unitsWorker:null,productivityWorker:null,unitsHour:null,categoryProductivity:null};
+  function destroySupervisorChart(key){if(supervisorCharts[key]){supervisorCharts[key].destroy();supervisorCharts[key]=null}}
+  function extractHour(localValue){const v=String(localValue||''),m=v.match(/T(\d{2}):/);if(m)return Number(m[1]);const d=new Date(localValue);return Number.isNaN(d.getTime())?null:d.getHours()}
+
+  const dataLabelsPlugin={
+    id:'professionalDataLabels',
+    afterDatasetsDraw(chart,args,opts){
+      const ctx=chart.ctx,dsIndex=0,meta=chart.getDatasetMeta(dsIndex),values=chart.data.datasets[dsIndex]?.data||[];
+      ctx.save();ctx.font='700 11px Inter, system-ui, sans-serif';ctx.textBaseline='middle';
+      meta.data.forEach((el,i)=>{
+        const raw=Number(values[i]||0);if(!Number.isFinite(raw))return;const label=fmtInt(raw)+(opts?.suffix||'');
+        if(chart.config.type==='line'){
+          ctx.fillStyle='#174b3d';ctx.textAlign='center';const y=Math.max(12,el.y-(i%2?16:11));ctx.fillText(label,el.x,y);
+        }else{
+          const right=chart.chartArea.right,space=right-el.x;ctx.textAlign=space>52?'left':'right';ctx.fillStyle=space>52?'#174b3d':'#ffffff';const x=space>52?el.x+7:el.x-7;ctx.fillText(label,x,el.y);
+        }
+      });ctx.restore();
+    }
   };
 
-  function destroySupervisorChart(key){
-    if(supervisorCharts[key]){
-      supervisorCharts[key].destroy();
-      supervisorCharts[key]=null;
-    }
-  }
-
-  function chartMedian(values){
-    const a=values.map(Number).filter(v=>Number.isFinite(v)&&v>0).sort((a,b)=>a-b);
-    if(!a.length)return 0;
-    const mid=Math.floor(a.length/2);
-    return a.length%2?a[mid]:(a[mid-1]+a[mid])/2;
-  }
-
-  function extractHour(localValue){
-    const s=String(localValue||'');
-    const m=s.match(/T(\d{2}):/);
-    if(m)return Number(m[1]);
-    const d=new Date(localValue);
-    return Number.isNaN(d.getTime())?null:d.getHours();
-  }
-
-  function makeBarChart(canvasId, labels, values, label, horizontal=false, target=null){
-    const ctx=$(canvasId);
-    if(!ctx || !window.Chart)return null;
-
-    const datasets=[{
-      label,
-      data:values,
-      borderWidth:1,
-      borderRadius:7
-    }];
-
-    if(target!==null && labels.length){
-      datasets.push({
-        type:'line',
-        label:'Meta',
-        data:labels.map(()=>target),
-        borderWidth:2,
-        pointRadius:0,
-        tension:0
-      });
-    }
-
-    return new Chart(ctx,{
-      type:'bar',
-      data:{labels,datasets},
-      options:{
-        responsive:true,
-        maintainAspectRatio:false,
-        indexAxis:horizontal?'y':'x',
-        plugins:{
-          legend:{display:target!==null},
-          tooltip:{enabled:true}
-        },
-        scales:{
-          x:{beginAtZero:true,grid:{display:false}},
-          y:{beginAtZero:true}
-        }
-      }
-    });
+  function professionalBar(canvasId,labels,values,label,target=null,suffix=''){
+    const canvas=$(canvasId);if(!canvas||!window.Chart)return null;
+    const wrap=canvas.parentElement;if(wrap)wrap.style.height=Math.max(270,labels.length*38+70)+'px';
+    const datasets=[{label,data:values,backgroundColor:'rgba(47,195,163,.62)',borderColor:'#159a80',borderWidth:1.4,borderRadius:8,borderSkipped:false,barThickness:22,maxBarThickness:25}];
+    if(target!==null&&labels.length)datasets.push({type:'line',label:'Referencia base',data:labels.map(()=>target),borderColor:'#f0a43a',borderWidth:2,pointRadius:0,tension:0});
+    return new Chart(canvas,{type:'bar',data:{labels,datasets},plugins:[dataLabelsPlugin],options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',layout:{padding:{right:48,top:6,bottom:2}},animation:{duration:450},plugins:{legend:{display:target!==null,position:'top',align:'end',labels:{boxWidth:18,usePointStyle:true}},tooltip:{enabled:true},professionalDataLabels:{suffix}},scales:{x:{beginAtZero:true,grid:{color:'rgba(20,55,40,.06)'},ticks:{color:'#64766f'}},y:{grid:{display:false},ticks:{color:'#4f625b',autoSkip:false}}}}});
   }
 
   async function loadCharts(){
-    const date=$("chartsDate").value || localISO().slice(0,10);
-    $("chartsDate").value=date;
-    const proc=$("chartsProcess").value;
-
+    const date=$("chartsDate").value||localISO().slice(0,10);$("chartsDate").value=date;const proc=$("chartsProcess").value;
     try{
-      const snap=await getDocs(
-        query(
-          collection(db,'registros_etiquetado'),
-          where('fecha_local','==',date)
-        )
-      );
+      let rows=await getRecordsByDate(date,false);rows=rows.filter(x=>proc==='todos'||(x.proceso||'etiquetado')===proc);
+      const totalUnits=rows.reduce((a,x)=>a+Number(x.unidades||0),0),workers=[...new Set(rows.map(x=>x.operario).filter(Boolean))];
+      $("chartsTotalUnits").textContent=fmtInt(totalUnits);$("chartsWorkers").textContent=fmtInt(workers.length);$("chartsAvg").textContent=rows.length?fmtInt(weightedUph(rows))+' u/h':'—';
 
-      let rows=snap.docs.map(d=>({id:d.id,...d.data()}));
-      rows=rows.filter(x=>proc==='todos'||(x.proceso||'etiquetado')===proc);
+      const byWorker=new Map();rows.forEach(x=>{const k=x.operario||'Sin operario';if(!byWorker.has(k))byWorker.set(k,[]);byWorker.get(k).push(x)});
+      const workerRows=[...byWorker.entries()].map(([name,arr])=>({name,units:arr.reduce((a,x)=>a+Number(x.unidades||0),0),uph:weightedUph(arr)})).sort((a,b)=>b.units-a.units);
+      destroySupervisorChart('unitsWorker');supervisorCharts.unitsWorker=professionalBar('chartUnitsWorker',workerRows.map(x=>x.name),workerRows.map(x=>x.units),'Unidades',null,'');
+      const prodRows=[...workerRows].sort((a,b)=>b.uph-a.uph);destroySupervisorChart('productivityWorker');supervisorCharts.productivityWorker=professionalBar('chartProductivityWorker',prodRows.map(x=>x.name),prodRows.map(x=>Math.round(x.uph)),'u/h',proc==='etiquetado'?500:null,' u/h');
 
-      const totalUnits=rows.reduce((s,x)=>s+Number(x.unidades||0),0);
-      const workers=[...new Set(rows.map(x=>x.operario).filter(Boolean))];
-      const speeds=rows.map(x=>Number(x.productividad_u_h||0)).filter(v=>v>0);
+      const hourly=new Map();rows.forEach(x=>{const h=extractHour(x.inicio_local);if(h===null)return;hourly.set(h,(hourly.get(h)||0)+Number(x.unidades||0))});const hours=[...hourly.keys()].sort((a,b)=>a-b);
+      destroySupervisorChart('unitsHour');const hourCanvas=$("chartUnitsHour");if(hourCanvas&&window.Chart){hourCanvas.parentElement.style.height='300px';supervisorCharts.unitsHour=new Chart(hourCanvas,{type:'line',data:{labels:hours.map(h=>String(h).padStart(2,'0')+':00'),datasets:[{label:'Unidades',data:hours.map(h=>hourly.get(h)),borderColor:'#159a80',backgroundColor:'rgba(47,195,163,.12)',borderWidth:3,pointRadius:5,pointHoverRadius:7,pointBackgroundColor:'#fff',pointBorderColor:'#159a80',pointBorderWidth:3,tension:.32,fill:true}]},plugins:[dataLabelsPlugin],options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:24,right:18}},plugins:{legend:{display:false},tooltip:{enabled:true},professionalDataLabels:{suffix:''}},scales:{y:{beginAtZero:true,grid:{color:'rgba(20,55,40,.06)'},ticks:{color:'#64766f'}},x:{grid:{display:false},ticks:{color:'#64766f'}}}}})}
 
-      $("chartsTotalUnits").textContent=fmtInt(totalUnits);
-      $("chartsWorkers").textContent=fmtInt(workers.length);
-      $("chartsMedian").textContent=speeds.length?fmtInt(chartMedian(speeds))+' u/h':'—';
-
-      // 1. Units by worker
-      const byWorker=new Map();
-      rows.forEach(x=>{
-        const k=x.operario||'Sin operario';
-        if(!byWorker.has(k))byWorker.set(k,{units:0,speeds:[]});
-        const g=byWorker.get(k);
-        g.units+=Number(x.unidades||0);
-        const v=Number(x.productividad_u_h||0);
-        if(v>0)g.speeds.push(v);
-      });
-      const workerRows=[...byWorker.entries()]
-        .map(([name,g])=>({name,units:g.units,median:chartMedian(g.speeds)}))
-        .sort((a,b)=>b.units-a.units);
-
-      destroySupervisorChart('unitsWorker');
-      supervisorCharts.unitsWorker=makeBarChart(
-        'chartUnitsWorker',
-        workerRows.map(x=>x.name),
-        workerRows.map(x=>x.units),
-        'Unidades',
-        workerRows.length>=6
-      );
-
-      // 2. Productivity by worker
-      const prodRows=[...workerRows].sort((a,b)=>b.median-a.median);
-      destroySupervisorChart('productivityWorker');
-      supervisorCharts.productivityWorker=makeBarChart(
-        'chartProductivityWorker',
-        prodRows.map(x=>x.name),
-        prodRows.map(x=>Math.round(x.median)),
-        'u/h',
-        prodRows.length>=6,
-        proc==='etiquetado'?500:null
-      );
-
-      // 3. Units by hour
-      const hourly=new Map();
-      rows.forEach(x=>{
-        const h=extractHour(x.inicio_local);
-        if(h===null)return;
-        hourly.set(h,(hourly.get(h)||0)+Number(x.unidades||0));
-      });
-      const hours=[...hourly.keys()].sort((a,b)=>a-b);
-      destroySupervisorChart('unitsHour');
-      const hourCanvas=$("chartUnitsHour");
-      if(hourCanvas && window.Chart){
-        supervisorCharts.unitsHour=new Chart(hourCanvas,{
-          type:'line',
-          data:{
-            labels:hours.map(h=>String(h).padStart(2,'0')+':00'),
-            datasets:[{
-              label:'Unidades',
-              data:hours.map(h=>hourly.get(h)),
-              borderWidth:3,
-              pointRadius:4,
-              tension:.25,
-              fill:false
-            }]
-          },
-          options:{
-            responsive:true,
-            maintainAspectRatio:false,
-            plugins:{legend:{display:false}},
-            scales:{y:{beginAtZero:true},x:{grid:{display:false}}}
-          }
-        });
-      }
-
-      // 4. Productivity by category
-      const byCategory=new Map();
-      rows.forEach(x=>{
-        const cat=x.categoria||'OTROS';
-        if(!byCategory.has(cat))byCategory.set(cat,[]);
-        const v=Number(x.productividad_u_h||0);
-        if(v>0)byCategory.get(cat).push(v);
-      });
-      const catRows=[...byCategory.entries()]
-        .map(([cat,vals])=>({cat,median:chartMedian(vals)}))
-        .filter(x=>x.median>0)
-        .sort((a,b)=>b.median-a.median);
-
-      destroySupervisorChart('categoryProductivity');
-      supervisorCharts.categoryProductivity=makeBarChart(
-        'chartCategoryProductivity',
-        catRows.map(x=>x.cat),
-        catRows.map(x=>Math.round(x.median)),
-        'u/h',
-        catRows.length>=6,
-        proc==='etiquetado'?500:null
-      );
-
+      const byFamily=new Map();rows.forEach(x=>{const fam=recordCategory(x);if(!byFamily.has(fam))byFamily.set(fam,[]);byFamily.get(fam).push(x)});const famRows=[...byFamily.entries()].map(([fam,arr])=>({fam,uph:weightedUph(arr)})).filter(x=>x.uph>0).sort((a,b)=>b.uph-a.uph);
+      destroySupervisorChart('categoryProductivity');supervisorCharts.categoryProductivity=professionalBar('chartCategoryProductivity',famRows.map(x=>x.fam),famRows.map(x=>Math.round(x.uph)),'u/h',proc==='etiquetado'?500:null,' u/h');
       if(!rows.length)toast('ℹ️ No hay registros para la fecha y proceso seleccionados');
-    }catch(e){
-      toast('⚠️ Gráficos: '+e.message);
-    }
+    }catch(e){toast('⚠️ Gráficos: '+e.message)}
   }
-
-  $("chartsDate").value=localISO().slice(0,10);
-  $("loadCharts").onclick=loadCharts;
-  $("chartsProcess").addEventListener('change',loadCharts);
+  $("chartsDate").value=localISO().slice(0,10);$("loadCharts").onclick=loadCharts;$("chartsProcess").addEventListener('change',loadCharts);
 
   async function loadDataSummary(){
     try{
@@ -2761,10 +3053,24 @@
 
   $("addOperator").onclick=async()=>{
     const nombre=norm($("newOpName").value),tipo=$("newOpType").value;if(!nombre)return;
-    try{const id=slug(nombre);await setDoc(doc(db,'operarios',id),{nombre,tipo,activo:true,creado_en:serverTimestamp()},{merge:true});$("userMsg").innerHTML='<div class="message ok">✅ Operario creado.</div>';$("newOpName").value='';await loadUsersTable();await loadOperators();}catch(e){$("userMsg").innerHTML='<div class="message err">❌ '+e.message+'</div>'}
+    try{const id=slug(nombre);await setDoc(doc(db,'operarios',id),{nombre,tipo,activo:true,creado_en:serverTimestamp()},{merge:true});await logAudit({accion:'Operario creado',entidad:'operario',entidadId:id,detalle:nombre,cambios:[{campo:'Estado',anterior:'',nuevo:'Activo'}]});$("userMsg").innerHTML='<div class="message ok">✅ Operario creado.</div>';$("newOpName").value='';await loadUsersTable();await loadOperators();}catch(e){$("userMsg").innerHTML='<div class="message err">❌ '+e.message+'</div>'}
   };
+  async function setOperatorActive(id,active){
+    try{await updateDoc(doc(db,'operarios',id),{activo:active,actualizado_local:localISO(),actualizado_por:currentSupervisorUser()});await logAudit({accion:active?'Operario reactivado':'Operario desactivado',entidad:'operario',entidadId:id,cambios:[{campo:'Activo',anterior:!active,nuevo:active}]});toast(active?'✅ Operario reactivado':'⏸️ Operario desactivado');await loadUsersTable();await loadOperators()}catch(e){toast('❌ '+e.message)}
+  }
+  async function deleteOperator(id,name){
+    try{
+      const ss=await getDoc(doc(db,'sesiones_activas',id));if(ss.exists()&&['idle','running','paused','finishing'].includes(ss.data().estado))return toast('⚠️ Cierra primero la sesión de este operario');
+      if(!confirm(`¿Eliminar definitivamente a ${name}?\n\nSus registros históricos no se borrarán.`))return;
+      await logAudit({accion:'Operario eliminado',entidad:'operario',entidadId:id,detalle:name});await deleteDoc(doc(db,'operarios',id));toast('🗑️ Operario eliminado');await loadUsersTable();await loadOperators();
+    }catch(e){toast('❌ '+e.message)}
+  }
   async function loadUsersTable(){
-    try{const snap=await getDocs(collection(db,'operarios'));const arr=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>norm(a.nombre).localeCompare(norm(b.nombre)));$("usersBody").innerHTML=arr.length?arr.map(x=>`<tr><td>${x.nombre}</td><td>${x.tipo||''}</td><td>${x.activo?'✅':'❌'}</td></tr>`).join(''):'<tr><td colspan="3">Sin operarios</td></tr>';}catch(e){$("usersBody").innerHTML=`<tr><td colspan="3">${e.message}</td></tr>`}
+    try{
+      const snap=await getDocs(collection(db,'operarios'));const arr=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>norm(a.nombre).localeCompare(norm(b.nombre)));
+      $("usersBody").innerHTML=arr.length?arr.map(x=>`<tr><td><b>${x.nombre}</b></td><td>${x.tipo||''}</td><td>${x.activo!==false?'<span class="statusPill ok">Activo</span>':'<span class="statusPill">Desactivado</span>'}</td><td><div class="rowActions">${x.activo!==false?`<button class="operatorDeactivateBtn" data-id="${x.id}">⏸️ Desactivar</button>`:`<button class="operatorReactivateBtn" data-id="${x.id}">▶️ Reactivar</button>`}<button class="operatorDeleteBtn" data-id="${x.id}" data-name="${x.nombre}">🗑️ Eliminar</button><button class="miniBtn operatorHistoryBtn" data-id="${x.id}" data-name="${x.nombre}">🕘</button></div></td></tr>`).join(''):'<tr><td colspan="4">Sin operarios</td></tr>';
+      document.querySelectorAll('.operatorDeactivateBtn').forEach(b=>b.onclick=()=>setOperatorActive(b.dataset.id,false));document.querySelectorAll('.operatorReactivateBtn').forEach(b=>b.onclick=()=>setOperatorActive(b.dataset.id,true));document.querySelectorAll('.operatorDeleteBtn').forEach(b=>b.onclick=()=>deleteOperator(b.dataset.id,b.dataset.name));document.querySelectorAll('.operatorHistoryBtn').forEach(b=>b.onclick=()=>openHistory('operario',b.dataset.id,b.dataset.name));
+    }catch(e){$("usersBody").innerHTML=`<tr><td colspan="4">${e.message}</td></tr>`}
   }
 
   $("saveMeta").onclick=async()=>{
@@ -2772,10 +3078,12 @@
     try{
       const prev=await getDoc(doc(db,'metas',code));const old=prev.exists()?prev.data().meta_u_h:null;
       await setDoc(doc(db,'metas',code),{codigo:code,meta_u_h:meta,estado:'aprobada',motivo:reason,actualizado_local:localISO(),actualizado_en:serverTimestamp()},{merge:true});
-      await addDoc(collection(db,'historial_metas'),{codigo:code,meta_anterior:old,meta_nueva:meta,motivo:reason,fecha_local:localISO(),usuario_uid:auth.currentUser?.uid||'',creado_en:serverTimestamp()});
+      await addDoc(collection(db,'historial_metas'),{codigo:code,meta_anterior:old,meta_nueva:meta,motivo:reason,fecha_local:localISO(),usuario_uid:auth.currentUser?.uid||'',usuario:currentSupervisorUser(),creado_en:serverTimestamp()});await logAudit({accion:'Meta modificada',entidad:'meta',entidadId:code,detalle:reason,cambios:[{campo:'Meta u/h',anterior:old??'',nuevo:meta}]});
       $("metaMsg").innerHTML=`<div class="message ok">✅ Meta ${code}: ${meta.toLocaleString('es-EC')} u/h guardada.</div>`;await loadDashboard();
     }catch(e){$("metaMsg").innerHTML='<div class="message err">❌ '+e.message+'</div>'}
   };
+
+  $("metaHistoryBtn").onclick=()=>{const code=norm($("metaCode").value);if(!code)return toast('⚠️ Ingresa un código para ver su historial');openHistory('meta',code,`Meta del código ${code}`)};
 
   $("loadRecords").onclick=()=>loadRecords(true);
 
@@ -2793,158 +3101,127 @@
     $("recordsEtiquetadoWrap").classList.add('hidden');
   };
 
-  async function deleteSupervisorRecord(id){
-    const rec=supervisorRecordsCache.find(x=>x.id===id);
-    if(!rec) return;
+  let editingRecordId='';
+  function toggleEditFields(){
+    const noExpiry=$("editExpiryType").value==='no_caduca';$("editExpiryMonthWrap").classList.toggle('hidden',noExpiry);$("editExpiryYearWrap").classList.toggle('hidden',noExpiry);
+    const noNovelty=$("editNoveltyType").value==='none';$("editNoveltyQtyWrap").classList.toggle('hidden',noNovelty);
+  }
+  function openRecordEditor(id){
+    const x=recordLookup.get(id)||supervisorRecordsCache.find(r=>r.id===id);if(!x)return toast('⚠️ No se encontró el registro');editingRecordId=id;recordLookup.set(id,x);
+    $("recordEditMeta").innerHTML=`<b>${x.operario||'—'}</b> · ${x.fecha_local||'—'} · Código <b>${x.codigo||'—'}</b> · Tiempo neto ${fmtTimer(Number(x.tiempo_neto_ms||0))}`;
+    $("editCode").value=x.codigo||'';$("editUnits").value=Number(x.unidades||0);$("editExpiryType").value=x.caducidad_tipo==='no_caduca'?'no_caduca':'fecha';$("editExpiryMonth").value=x.caducidad_mes||'';$("editExpiryYear").value=x.caducidad_anio||'';$("editNoveltyType").value=x.novedad_tipo||'none';$("editNoveltyQty").value=Number(x.novedad_cantidad||0)||'';$("editComment").value=x.comentario||'';toggleEditFields();$("recordEditModal").classList.add('show');
+  }
+  $("closeHistoryModal").onclick=()=>$("historyModal").classList.remove('show');
+  $("closeRecordEditModal").onclick=()=>$("recordEditModal").classList.remove('show');$("editExpiryType").addEventListener('change',toggleEditFields);$("editNoveltyType").addEventListener('change',toggleEditFields);
+  $("saveRecordEdit").onclick=async()=>{
+    const x=recordLookup.get(editingRecordId);if(!x)return;
+    const newCode=norm($("editCode").value);if(!newCode)return toast('⚠️ Ingresa un código');
+    const units=Math.floor(safeNum($("editUnits").value));if(units<=0)return toast('⚠️ Ingresa unidades válidas');
+    const expiryType=$("editExpiryType").value,month=expiryType==='no_caduca'?'':$("editExpiryMonth").value,year=expiryType==='no_caduca'?null:Number($("editExpiryYear").value||0);if(expiryType==='fecha'&&(!month||!year))return toast('⚠️ Selecciona mes y año');
+    const novelty=$("editNoveltyType").value;let noveltyQty=novelty==='none'?0:Math.floor(safeNum($("editNoveltyQty").value));if(novelty!=='none'&&noveltyQty<=0)return toast('⚠️ Ingresa la cantidad de novedad');
 
-    const label=`${rec.operario||'Operario'} · ${rec.codigo||'sin código'} · ${rec.fecha_local||''}`;
-    if(!confirm(`¿Borrar este registro?\n\n${label}\n\nEsta acción eliminará este dato de Firebase.`)) return;
-
-    try{
-      await deleteDoc(doc(db,'registros_etiquetado',id));
-      supervisorRecordsCache=supervisorRecordsCache.filter(x=>x.id!==id);
-      toast('🗑️ Registro eliminado');
-      await loadRecords(false);
-
-      // Refrescar vistas que reutilizan la misma caché.
-      if($("view-dashboard")?.classList.contains('active')) await loadDashboard(false);
-    }catch(e){
-      toast('❌ No se pudo borrar: '+e.message);
+    let description=x.descripcion||'',category=recordCategory(x),meta=Number(x.meta_u_h||0)||null;
+    if(newCode!==String(x.codigo||'')){
+      try{
+        const product=await getProductByCode(newCode);
+        if(!product)return toast('⚠️ El código corregido no existe en la data de productos');
+        description=product.descripcion||'';
+        category=(await getManualCategory(newCode))||classifyProduct(description).categoria;
+        const metaSnap=await getDoc(doc(db,'metas',newCode));
+        meta=metaSnap.exists()?Number(metaSnap.data().meta_u_h||0)||null:null;
+      }catch(e){return toast('⚠️ No se pudo validar el código corregido');}
     }
-  }
 
-  function bindRecordDeleteButtons(){
-    document.querySelectorAll('.deleteRecordBtn').forEach(btn=>{
-      btn.onclick=()=>deleteSupervisorRecord(btn.dataset.id);
-    });
-  }
+    const netMs=Number(x.tiempo_neto_ms||0),uph=netMs>0?Math.round(units/(netMs/3600000)):0,compliance=meta?Math.round((uph/meta)*1000)/10:null;
+    try{
+      const newComment=norm($("editComment").value);const changes=[diffChange('Código',x.codigo,newCode),diffChange('Unidades',x.unidades,units),diffChange('Caducidad',expiryLabel(x),expiryType==='no_caduca'?'No caduca':`${month}/${year}`),diffChange('Novedad',x.novedad_tipo||'none',novelty),diffChange('Cantidad novedad',x.novedad_cantidad||0,noveltyQty),diffChange('Comentario',x.comentario||'',newComment)].filter(Boolean);
+      await updateDoc(doc(db,'registros_etiquetado',editingRecordId),{codigo:newCode,descripcion:description,categoria:category,unidades:units,productividad_u_h:uph,meta_u_h:meta,cumplimiento_pct:compliance,caducidad_tipo:expiryType,caducidad_mes:month,caducidad_anio:year,novedad_tipo:novelty,novedad_cantidad:noveltyQty,comentario:newComment,editado_supervisor:true,editado_por:currentSupervisorUser(),editado_local:localISO()});
+      if(changes.length)await logAudit({accion:'Registro editado',entidad:'registro',entidadId:editingRecordId,detalle:`${x.operario||''} · ${x.fecha_local||''}`,cambios:changes});
+      $("recordEditModal").classList.remove('show');invalidateRecordCaches();toast('✅ Registro actualizado');
+      if($("view-registros").classList.contains('active'))await loadRecords(true);
+      if($("view-novedades").classList.contains('active'))await loadNoveltyReport();
+      if($("view-productividad").classList.contains('active'))await loadProductivity(true);
+      if($("view-caducidad")?.classList.contains('active'))await loadExpiryReport();
+    }catch(e){toast('❌ No se pudo editar: '+e.message)}
+  };
 
-  function noveltyLabel(x){
-    const type=x.novedad_tipo||'none';
-    if(type==='sobrante') return `➕ Sobrante${x.novedad_cantidad?` (${x.novedad_cantidad})`:''}`;
-    if(type==='faltante') return `➖ Faltante${x.novedad_cantidad?` (${x.novedad_cantidad})`:''}`;
-    if(type==='danado') return `💥 Dañado${x.novedad_cantidad?` (${x.novedad_cantidad})`:''}`;
-    return '✅ Sin novedad';
+  async function deleteSupervisorRecord(id){
+    const rec=recordLookup.get(id)||supervisorRecordsCache.find(x=>x.id===id);if(!rec)return;const label=`${rec.operario||'Operario'} · ${rec.codigo||'sin código'} · ${rec.fecha_local||''}`;if(!confirm(`¿Borrar este registro?\n\n${label}\n\nEsta acción eliminará este dato de Firebase.`))return;
+    try{await logAudit({accion:'Registro eliminado',entidad:'registro',entidadId:id,detalle:label});await deleteDoc(doc(db,'registros_etiquetado',id));invalidateRecordCaches();toast('🗑️ Registro eliminado');await loadRecords(true);if($("view-dashboard")?.classList.contains('active'))await loadDashboard(true)}catch(e){toast('❌ No se pudo borrar: '+e.message)}
   }
+  function bindRecordActionButtons(){document.querySelectorAll('.deleteRecordBtn').forEach(btn=>btn.onclick=()=>deleteSupervisorRecord(btn.dataset.id));document.querySelectorAll('.editRecordBtn').forEach(btn=>btn.onclick=()=>openRecordEditor(btn.dataset.id));document.querySelectorAll('.historyRecordBtn').forEach(btn=>btn.onclick=()=>openHistory('registro',btn.dataset.id,'Registro '+btn.dataset.id))}
 
-  function expiryLabel(x){
-    if(x.caducidad_tipo==='no_caduca') return '♾️ No caduca';
-    if(!x.caducidad_mes || !x.caducidad_anio) return '—';
-    return `${x.caducidad_mes}/${x.caducidad_anio}`;
-  }
+  function noveltyLabel(x){const type=x.novedad_tipo||'none';if(type==='sobrante')return `➕ Sobrante${x.novedad_cantidad?` (${x.novedad_cantidad})`:''}`;if(type==='faltante')return `➖ Faltante${x.novedad_cantidad?` (${x.novedad_cantidad})`:''}`;if(type==='danado')return `💥 Dañado${x.novedad_cantidad?` (${x.novedad_cantidad})`:''}`;return '✅ Sin novedad'}
+  function expiryLabel(x){if(x.caducidad_tipo==='no_caduca')return '♾️ No caduca';if(!x.caducidad_mes||!x.caducidad_anio)return '—';return `${x.caducidad_mes}/${x.caducidad_anio}`}
 
   async function loadRecords(force=false){
     try{
-      const all=await getSupervisorRecords(force);
-      const etiquetado=all.filter(x=>(x.proceso||'etiquetado')==='etiquetado');
-      const armado=all.filter(x=>x.proceso==='armado');
-
-      $("recordsEtiquetadoBody").innerHTML=etiquetado.length
-        ? etiquetado.map(x=>`<tr>
-            <td>${x.fecha_local||''}</td>
-            <td>${x.operario||''}</td>
-            <td>${x.codigo||''}</td>
-            <td>${fmtInt(x.unidades)}</td>
-            <td>${Math.round((x.tiempo_neto_ms||0)/60000)}</td>
-            <td><b>${fmtInt(x.productividad_u_h||0)}</b></td>
-            <td>${x.meta_u_h?fmtInt(x.meta_u_h):'—'}</td>
-            <td>${expiryLabel(x)}</td>
-            <td>${noveltyLabel(x)}</td>
-            <td>${x.comentario||'—'}</td>
-            <td><button class="deleteRecordBtn" data-id="${x.id}">🗑️ Borrar</button></td>
-          </tr>`).join('')
-        : '<tr><td colspan="11">Sin registros de etiquetado</td></tr>';
-
-      $("recordsArmadoBody").innerHTML=armado.length
-        ? armado.map(x=>`<tr>
-            <td>${x.fecha_local||''}</td>
-            <td>${x.operario||''}</td>
-            <td>${x.codigo||''}</td>
-            <td>${fmtInt(x.unidades)}</td>
-            <td>${Math.round((x.tiempo_neto_ms||0)/60000)}</td>
-            <td><b>${fmtInt(x.productividad_u_h||0)}</b></td>
-            <td>${expiryLabel(x)}</td>
-            <td>${noveltyLabel(x)}</td>
-            <td>${x.comentario||'—'}</td>
-            <td><button class="deleteRecordBtn" data-id="${x.id}">🗑️ Borrar</button></td>
-          </tr>`).join('')
-        : '<tr><td colspan="10">Sin registros de armado</td></tr>';
-
-      bindRecordDeleteButtons();
-    }catch(e){
-      $("recordsEtiquetadoBody").innerHTML=`<tr><td colspan="11">${e.message}</td></tr>`;
-      $("recordsArmadoBody").innerHTML=`<tr><td colspan="10">${e.message}</td></tr>`;
-    }
+      const all=await getSupervisorRecords(force);indexRecords(all);const etiquetado=all.filter(x=>(x.proceso||'etiquetado')==='etiquetado'),armado=all.filter(x=>x.proceso==='armado');
+      $("recordsEtiquetadoBody").innerHTML=etiquetado.length?etiquetado.map(x=>`<tr><td>${x.fecha_local||''}</td><td>${x.operario||''}</td><td>${x.codigo||''}</td><td>${fmtInt(x.unidades)}</td><td>${Math.round((x.tiempo_neto_ms||0)/60000)}</td><td><b>${fmtInt(x.productividad_u_h||0)}</b></td><td>${x.meta_u_h?fmtInt(x.meta_u_h):'—'}</td><td>${expiryLabel(x)}</td><td>${noveltyLabel(x)}</td><td>${x.comentario||'—'}</td><td><div class="rowActions"><button class="editRecordBtn" data-id="${x.id}">✏️ Editar</button><button class="deleteRecordBtn" data-id="${x.id}">🗑️ Borrar</button><button class="miniBtn historyRecordBtn" data-id="${x.id}">🕘</button></div></td></tr>`).join(''):'<tr><td colspan="11">Sin registros de etiquetado</td></tr>';
+      $("recordsArmadoBody").innerHTML=armado.length?armado.map(x=>`<tr><td>${x.fecha_local||''}</td><td>${x.operario||''}</td><td>${x.codigo||''}</td><td>${fmtInt(x.unidades)}</td><td>${Math.round((x.tiempo_neto_ms||0)/60000)}</td><td><b>${fmtInt(x.productividad_u_h||0)}</b></td><td>${expiryLabel(x)}</td><td>${noveltyLabel(x)}</td><td>${x.comentario||'—'}</td><td><div class="rowActions"><button class="editRecordBtn" data-id="${x.id}">✏️ Editar</button><button class="deleteRecordBtn" data-id="${x.id}">🗑️ Borrar</button><button class="miniBtn historyRecordBtn" data-id="${x.id}">🕘</button></div></td></tr>`).join(''):'<tr><td colspan="10">Sin registros de armado</td></tr>';bindRecordActionButtons();
+    }catch(e){$("recordsEtiquetadoBody").innerHTML=`<tr><td colspan="11">${e.message}</td></tr>`;$("recordsArmadoBody").innerHTML=`<tr><td colspan="10">${e.message}</td></tr>`}
   }
+
+  // ---------- CADUCIDAD ----------
+  let expiryReportRows=[];
+  async function loadExpiryReport(){
+    const today=localISO().slice(0,10);
+    const from=$("expiryFrom").value||today,to=$("expiryTo").value||today;
+    $("expiryFrom").value=from;$("expiryTo").value=to;
+    if(from>to)return toast('⚠️ El rango de fechas no es válido');
+    const proc=$("expiryProcess").value,op=$("expiryOperator").value,type=$("expiryTypeFilter").value;
+    try{
+      const all=await getRecordsByRange(from,to);
+      const ops=[...new Set(all.map(x=>x.operario).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es'));
+      const opSel=$("expiryOperator"),current=opSel.value;
+      opSel.innerHTML='<option value="">Todos</option>'+ops.map(v=>`<option>${v}</option>`).join('');
+      if(ops.includes(current))opSel.value=current;
+      const rows=all.filter(x=>{
+        const p=x.proceso||'etiquetado',t=x.caducidad_tipo==='no_caduca'?'no_caduca':'fecha';
+        return (proc==='todos'||p===proc)&&(!op||x.operario===op)&&(type==='todos'||t===type);
+      }).sort((a,b)=>String(a.caducidad_anio||9999).localeCompare(String(b.caducidad_anio||9999))||String(a.caducidad_mes||'99').localeCompare(String(b.caducidad_mes||'99')));
+      expiryReportRows=rows;
+      $("expiryBody").innerHTML=rows.length?rows.map(x=>`<tr><td>${x.fecha_local||'—'}</td><td>${x.operario||'—'}</td><td>${processName(x.proceso)}</td><td>${x.codigo||'—'}</td><td title="${x.descripcion||''}">${shortDescription(x.descripcion)}</td><td>${recordCategory(x)}</td><td>${fmtInt(x.unidades)}</td><td><b>${expiryLabel(x)}</b></td></tr>`).join(''):'<tr><td colspan="8">Sin registros para los filtros seleccionados.</td></tr>';
+    }catch(e){$("expiryBody").innerHTML=`<tr><td colspan="8">${e.message}</td></tr>`}
+  }
+  $("expiryFrom").value=localISO().slice(0,10);$("expiryTo").value=localISO().slice(0,10);
+  $("loadExpiryReport").onclick=loadExpiryReport;
+  ["expiryFrom","expiryTo","expiryProcess","expiryOperator","expiryTypeFilter"].forEach(id=>$(id)?.addEventListener('change',loadExpiryReport));
+
+  $("copyExpiryReport").onclick=async()=>{
+    if(!expiryReportRows.length)return toast('⚠️ No hay datos para copiar');
+    const lines=[['Fecha','Operario','Proceso','Código','Descripción','Categoría','Unidades','Caducidad'],...expiryReportRows.map(x=>[x.fecha_local||'',x.operario||'',processName(x.proceso),x.codigo||'',shortDescription(x.descripcion),recordCategory(x),Number(x.unidades||0),expiryLabel(x)])];
+    try{await navigator.clipboard.writeText(lines.map(r=>r.join('\t')).join('\n'));toast('📋 Tabla de caducidad copiada')}catch{toast('❌ No se pudo copiar')}
+  };
+  $("downloadExpiryReport").onclick=()=>{
+    if(!expiryReportRows.length)return toast('⚠️ No hay datos para descargar');
+    const data=expiryReportRows.map(x=>({'Fecha':x.fecha_local||'','Operario':x.operario||'','Proceso':processName(x.proceso),'Código':x.codigo||'','Descripción':shortDescription(x.descripcion),'Categoría':recordCategory(x),'Unidades':Number(x.unidades||0),'Caducidad':expiryLabel(x)}));
+    const ws=XLSX.utils.json_to_sheet(data);ws['!cols']=[{wch:12},{wch:25},{wch:13},{wch:12},{wch:28},{wch:24},{wch:12},{wch:14}];const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Caducidad');XLSX.writeFile(wb,`Caducidad_${$("expiryFrom").value}_${$("expiryTo").value}.xlsx`);
+  };
 
 
   // ---------- NOVEDADES ----------
-  async function loadNoveltyReport(){
-    const date=$("noveltyDate").value || localISO().slice(0,10);
-    $("noveltyDate").value=date;
-    const proc=$("noveltyProcess").value;
-    const opFilter=$("noveltyOperator").value;
-    const typeFilter=$("noveltyTypeFilter").value;
-
-    try{
-      const snap=await getDocs(
-        query(
-          collection(db,'registros_etiquetado'),
-          where('fecha_local','==',date)
-        )
-      );
-
-      const all=snap.docs.map(d=>({id:d.id,...d.data()}));
-
-      const operatorsForDay=[...new Set(all.map(x=>x.operario).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es'));
-      const opSel=$("noveltyOperator");
-      const current=opSel.value;
-      opSel.innerHTML='<option value="">Todos</option>'+operatorsForDay.map(v=>`<option>${v}</option>`).join('');
-      if(operatorsForDay.includes(current))opSel.value=current;
-
-      let rows=all.filter(x=>{
-        const p=x.proceso||'etiquetado';
-        const t=x.novedad_tipo||'none';
-        return t!=='none'
-          && (proc==='todos'||p===proc)
-          && (!opFilter||x.operario===opFilter)
-          && (typeFilter==='todos'||t===typeFilter);
-      });
-
-      rows.sort((a,b)=>String(a.inicio_local||'').localeCompare(String(b.inicio_local||'')));
-
-      const over=rows.filter(x=>x.novedad_tipo==='sobrante').reduce((s,x)=>s+Number(x.novedad_cantidad||0),0);
-      const short=rows.filter(x=>x.novedad_tipo==='faltante').reduce((s,x)=>s+Number(x.novedad_cantidad||0),0);
-      const damaged=rows.filter(x=>x.novedad_tipo==='danado').reduce((s,x)=>s+Number(x.novedad_cantidad||0),0);
-
-      $("noveltyCount").textContent=fmtInt(rows.length);
-      $("noveltyOverQty").textContent=fmtInt(over);
-      $("noveltyShortQty").textContent=fmtInt(short);
-      $("noveltyDamagedQty").textContent=fmtInt(damaged);
-      $("noveltyTotalQty").textContent=fmtInt(over+short+damaged);
-
-      $("noveltyBody").innerHTML=rows.length
-        ? rows.map(x=>`<tr>
-            <td>${x.fecha_local||''}</td>
-            <td>${x.operario||''}</td>
-            <td>${processName(x.proceso)}</td>
-            <td>${x.codigo||''}</td>
-            <td>${expiryLabel(x)}</td>
-            <td>${x.novedad_tipo==='sobrante'?'➕ Sobrante':x.novedad_tipo==='faltante'?'➖ Faltante':'💥 Dañado'}</td>
-            <td><b>${fmtInt(x.novedad_cantidad||0)}</b></td>
-            <td>${x.comentario||'—'}</td>
-          </tr>`).join('')
-        : '<tr><td colspan="8">Sin novedades para los filtros seleccionados.</td></tr>';
-    }catch(e){
-      $("noveltyBody").innerHTML=`<tr><td colspan="8">${e.message}</td></tr>`;
-    }
+  let noveltyActiveType='todos';
+  async function setNoveltyManaged(id,managed){
+    const x=recordLookup.get(id);if(!x)return;
+    const old=x.gestion_estado||'pendiente',next=managed?'gestionado':'pendiente';
+    try{await updateDoc(doc(db,'registros_etiquetado',id),{gestion_estado:next,gestion_por:managed?currentSupervisorUser():'',gestion_fecha_local:managed?localISO():'',gestion_actualizado_por:currentSupervisorUser()});await logAudit({accion:managed?'Novedad gestionada':'Novedad reabierta',entidad:'registro',entidadId:id,detalle:`${x.operario||''} · ${x.codigo||''}`,cambios:[{campo:'Estado de gestión',anterior:old,nuevo:next}]});invalidateRecordCaches();toast(managed?'✅ Marcado como gestionado':'↩️ Marcado como pendiente');await loadNoveltyReport()}catch(e){toast('❌ '+e.message)}
   }
-
-  $("noveltyDate").value=localISO().slice(0,10);
-  $("loadNoveltyReport").onclick=loadNoveltyReport;
-  $("noveltyProcess").addEventListener('change',loadNoveltyReport);
-  $("noveltyOperator").addEventListener('change',loadNoveltyReport);
-  $("noveltyTypeFilter").addEventListener('change',loadNoveltyReport);
+  async function loadNoveltyReport(){
+    const date=$("noveltyDate").value||localISO().slice(0,10);$("noveltyDate").value=date;const proc=$("noveltyProcess").value,opFilter=$("noveltyOperator").value,management=$("noveltyManagementFilter").value;
+    try{
+      const snap=await getDocs(query(collection(db,'registros_etiquetado'),where('fecha_local','==',date)));const all=snap.docs.map(d=>({id:d.id,...d.data()}));indexRecords(all);
+      const operatorsForDay=[...new Set(all.map(x=>x.operario).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es'));const opSel=$("noveltyOperator"),current=opSel.value;opSel.innerHTML='<option value="">Todos</option>'+operatorsForDay.map(v=>`<option>${v}</option>`).join('');if(operatorsForDay.includes(current))opSel.value=current;
+      let rows=all.filter(x=>{const p=x.proceso||'etiquetado',t=x.novedad_tipo||'none',g=x.gestion_estado||'pendiente';return t!=='none'&&(proc==='todos'||p===proc)&&(!opFilter||x.operario===opFilter)&&(noveltyActiveType==='todos'||t===noveltyActiveType)&&(management==='todos'||g===management)});
+      rows.sort((a,b)=>String(a.inicio_local||'').localeCompare(String(b.inicio_local||'')));
+      const over=rows.filter(x=>x.novedad_tipo==='sobrante').reduce((s,x)=>s+Number(x.novedad_cantidad||0),0),short=rows.filter(x=>x.novedad_tipo==='faltante').reduce((s,x)=>s+Number(x.novedad_cantidad||0),0),damaged=rows.filter(x=>x.novedad_tipo==='danado').reduce((s,x)=>s+Number(x.novedad_cantidad||0),0);
+      $("noveltyCount").textContent=fmtInt(rows.length);$("noveltyOverQty").textContent=fmtInt(over);$("noveltyShortQty").textContent=fmtInt(short);$("noveltyDamagedQty").textContent=fmtInt(damaged);$("noveltyTotalQty").textContent=fmtInt(over+short+damaged);
+      $("noveltyBody").innerHTML=rows.length?rows.map(x=>{const managed=(x.gestion_estado||'pendiente')==='gestionado';return `<tr><td>${x.fecha_local||''}</td><td>${x.operario||''}</td><td>${processName(x.proceso)}</td><td>${x.codigo||''}</td><td>${expiryLabel(x)}</td><td>${x.novedad_tipo==='sobrante'?'➕ Sobrante':x.novedad_tipo==='faltante'?'➖ Faltante':'💥 Dañado'}</td><td><b>${fmtInt(x.novedad_cantidad||0)}</b></td><td>${x.comentario||'—'}</td><td><span class="managementPill ${managed?'done':'pending'}">${managed?'✅ Gestionado':'🟡 Pendiente'}</span></td><td>${managed?`${x.gestion_por||'—'}${x.gestion_fecha_local?` · ${x.gestion_fecha_local.replace('T',' ').slice(0,16)}`:''}`:'—'}</td><td><div class="compactActions"><button class="editRecordBtn" data-id="${x.id}">✏️ Editar</button><button class="miniBtn ${managed?'warn':'ok'} noveltyManageBtn" data-id="${x.id}" data-managed="${managed?'0':'1'}">${managed?'↩️ Reabrir':'✅ Gestionado'}</button><button class="miniBtn historyNoveltyBtn" data-id="${x.id}">🕘</button></div></td></tr>`}).join(''):'<tr><td colspan="11">Sin novedades para los filtros seleccionados.</td></tr>';
+      document.querySelectorAll('#noveltyBody .editRecordBtn').forEach(btn=>btn.onclick=()=>openRecordEditor(btn.dataset.id));document.querySelectorAll('.noveltyManageBtn').forEach(btn=>btn.onclick=()=>setNoveltyManaged(btn.dataset.id,btn.dataset.managed==='1'));document.querySelectorAll('.historyNoveltyBtn').forEach(btn=>btn.onclick=()=>openHistory('registro',btn.dataset.id,'Novedad '+btn.dataset.id));
+    }catch(e){$("noveltyBody").innerHTML=`<tr><td colspan="11">${e.message}</td></tr>`}
+  }
+  $("noveltyDate").value=localISO().slice(0,10);$("loadNoveltyReport").onclick=loadNoveltyReport;$("noveltyProcess").addEventListener('change',loadNoveltyReport);$("noveltyOperator").addEventListener('change',loadNoveltyReport);$("noveltyManagementFilter").addEventListener('change',loadNoveltyReport);
+  document.querySelectorAll('.noveltyTab').forEach(btn=>btn.onclick=()=>{document.querySelectorAll('.noveltyTab').forEach(x=>x.classList.remove('active'));btn.classList.add('active');noveltyActiveType=btn.dataset.type;loadNoveltyReport()});
 
   // ---------- REPORTE DIARIO ----------
   let dailyReportRows=[];
@@ -3092,10 +3369,11 @@
       const bucketId = masterBucketId(code);
       if(!buckets.has(bucketId)) buckets.set(bucketId,{});
 
+      const hierarchy=classifyProduct(descripcion);
       buckets.get(bucketId)[code] = {
         codigo:code,
         descripcion,
-        categoria:categorize(descripcion),
+        categoria:hierarchy.categoria,
         activo:true
       };
     }
@@ -3120,15 +3398,15 @@
         );
       }
 
-      const lote=Math.floor(i/GROUP)+1;
-      const totalLotes=Math.ceil(bucketEntries.length/GROUP);
+      const grupo=Math.floor(i/GROUP)+1;
+      const totalGrupos=Math.ceil(bucketEntries.length/GROUP);
 
       msg.innerHTML=`<div class="message warn">
-        ⬆️ Cargando nueva versión: <b>${lote} / ${totalLotes}</b><br>
+        ⬆️ Cargando nueva versión: <b>${grupo} / ${totalGrupos}</b><br>
         ${written.toLocaleString('es-EC')} de ${validRows.length.toLocaleString('es-EC')} productos preparados
       </div>`;
 
-      await withTimeout(batch.commit(),30000,`La carga del bloque ${lote}`);
+      await withTimeout(batch.commit(),30000,`La carga del bloque ${grupo}`);
 
       written += group.reduce((acc,[,items])=>acc+Object.keys(items).length,0);
 
@@ -3298,7 +3576,29 @@
       btn.disabled=false;btn.textContent='⬆️ Cargar productos';
     }
   };
-  function categorize(desc){const d=norm(desc).toUpperCase();const rules=[['PENCIL','LÁPIZ'],['LIPSTICK','LABIAL'],['LIP GLOSS','LABIAL'],['MASCARA','MÁSCARA'],['EAU DE PARFUM','PERFUME'],[' EDP','PERFUME'],['EAU DE TOILETTE','PERFUME'],[' EDT','PERFUME'],['PERFUME','PERFUME'],['CREAM','CREMA'],['CREME','CREMA'],['SHAMPOO','SHAMPOO'],['SOAP','JABÓN'],['DEODORANT','DESODORANTE'],['ROLL-ON','DESODORANTE'],['FOUNDATION','MAQUILLAJE'],['POWDER','MAQUILLAJE'],['CONCEALER','MAQUILLAJE'],['SERUM','SÉRUM'],['CLEANSER','LIMPIEZA FACIAL'],['TONER','LIMPIEZA FACIAL']];for(const [k,v] of rules)if(d.includes(k))return v;return 'OTROS'}
+  function classifyProduct(desc){
+    const d=(' '+norm(desc).toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')+' ');
+    const has=(...terms)=>terms.some(t=>d.includes(t));
+    const word=(term)=>new RegExp(`\\b${term}\\b`).test(d);
+
+    if(has('HAIR','SHAMPOO','CONDITIONER','SCALP','ANTI-DANDRUFF','DANDRUFF')) return {categoria:'PRODUCTOS CAPILARES'};
+    if(has('DEODORANT','ROLL-ON','ROLL ON','ANTIPERSPIRANT')) return {categoria:'DESODORANTES'};
+    if(has('TOOTHPASTE','TOOTHBRUSH','MOUTHWASH','DENTAL')) return {categoria:'CUIDADO ORAL'};
+    if(has('SUNSCREEN','SUN CREAM','SUN LOTION',' SPF ')) return {categoria:'PROTECCIÓN SOLAR'};
+    if(has('FOOT','FEET')) return {categoria:'CUIDADO DE PIES'};
+    if(has('HAND CREAM','HAND LOTION','HAND CARE')) return {categoria:'CUIDADO DE MANOS'};
+    if(has('BODY LOTION','BODY CREAM','BODY BUTTER','BODY OIL')) return {categoria:'CUIDADO CORPORAL'};
+    if(has('SOAP','SHOWER GEL','SHOWER CREAM','BODY WASH','BATH')) return {categoria:'HIGIENE CORPORAL'};
+    if(has('FACE CREAM','FACIAL','FACE SERUM','CLEANSER','TONER','MICELLAR','EYE CREAM','MOISTUR','SCRUB','PEEL','ACNE')) return {categoria:'CUIDADO FACIAL'};
+    if(has('LIPSTICK','LIP GLOSS','LIP LINER','LIP COLOUR','LIP COLOR','LIP BALM','MASCARA','EYELINER','EYE LINER','EYE PENCIL','BROW','EYESHADOW','EYE SHADOW','FOUNDATION','CONCEALER','FACE POWDER','PRESSED POWDER','BLUSH','BRONZER','HIGHLIGHTER','MAKE-UP','MAKEUP')) return {categoria:'MAQUILLAJE'};
+    if(has('NAIL','MANICURE')) return {categoria:'UÑAS'};
+    if(has('EAU DE PARFUM','EAU DE TOILETTE',' EDP ',' EDT ','FRAGRANCE','COLOGNE','PARFUM') || word('PERFUME')) return {categoria:'PERFUMERÍA'};
+    if(has('SUPPLEMENT','CAPSULE','TABLET','VITAMIN','OMEGA')) return {categoria:'BIENESTAR'};
+    if(has('BRUSH','SPONGE','APPLICATOR','BAG','POUCH','CASE','COMB','MIRROR','ACCESSORY','ACCESSORIES')) return {categoria:'ACCESORIOS'};
+    if(has('CREAM','CREME','LOTION','BALM','OIL')) return {categoria:'CUIDADO PERSONAL'};
+    return {categoria:'OTROS'};
+  }
+  function categorize(desc){return classifyProduct(desc).categoria}
 </script>
 </body>
 </html>
