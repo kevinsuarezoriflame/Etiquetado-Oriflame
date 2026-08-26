@@ -784,7 +784,78 @@
       .noveltyToggle{grid-template-columns:repeat(2,1fr)}
     }
 
-  </style>
+  
+
+    /* ===== Perfil activo más notorio ===== */
+    .opTab{
+      position:relative;
+      transition:transform .15s ease, box-shadow .15s ease, opacity .15s ease, border-color .15s ease;
+    }
+    .opTab:not(.active){
+      opacity:.78;
+      filter:saturate(.92);
+    }
+    .opTab.active{
+      border:2px solid #35c3a6 !important;
+      background:linear-gradient(180deg,#ecfffb 0%, #dff8f1 100%) !important;
+      box-shadow:0 0 0 3px rgba(53,195,166,.14), 0 10px 24px rgba(15,39,31,.08);
+      transform:translateY(-1px);
+      opacity:1;
+    }
+    .opTab.active b{
+      font-size:24px;
+      line-height:1.05;
+      letter-spacing:.1px;
+      color:#0c2b21;
+    }
+    .opTab .nameWrap{display:flex;flex-direction:column;gap:3px;min-width:0}
+    .opTab .activeBadge{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      align-self:flex-start;
+      font-size:10px;
+      font-weight:800;
+      letter-spacing:.5px;
+      text-transform:uppercase;
+      color:#0d6a59;
+      background:#ffffff;
+      border:1px solid #8fdbc8;
+      border-radius:999px;
+      padding:3px 8px;
+      margin-top:2px;
+      box-shadow:0 1px 0 rgba(0,0,0,.03);
+    }
+    .opTab .activeDot{
+      width:8px;height:8px;border-radius:50%;background:#20c997;display:inline-block;
+      box-shadow:0 0 0 4px rgba(32,201,151,.16);
+    }
+    .opTab.active::after{
+      content:'';
+      position:absolute;
+      left:0;top:10px;bottom:10px;
+      width:5px;
+      border-radius:0 8px 8px 0;
+      background:#20c997;
+    }
+    .workspaceActiveBanner{
+      display:flex;align-items:center;gap:10px;
+      background:#f1fffb;border:1px solid #b9eadc;color:#0f5f51;
+      border-radius:14px;padding:10px 12px;margin-bottom:10px;font-weight:700;
+    }
+    .workspaceActiveBanner .badge{
+      display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid #9bddd0;
+      border-radius:999px;padding:4px 10px;font-size:11px;font-weight:800;
+    }
+    .workspaceActiveBanner .name{font-size:18px;color:#0c2b21}
+    @media(max-width:700px){
+      .opTab.active b{font-size:17px !important}
+      .opTab .activeBadge{font-size:9px;padding:2px 7px}
+      .workspaceActiveBanner{padding:8px 10px;margin-bottom:8px}
+      .workspaceActiveBanner .name{font-size:15px}
+    }
+
+</style>
 </head>
 <body>
 <div class="app">
@@ -1660,7 +1731,8 @@
       b.className='opTab '+(id===activeOpId?'active':'');
       const st=s.state==='running'?'🟢 TRABAJANDO':s.state==='paused'?'🟡 PAUSA':s.state==='finishing'?'🔵 FINALIZANDO':'⚪ LISTO';
       const proc=s.proceso?(s.proceso==='armado'?'📦 ARMADO':'🏷️ ETIQUETADO'):'⚙️ SIN PROCESO';
-      b.innerHTML=`<span><b>${s.operator.nombre}</b><div class="processMini">${proc}</div><div class="miniStatus">${st}</div></span>`;
+      const activeMark=id===activeOpId?'<div class="activeBadge"><span class="activeDot"></span>Perfil activo</div>':'';
+      b.innerHTML=`<span class="nameWrap"><b>${s.operator.nombre}</b>${activeMark}<div class="processMini">${proc}</div><div class="miniStatus">${st}</div></span>`;
       b.onclick=()=>{activeOpId=id;renderOpTabs();renderWorkspace()};
       box.appendChild(b)
     });
@@ -1681,9 +1753,12 @@
 
     const s=openOps.get(activeOpId);
 
+    const activeBanner=`<div class="workspaceActiveBanner"><span class="badge">🟢 Perfil activo</span><span class="name">${s.operator.nombre}</span></div>`;
+
     // El proceso se elige una sola vez para la sesión/jornada de ese perfil.
     if(!s.proceso){
       root.innerHTML=`
+        ${activeBanner}
         <div class="card" style="max-width:700px;margin:8px auto">
           <h3 style="margin:0 0 5px">⚙️ ¿Qué proceso realizará hoy?</h3>
           <div class="small"><b>${s.operator.nombre}</b> selecciona una opción una sola vez para esta sesión.</div>
@@ -1724,7 +1799,7 @@
     const stateLabel=s.state==='running'?'Trabajando':s.state==='paused'?'Pausado':s.state==='finishing'?'Finalizando':'Listo';
     const pauseMs=s.pauseTotal+(s.state==='paused'&&s.pauseStart?Date.now()-s.pauseStart:0);
 
-    root.innerHTML=`<div class="workGrid compactWork">
+    root.innerHTML=`${activeBanner}<div class="workGrid compactWork">
       <div class="card productCard compactProductCard">
         <h3>📦 Producto</h3>
 
