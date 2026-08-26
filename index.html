@@ -650,34 +650,6 @@
       color:#9a2f29;
     }
 
-  
-    /* ===== Selector de operario robusto en móvil ===== */
-    .operatorEntry,
-    .operatorSearchWrap,
-    .card{
-      overflow:visible!important;
-    }
-    .operatorMatches{
-      z-index:999!important;
-      max-height:240px!important;
-      -webkit-overflow-scrolling:touch;
-    }
-    @media(max-width:700px){
-      .operatorMatches{
-        position:fixed!important;
-        left:12px!important;
-        right:12px!important;
-        top:auto!important;
-        bottom:12px!important;
-        max-height:44vh!important;
-        border-radius:16px!important;
-      }
-      .operatorMatch{
-        min-height:48px;
-        font-size:15px;
-      }
-    }
-
   </style>
 </head>
 <body>
@@ -1334,24 +1306,16 @@
 
 
   async function loadOperators(){
-    try{
-      const snap=await getDocs(query(collection(db,'operarios'),where('activo','==',true)));
-      operators=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>norm(a.nombre).localeCompare(norm(b.nombre)));
-      renderOperatorPicker();
-      return operators.length;
-    }catch(e){
-      operators=[];
-      renderOperatorPicker();
-      console.warn('No se pudieron cargar operarios',e);
-      throw e;
-    }
+    const snap=await getDocs(query(collection(db,'operarios'),where('activo','==',true)));
+    operators=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>norm(a.nombre).localeCompare(norm(b.nombre)));
+    renderOperatorPicker();
   }
   function matchingOperators(){
     const q=norm($("operatorSearch")?.value||'').toLocaleLowerCase('es');
-    if(!q) return operators.slice(0,8);
+    if(!q) return [];
     return operators
       .filter(o=>norm(o.nombre).toLocaleLowerCase('es').includes(q))
-      .slice(0,8);
+      .slice(0,6);
   }
 
   function renderOperatorPicker(){
@@ -1362,16 +1326,10 @@
     const box=$("operatorMatches");
     if(!box) return;
 
-    if(!operators.length){
-      box.innerHTML='<div class="small" style="padding:10px 12px">No se pudieron cargar operarios.</div>';
-      box.classList.remove('hidden');
-      return;
-    }
-
     const matches=matchingOperators();
     if(!matches.length){
-      box.innerHTML='<div class="small" style="padding:10px 12px">Sin coincidencias.</div>';
-      box.classList.remove('hidden');
+      box.innerHTML='';
+      box.classList.add('hidden');
       return;
     }
 
@@ -1384,26 +1342,21 @@
 
     box.classList.remove('hidden');
 
-    const chooseOperator=(btn,e)=>{
-      e?.preventDefault?.();
-      e?.stopPropagation?.();
-      const o=operators.find(x=>x.id===btn.dataset.opId);
-      if(!o) return;
-      $("operatorSearch").value=o.nombre;
-      box.classList.add('hidden');
-      openOperator(o);
-      $("operatorSearch").value='';
-      $("operatorSearch").blur();
-    };
-
     box.querySelectorAll('.operatorMatch').forEach(btn=>{
-      btn.addEventListener('click',e=>chooseOperator(btn,e));
-      btn.addEventListener('touchend',e=>chooseOperator(btn,e),{passive:false});
-      btn.addEventListener('pointerup',e=>{
-        if(e.pointerType!=='touch') chooseOperator(btn,e);
+      btn.addEventListener('pointerdown',e=>{
+        // pointerdown evita que Android cierre el teclado antes de tomar la selección
+        e.preventDefault();
+        const o=operators.find(x=>x.id===btn.dataset.opId);
+        if(!o) return;
+        $("operatorSearch").value=o.nombre;
+        box.classList.add('hidden');
+        openOperator(o);
+        $("operatorSearch").value='';
+        $("operatorSearch").blur();
       });
     });
   }
+
   function openOperatorFromSearch(){
     const typed=norm($("operatorSearch").value);
     if(!typed) return toast('⚠️ Escribe el nombre del operario');
@@ -1431,10 +1384,13 @@
 
   $("operatorSearch").addEventListener('input',()=>{
     renderOperatorMatches();
+    // Mantiene el selector en la parte superior cuando Android abre el teclado
+    setTimeout(()=>$("operatorSearch").scrollIntoView({block:'start',behavior:'smooth'}),40);
   });
 
   $("operatorSearch").addEventListener('focus',()=>{
     renderOperatorMatches();
+    setTimeout(()=>$("operatorSearch").scrollIntoView({block:'start',behavior:'smooth'}),80);
   });
 
   $("operatorSearch").addEventListener('keydown',e=>{
@@ -1445,7 +1401,7 @@
   });
 
   document.addEventListener('pointerdown',e=>{
-    if(!e.target.closest('.operatorSearchWrap') && !e.target.closest('#operatorMatches')){
+    if(!e.target.closest('.operatorSearchWrap')){
       $("operatorMatches")?.classList.add('hidden');
     }
   });
