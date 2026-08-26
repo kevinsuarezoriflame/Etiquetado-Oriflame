@@ -735,6 +735,35 @@
       }
     }
 
+  
+    /* ===== Supervisor simplificado: 4 grupos ===== */
+    .compactSupervisorNav{gap:8px!important}
+    .supMenuGroup{display:grid;gap:6px}
+    .supGroupBtn{
+      width:100%;display:flex;align-items:center;justify-content:space-between;
+      text-align:left!important;background:#eef2ef;color:#173c2c;
+    }
+    .supGroupBtn span{font-size:18px;color:var(--muted)}
+    .supMenuGroup.open>.supGroupBtn{background:var(--green);color:#fff}
+    .supMenuGroup.open>.supGroupBtn span{color:#fff}
+    .supGroupChildren{display:none;gap:5px;padding-left:10px}
+    .supMenuGroup.open .supGroupChildren{display:grid}
+    .supGroupChildren .supNavBtn{
+      padding:9px 11px;font-size:12px;background:#fff;border:1px solid var(--border);
+      box-shadow:none!important;
+    }
+    .supGroupChildren .supNavBtn.active{
+      background:var(--greenSoft)!important;color:var(--green)!important;
+      border-color:#9fd2bc!important;
+    }
+    @media(max-width:900px){
+      .compactSupervisorNav{grid-template-columns:1fr!important;position:static!important}
+      .supGroupChildren{padding-left:0;grid-template-columns:repeat(2,minmax(0,1fr))}
+    }
+    @media(max-width:560px){
+      .supGroupChildren{grid-template-columns:1fr}
+    }
+
   </style>
 </head>
 <body>
@@ -779,18 +808,42 @@
 
     <div id="supApp" class="hidden">
       <div class="supGrid">
-        <aside class="supNav card">
-          <button class="btn secondary supNavBtn active" data-view="dashboard">📊 Dashboard</button>
-          <button class="btn secondary supNavBtn" data-view="productividad">📈 Productividad</button>
-          <button class="btn secondary supNavBtn" data-view="graficos">📊 Gráficos</button>
-          <button class="btn secondary supNavBtn" data-view="categorias">🧩 Categorías</button>
-          <button class="btn secondary supNavBtn" data-view="metas">🎯 Metas</button>
-          <button class="btn secondary supNavBtn" data-view="registros">🧾 Registros</button>
-          <button class="btn secondary supNavBtn" data-view="novedades">⚠️ Novedades</button>
-          <button class="btn secondary supNavBtn" data-view="reporte">📋 Reporte diario</button>
-          <button class="btn secondary supNavBtn" data-view="supervision">👀 Supervisión</button>
-          <button class="btn secondary supNavBtn" data-view="operarios">👷 Operarios</button>
-          <button class="btn secondary supNavBtn" data-view="data">📦 Data</button>
+        <aside class="supNav card compactSupervisorNav">
+          <div class="supMenuGroup open" data-group="dashboard">
+            <button type="button" class="btn secondary supGroupBtn">📊 Dashboard <span>⌄</span></button>
+            <div class="supGroupChildren">
+              <button class="btn secondary supNavBtn active" data-view="dashboard">Resumen</button>
+              <button class="btn secondary supNavBtn" data-view="supervision">Supervisión</button>
+            </div>
+          </div>
+
+          <div class="supMenuGroup" data-group="analisis">
+            <button type="button" class="btn secondary supGroupBtn">📈 Análisis <span>›</span></button>
+            <div class="supGroupChildren">
+              <button class="btn secondary supNavBtn" data-view="productividad">Productividad</button>
+              <button class="btn secondary supNavBtn" data-view="graficos">Gráficos</button>
+              <button class="btn secondary supNavBtn" data-view="categorias">Categorías</button>
+              <button class="btn secondary supNavBtn" data-view="metas">Metas</button>
+            </div>
+          </div>
+
+          <div class="supMenuGroup" data-group="registros">
+            <button type="button" class="btn secondary supGroupBtn">🧾 Registros <span>›</span></button>
+            <div class="supGroupChildren">
+              <button class="btn secondary supNavBtn" data-view="registros">Últimos registros</button>
+              <button class="btn secondary supNavBtn" data-view="novedades">Novedades</button>
+              <button class="btn secondary supNavBtn" data-view="reporte">Reporte diario</button>
+            </div>
+          </div>
+
+          <div class="supMenuGroup" data-group="config">
+            <button type="button" class="btn secondary supGroupBtn">⚙️ Configuración <span>›</span></button>
+            <div class="supGroupChildren">
+              <button class="btn secondary supNavBtn" data-view="operarios">Operarios</button>
+              <button class="btn secondary supNavBtn" data-view="data">Data de productos</button>
+            </div>
+          </div>
+
           <button id="supLogout" class="btn ghost">🚪 Cerrar sesión</button>
         </aside>
 
@@ -2084,6 +2137,40 @@
     if(b.dataset.view==='metas') await loadEvaluation();
     if(b.dataset.view==='supervision') await loadSupervision();
     if(b.dataset.view==='data') await loadDataSummary();
+  });
+
+
+  // Menú agrupado del Supervisor. Mantiene intacta la navegación original de cada vista.
+  document.querySelectorAll('.supGroupBtn').forEach(groupBtn=>{
+    groupBtn.addEventListener('click',()=>{
+      const group=groupBtn.closest('.supMenuGroup');
+      const wasOpen=group.classList.contains('open');
+      document.querySelectorAll('.supMenuGroup').forEach(g=>g.classList.remove('open'));
+      if(!wasOpen) group.classList.add('open');
+      else group.classList.add('open');
+
+      document.querySelectorAll('.supGroupBtn span').forEach(s=>s.textContent='›');
+      const arrow=group.querySelector('.supGroupBtn span');
+      if(arrow) arrow.textContent='⌄';
+
+      const activeInside=group.querySelector('.supNavBtn.active');
+      if(!activeInside){
+        const first=group.querySelector('.supNavBtn');
+        if(first) first.click();
+      }
+    });
+  });
+
+  document.querySelectorAll('.supNavBtn').forEach(viewBtn=>{
+    viewBtn.addEventListener('click',()=>{
+      const group=viewBtn.closest('.supMenuGroup');
+      if(!group) return;
+      document.querySelectorAll('.supMenuGroup').forEach(g=>g.classList.remove('open'));
+      group.classList.add('open');
+      document.querySelectorAll('.supGroupBtn span').forEach(s=>s.textContent='›');
+      const arrow=group.querySelector('.supGroupBtn span');
+      if(arrow) arrow.textContent='⌄';
+    });
   });
 
   let dashboardLiveInterval=null;
