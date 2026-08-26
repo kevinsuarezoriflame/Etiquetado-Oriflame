@@ -650,6 +650,91 @@
       color:#9a2f29;
     }
 
+  
+    /* ===== Ajuste móvil: 3 operarios sin desbordar ===== */
+    @media(max-width:700px){
+      .operatorEntry{
+        grid-template-columns:minmax(0,1fr) auto!important;
+        width:100%;
+      }
+
+      .operatorEntry .field{
+        min-width:0;
+      }
+
+      .operatorEntry .btn{
+        width:auto;
+        min-width:82px;
+        padding-left:10px;
+        padding-right:10px;
+      }
+
+      .opTabs{
+        display:grid!important;
+        grid-template-columns:repeat(3,minmax(0,1fr))!important;
+        gap:6px!important;
+        width:100%;
+        overflow:visible!important;
+      }
+
+      .opTab{
+        min-width:0!important;
+        width:100%!important;
+        padding:8px 6px!important;
+        gap:5px!important;
+        overflow:hidden;
+      }
+
+      .opTab > div{
+        min-width:0;
+        width:100%;
+      }
+
+      .opTab b{
+        display:block;
+        font-size:12px!important;
+        line-height:1.15;
+        white-space:normal;
+        overflow-wrap:anywhere;
+      }
+
+      .opTab .processMini{
+        font-size:9px!important;
+        line-height:1.1;
+        white-space:nowrap;
+        overflow:hidden;
+        text-overflow:ellipsis;
+      }
+
+      .opTab .miniStatus{
+        font-size:9px!important;
+      }
+
+      .processChoice{
+        grid-template-columns:repeat(2,minmax(0,1fr))!important;
+        width:100%;
+      }
+
+      .processChoiceBtn{
+        min-width:0!important;
+        width:100%!important;
+        padding:14px 8px!important;
+      }
+
+      .processChoiceBtn .title{
+        font-size:16px!important;
+      }
+
+      #opWorkspace,
+      .workGrid,
+      .compactWork,
+      .productCard,
+      .timerCard{
+        min-width:0!important;
+        max-width:100%!important;
+      }
+    }
+
   </style>
 </head>
 <body>
