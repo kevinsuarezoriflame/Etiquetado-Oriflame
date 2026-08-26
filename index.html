@@ -583,6 +583,73 @@
       margin-bottom:8px;
     }
 
+  
+    /* ===== Caducidad + novedades ===== */
+    .finishSection{
+      margin-top:10px;
+      padding-top:10px;
+      border-top:1px solid #dfece7;
+    }
+    .finishSectionTitle{
+      font-size:12px;
+      font-weight:900;
+      color:var(--ink);
+      margin-bottom:7px;
+    }
+    .expiryGrid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:8px;
+    }
+    .noveltyToggle{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:7px;
+      margin-bottom:8px;
+    }
+    .noveltyBtn{
+      border:1px solid var(--border);
+      background:#fff;
+      border-radius:10px;
+      padding:8px 7px;
+      font-weight:900;
+      font-size:12px;
+      color:var(--muted);
+    }
+    .noveltyBtn.active{
+      background:var(--green);
+      color:#fff;
+      border-color:var(--green);
+    }
+    .noveltyQty{margin-top:6px}
+
+  
+    /* ===== Control de sesiones activas ===== */
+    .sessionActionBtns{
+      display:flex;
+      gap:6px;
+      flex-wrap:wrap;
+    }
+    .sessionCloseBtn,
+    .sessionDeleteBtn{
+      border-radius:9px;
+      padding:6px 8px;
+      font-size:11px;
+      font-weight:900;
+      cursor:pointer;
+      white-space:nowrap;
+    }
+    .sessionCloseBtn{
+      border:1px solid #e2c86d;
+      background:#fff8df;
+      color:#7b5d00;
+    }
+    .sessionDeleteBtn{
+      border:1px solid #efc4c1;
+      background:#fff1f0;
+      color:#9a2f29;
+    }
+
   </style>
 </head>
 <body>
@@ -634,6 +701,7 @@
           <button class="btn secondary supNavBtn" data-view="categorias">🧩 Categorías</button>
           <button class="btn secondary supNavBtn" data-view="metas">🎯 Metas</button>
           <button class="btn secondary supNavBtn" data-view="registros">🧾 Registros</button>
+          <button class="btn secondary supNavBtn" data-view="novedades">⚠️ Novedades</button>
           <button class="btn secondary supNavBtn" data-view="reporte">📋 Reporte diario</button>
           <button class="btn secondary supNavBtn" data-view="supervision">👀 Supervisión</button>
           <button class="btn secondary supNavBtn" data-view="operarios">👷 Operarios</button>
@@ -762,15 +830,15 @@
 
             <div id="recordsEtiquetadoWrap" class="tableWrap">
               <table>
-                <thead><tr><th>Fecha</th><th>Operario</th><th>Código</th><th>Unidades</th><th>Min netos</th><th>U/H</th><th>Meta</th><th>Acción</th></tr></thead>
-                <tbody id="recordsEtiquetadoBody"><tr><td colspan="8">Sin cargar</td></tr></tbody>
+                <thead><tr><th>Fecha</th><th>Operario</th><th>Código</th><th>Unidades</th><th>Min netos</th><th>U/H</th><th>Meta</th><th>Caducidad</th><th>Novedad</th><th>Acción</th></tr></thead>
+                <tbody id="recordsEtiquetadoBody"><tr><td colspan="10">Sin cargar</td></tr></tbody>
               </table>
             </div>
 
             <div id="recordsArmadoWrap" class="tableWrap hidden">
               <table>
-                <thead><tr><th>Fecha</th><th>Operario</th><th>Código</th><th>Unidades</th><th>Min netos</th><th>U/H</th><th>Acción</th></tr></thead>
-                <tbody id="recordsArmadoBody"><tr><td colspan="7">Sin cargar</td></tr></tbody>
+                <thead><tr><th>Fecha</th><th>Operario</th><th>Código</th><th>Unidades</th><th>Min netos</th><th>U/H</th><th>Caducidad</th><th>Novedad</th><th>Acción</th></tr></thead>
+                <tbody id="recordsArmadoBody"><tr><td colspan="9">Sin cargar</td></tr></tbody>
               </table>
             </div>
           </div>
@@ -820,6 +888,66 @@
                 </thead>
                 <tbody id="dailyReportBody">
                   <tr><td colspan="5">Selecciona una fecha y carga el reporte.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div id="view-novedades" class="supView card">
+            <div class="sectionTitle">
+              <h2>⚠️ Novedades</h2>
+              <button id="loadNoveltyReport" class="btn ghost">🔄 Actualizar</button>
+            </div>
+
+            <div class="filterGrid">
+              <div class="field">
+                <label>Fecha</label>
+                <input id="noveltyDate" type="date">
+              </div>
+              <div class="field">
+                <label>Proceso</label>
+                <select id="noveltyProcess">
+                  <option value="todos">Todos</option>
+                  <option value="etiquetado">🏷️ Etiquetado</option>
+                  <option value="armado">📦 Armado</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Operario</label>
+                <select id="noveltyOperator"><option value="">Todos</option></select>
+              </div>
+              <div class="field">
+                <label>Tipo</label>
+                <select id="noveltyTypeFilter">
+                  <option value="todos">Todas</option>
+                  <option value="sobrante">➕ Sobrantes</option>
+                  <option value="faltante">➖ Faltantes</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="miniKpis">
+              <div class="miniKpi"><span>Registros con novedad</span><strong id="noveltyCount">—</strong></div>
+              <div class="miniKpi"><span>Sobrantes</span><strong id="noveltyOverQty">—</strong></div>
+              <div class="miniKpi"><span>Faltantes</span><strong id="noveltyShortQty">—</strong></div>
+              <div class="miniKpi"><span>Unidades involucradas</span><strong id="noveltyTotalQty">—</strong></div>
+            </div>
+
+            <div class="tableWrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Fecha</th>
+                    <th>Operario</th>
+                    <th>Proceso</th>
+                    <th>Código</th>
+                    <th>Caducidad</th>
+                    <th>Novedad</th>
+                    <th>Cantidad</th>
+                  </tr>
+                </thead>
+                <tbody id="noveltyBody">
+                  <tr><td colspan="7">Sin cargar</td></tr>
                 </tbody>
               </table>
             </div>
@@ -896,7 +1024,7 @@
   import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
   import {
     getFirestore, doc, getDoc, setDoc, updateDoc, addDoc, collection, getDocs,
-    query, where, orderBy, limit, serverTimestamp, writeBatch, getCountFromServer, deleteDoc
+    query, where, orderBy, limit, serverTimestamp, writeBatch, getCountFromServer, deleteDoc, onSnapshot
   } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -999,6 +1127,7 @@
 
   // ---------- OPERARIOS ----------
   let operators=[]; const openOps=new Map(); let activeOpId=null;
+  const activeSessionListeners=new Map();
   const DEVICE_ID_KEY='etiquetado_device_id_v1';
   const DEVICE_OPEN_OPS_KEY='etiquetado_open_ops_v2';
 
@@ -1044,8 +1173,56 @@
       pauseTotal:0,
       pauses:[],
       qtyMode:'total',
+      expiryMonth:'',
+      expiryYear:'',
+      noveltyType:'',
+      noveltyQty:0,
       interval:null
     };
+  }
+
+  function attachActiveSessionListener(operatorId){
+    if(activeSessionListeners.has(operatorId)) return;
+
+    const unsub=onSnapshot(doc(db,'sesiones_activas',operatorId),(snap)=>{
+      const s=openOps.get(operatorId);
+      if(!s) return;
+
+      // Documento eliminado por Supervisor.
+      if(!snap.exists()){
+        if(['running','paused','finishing'].includes(s.state)){
+          if(s.interval){clearInterval(s.interval);s.interval=null;}
+          openOps.set(operatorId,buildIdleSession(s.operator,s.proceso));
+          saveDeviceOpenOps();
+          renderOpTabs();
+          if(activeOpId===operatorId) renderWorkspace();
+          toast('⚠️ La sesión fue eliminada por Supervisor');
+        }
+        return;
+      }
+
+      const x=snap.data()||{};
+
+      // Cierre forzado por Supervisor.
+      if(x.estado==='cerrada_supervisor' && ['running','paused','finishing'].includes(s.state)){
+        if(s.interval){clearInterval(s.interval);s.interval=null;}
+        openOps.set(operatorId,buildIdleSession(s.operator,s.proceso));
+        saveDeviceOpenOps();
+        renderOpTabs();
+        if(activeOpId===operatorId) renderWorkspace();
+        toast('🔒 La sesión fue cerrada por Supervisor');
+      }
+    },(err)=>console.warn('Listener sesión activa',err));
+
+    activeSessionListeners.set(operatorId,unsub);
+  }
+
+  function detachActiveSessionListener(operatorId){
+    const unsub=activeSessionListeners.get(operatorId);
+    if(unsub){
+      try{unsub()}catch{}
+      activeSessionListeners.delete(operatorId);
+    }
   }
 
   async function hydrateSessionProduct(s){
@@ -1095,6 +1272,10 @@
               pauseTotal:Number(x.pausa_total_ms||0),
               pauses:Array.isArray(x.pausas)?x.pausas:[],
               qtyMode:'total',
+              expiryMonth:'',
+              expiryYear:'',
+              noveltyType:'',
+              noveltyQty:0,
               interval:null
             };
 
@@ -1111,6 +1292,7 @@
       }
 
       openOps.set(op.id,session);
+      attachActiveSessionListener(op.id);
       restored++;
     }
 
@@ -1269,6 +1451,7 @@
 
             await hydrateSessionProduct(s);
             openOps.set(o.id,s);
+            attachActiveSessionListener(o.id);
             activeOpId=o.id;
             saveDeviceOpenOps();
             renderOpTabs();
@@ -1287,6 +1470,7 @@
     }
 
     openOps.set(o.id,buildIdleSession(o,null));
+    attachActiveSessionListener(o.id);
     activeOpId=o.id;
     saveDeviceOpenOps();
     renderOpTabs();
@@ -1297,6 +1481,7 @@
     if(x?.state==='running'||x?.state==='paused'||x?.state==='finishing'){toast('⚠️ Guarda el trabajo antes de cerrar la sesión');return;}
     if(!confirm(`¿Cerrar la sesión del día de ${x?.operator?.nombre||'este operario'}?`)) return;
     openOps.delete(id);
+    detachActiveSessionListener(id);
     saveDeviceOpenOps();
     activeOpId=[...openOps.keys()][0]||null;
     renderOpTabs();
@@ -1435,6 +1620,47 @@
                 <div id="qtyCalculated" class="qtyCalculated">0 unidades</div>
               `}
 
+              <div class="finishSection">
+                <div class="finishSectionTitle">📅 Caducidad</div>
+                <div class="expiryGrid">
+                  <div class="field">
+                    <label>Mes</label>
+                    <select id="expiryMonth">
+                      <option value="">Mes</option>
+                      ${Array.from({length:12},(_,i)=>{
+                        const v=String(i+1).padStart(2,'0');
+                        return `<option value="${v}" ${s.expiryMonth===v?'selected':''}>${v}</option>`;
+                      }).join('')}
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label>Año</label>
+                    <select id="expiryYear">
+                      <option value="">Año</option>
+                      ${Array.from({length:12},(_,i)=>{
+                        const y=new Date().getFullYear()+i;
+                        return `<option value="${y}" ${String(s.expiryYear)===String(y)?'selected':''}>${y}</option>`;
+                      }).join('')}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="finishSection">
+                <div class="finishSectionTitle">⚠️ Novedad</div>
+                <div class="noveltyToggle">
+                  <button id="noveltyNone" class="noveltyBtn ${s.noveltyType==='none'?'active':''}">✅ Sin novedad</button>
+                  <button id="noveltyOver" class="noveltyBtn ${s.noveltyType==='sobrante'?'active':''}">➕ Sobrante</button>
+                  <button id="noveltyShort" class="noveltyBtn ${s.noveltyType==='faltante'?'active':''}">➖ Faltante</button>
+                </div>
+                ${['sobrante','faltante'].includes(s.noveltyType)?`
+                  <div class="field noveltyQty">
+                    <label>Cantidad ${s.noveltyType}</label>
+                    <input id="noveltyQty" type="number" min="1" inputmode="numeric" placeholder="Ej. 2">
+                  </div>
+                `:''}
+              </div>
+
               <button id="confirmFinish" class="btn primary" style="width:100%">💾 GUARDAR REGISTRO</button>
             </div>`:''}
         </div>
@@ -1475,6 +1701,28 @@
     $("qtyInput")?.addEventListener('keydown',e=>{if(e.key==='Enter')confirmFinish(s)});
     $("qtyBoxes")?.addEventListener('keydown',e=>{if(e.key==='Enter')$("qtyPerBox")?.focus()});
     $("qtyPerBox")?.addEventListener('keydown',e=>{if(e.key==='Enter')confirmFinish(s)});
+    $("expiryMonth")?.addEventListener('change',e=>{s.expiryMonth=e.target.value});
+    $("expiryYear")?.addEventListener('change',e=>{s.expiryYear=e.target.value});
+
+    $("noveltyNone")?.addEventListener('click',()=>{
+      s.noveltyType='none';
+      s.noveltyQty=0;
+      renderWorkspace();
+    });
+    $("noveltyOver")?.addEventListener('click',()=>{
+      s.noveltyType='sobrante';
+      s.noveltyQty=0;
+      renderWorkspace();
+      setTimeout(()=>$("noveltyQty")?.focus(),60);
+    });
+    $("noveltyShort")?.addEventListener('click',()=>{
+      s.noveltyType='faltante';
+      s.noveltyQty=0;
+      renderWorkspace();
+      setTimeout(()=>$("noveltyQty")?.focus(),60);
+    });
+    $("noveltyQty")?.addEventListener('input',e=>{s.noveltyQty=Math.floor(safeNum(e.target.value))});
+
     $("closeDaySession")?.addEventListener('click',()=>closeOperator(s.operator.id));
 
     startTimerLoop(s);
@@ -1653,9 +1901,22 @@
       qty=Math.floor(safeNum($("qtyInput")?.value));
       if(qty<=0)return toast('⚠️ Ingresa las unidades procesadas');
     }
+
+    const expiryMonth=s.expiryMonth||$("expiryMonth")?.value||'';
+    const expiryYear=s.expiryYear||$("expiryYear")?.value||'';
+    if(!expiryMonth||!expiryYear)return toast('⚠️ Selecciona mes y año de caducidad');
+
+    const noveltyType=s.noveltyType||'';
+    if(!noveltyType)return toast('⚠️ Selecciona si existe novedad');
+
+    let noveltyQty=0;
+    if(['sobrante','faltante'].includes(noveltyType)){
+      noveltyQty=Math.floor(safeNum($("noveltyQty")?.value||s.noveltyQty||0));
+      if(noveltyQty<=0)return toast(`⚠️ Ingresa la cantidad de ${noveltyType}`);
+    }
     const now=s.finishMs||Date.now();
     const netMs=Math.max(0,now-s.startMs-s.pauseTotal); const hours=netMs/3600000; const uph=hours>0?Math.round(qty/hours):0; const meta=s.meta?.meta_u_h||null; const compliance=meta?Math.round((uph/meta)*1000)/10:null;
-    const data={fecha_local:new Date(now).toLocaleDateString('sv-SE'),fin_local:new Date(now).toLocaleString('sv-SE').replace(' ','T'),inicio_local:new Date(s.startMs).toLocaleString('sv-SE').replace(' ','T'),operarioId:s.operator.id,operario:s.operator.nombre,tipo_personal:s.operator.tipo||'',proceso:s.proceso||'etiquetado',codigo:s.code,descripcion:s.product.descripcion||'',categoria:s.product.categoria||'',unidades:qty,modo_registro_unidades:(s.qtyMode||'total'),cajas,unidades_por_caja:unidadesPorCaja,tiempo_neto_ms:netMs,tiempo_pausa_ms:s.pauseTotal,productividad_u_h:uph,meta_u_h:meta,cumplimiento_pct:compliance,pausas:s.pauses,creado_en:serverTimestamp()};
+    const data={fecha_local:new Date(now).toLocaleDateString('sv-SE'),fin_local:new Date(now).toLocaleString('sv-SE').replace(' ','T'),inicio_local:new Date(s.startMs).toLocaleString('sv-SE').replace(' ','T'),operarioId:s.operator.id,operario:s.operator.nombre,tipo_personal:s.operator.tipo||'',proceso:s.proceso||'etiquetado',codigo:s.code,descripcion:s.product.descripcion||'',categoria:s.product.categoria||'',unidades:qty,modo_registro_unidades:(s.qtyMode||'total'),cajas,unidades_por_caja:unidadesPorCaja,caducidad_mes:expiryMonth,caducidad_anio:Number(expiryYear),novedad_tipo:noveltyType,novedad_cantidad:noveltyQty,tiempo_neto_ms:netMs,tiempo_pausa_ms:s.pauseTotal,productividad_u_h:uph,meta_u_h:meta,cumplimiento_pct:compliance,pausas:s.pauses,creado_en:serverTimestamp()};
     try{
       await addDoc(collection(db,'registros_etiquetado'),data);
       await setDoc(doc(db,'sesiones_activas',s.operator.id),{...data,deviceId,estado:'finalizada'});
@@ -1726,6 +1987,7 @@
 
     if(b.dataset.view==='operarios') await loadUsersTable();
     if(b.dataset.view==='registros') await loadRecords();
+    if(b.dataset.view==='novedades') await loadNoveltyReport();
     if(b.dataset.view==='reporte') await loadDailyReport();
     if(b.dataset.view==='productividad') await loadProductivity();
     if(b.dataset.view==='graficos') await loadCharts();
@@ -1773,6 +2035,49 @@
     dashboardLiveInterval=setInterval(tick,1000);
   }
 
+  async function supervisorCloseSession(operatorId){
+    const s=dashboardLiveSessions.find(x=>x.operarioId===operatorId);
+    const label=s?.operario||operatorId;
+
+    if(!confirm(`¿Cerrar la sesión activa de ${label}?\n\nEl operario verá que la sesión fue cerrada por Supervisor.`)) return;
+
+    try{
+      await updateDoc(doc(db,'sesiones_activas',operatorId),{
+        estado:'cerrada_supervisor',
+        cierre_supervisor_local:localISO(),
+        ultima_actualizacion_local:localISO()
+      });
+      toast('🔒 Sesión cerrada');
+      await loadDashboard(true);
+    }catch(e){
+      toast('❌ No se pudo cerrar la sesión: '+e.message);
+    }
+  }
+
+  async function supervisorDeleteSession(operatorId){
+    const s=dashboardLiveSessions.find(x=>x.operarioId===operatorId);
+    const label=s?.operario||operatorId;
+
+    if(!confirm(`¿Eliminar la sesión activa de ${label}?\n\nÚsalo para limpiar sesiones de prueba o sesiones atascadas.`)) return;
+
+    try{
+      await deleteDoc(doc(db,'sesiones_activas',operatorId));
+      toast('🗑️ Sesión eliminada');
+      await loadDashboard(true);
+    }catch(e){
+      toast('❌ No se pudo eliminar la sesión: '+e.message);
+    }
+  }
+
+  function bindSupervisorSessionActions(){
+    document.querySelectorAll('.sessionCloseBtn').forEach(btn=>{
+      btn.onclick=()=>supervisorCloseSession(btn.dataset.id);
+    });
+    document.querySelectorAll('.sessionDeleteBtn').forEach(btn=>{
+      btn.onclick=()=>supervisorDeleteSession(btn.dataset.id);
+    });
+  }
+
   async function loadDashboard(force=false){
     try{
       const cfg=await getActiveMasterConfig(force);
@@ -1808,9 +2113,23 @@
       $("dashArmadoResumen").innerHTML=summary(ar,'Armados');
 
       $("dashActiveSessions").innerHTML=active.length
-        ? `<div class="tableWrap"><table style="min-width:720px"><thead><tr><th>Operario</th><th>Proceso</th><th>Código</th><th>Estado</th><th>⏱️ Tiempo en vivo</th><th>Inicio</th></tr></thead><tbody>${active.map((x,i)=>`<tr><td><b>${x.operario||'—'}</b></td><td>${processName(x.proceso)}</td><td>${x.codigo||'—'}</td><td><span class="statusPill ${x.estado==='paused'?'warn':'ok'}">${x.estado==='paused'?'⏸️ Pausado':x.estado==='finishing'?'✅ Finalizando':'▶️ Trabajando'}</span></td><td><span class="liveTimer" data-live-index="${i}">00:00:00</span></td><td>${x.inicio_local||'—'}</td></tr>`).join('')}</tbody></table></div>`
+        ? `<div class="tableWrap"><table style="min-width:880px"><thead><tr><th>Operario</th><th>Proceso</th><th>Código</th><th>Estado</th><th>⏱️ Tiempo en vivo</th><th>Dispositivo</th><th>Acción</th></tr></thead><tbody>${active.map((x,i)=>`<tr>
+            <td><b>${x.operario||'—'}</b></td>
+            <td>${processName(x.proceso)}</td>
+            <td>${x.codigo||'—'}</td>
+            <td><span class="statusPill ${x.estado==='paused'?'warn':'ok'}">${x.estado==='paused'?'⏸️ Pausado':x.estado==='finishing'?'✅ Finalizando':'▶️ Trabajando'}</span></td>
+            <td><span class="liveTimer" data-live-index="${i}">00:00:00</span></td>
+            <td><span class="small">${x.deviceId?String(x.deviceId).slice(-8):'Sin ID'}</span></td>
+            <td>
+              <div class="sessionActionBtns">
+                <button class="sessionCloseBtn" data-id="${x.operarioId}">🔒 Cerrar</button>
+                <button class="sessionDeleteBtn" data-id="${x.operarioId}">🗑️ Eliminar</button>
+              </div>
+            </td>
+          </tr>`).join('')}</tbody></table></div>`
         : '<div class="emptyState">No hay procesos activos.</div>';
       startDashboardLiveClock(active);
+      bindSupervisorSessionActions();
     }catch(e){toast('⚠️ Dashboard: '+e.message)}
   }
   $("refreshDashboard").onclick=()=>loadDashboard(true);
@@ -2187,6 +2506,18 @@
     });
   }
 
+  function noveltyLabel(x){
+    const type=x.novedad_tipo||'none';
+    if(type==='sobrante') return `➕ Sobrante${x.novedad_cantidad?` (${x.novedad_cantidad})`:''}`;
+    if(type==='faltante') return `➖ Faltante${x.novedad_cantidad?` (${x.novedad_cantidad})`:''}`;
+    return '✅ Sin novedad';
+  }
+
+  function expiryLabel(x){
+    if(!x.caducidad_mes || !x.caducidad_anio) return '—';
+    return `${x.caducidad_mes}/${x.caducidad_anio}`;
+  }
+
   async function loadRecords(force=false){
     try{
       const all=await getSupervisorRecords(force);
@@ -2202,9 +2533,11 @@
             <td>${Math.round((x.tiempo_neto_ms||0)/60000)}</td>
             <td><b>${fmtInt(x.productividad_u_h||0)}</b></td>
             <td>${x.meta_u_h?fmtInt(x.meta_u_h):'—'}</td>
+            <td>${expiryLabel(x)}</td>
+            <td>${noveltyLabel(x)}</td>
             <td><button class="deleteRecordBtn" data-id="${x.id}">🗑️ Borrar</button></td>
           </tr>`).join('')
-        : '<tr><td colspan="8">Sin registros de etiquetado</td></tr>';
+        : '<tr><td colspan="10">Sin registros de etiquetado</td></tr>';
 
       $("recordsArmadoBody").innerHTML=armado.length
         ? armado.map(x=>`<tr>
@@ -2214,17 +2547,84 @@
             <td>${fmtInt(x.unidades)}</td>
             <td>${Math.round((x.tiempo_neto_ms||0)/60000)}</td>
             <td><b>${fmtInt(x.productividad_u_h||0)}</b></td>
+            <td>${expiryLabel(x)}</td>
+            <td>${noveltyLabel(x)}</td>
             <td><button class="deleteRecordBtn" data-id="${x.id}">🗑️ Borrar</button></td>
           </tr>`).join('')
-        : '<tr><td colspan="7">Sin registros de armado</td></tr>';
+        : '<tr><td colspan="9">Sin registros de armado</td></tr>';
 
       bindRecordDeleteButtons();
     }catch(e){
-      $("recordsEtiquetadoBody").innerHTML=`<tr><td colspan="8">${e.message}</td></tr>`;
-      $("recordsArmadoBody").innerHTML=`<tr><td colspan="7">${e.message}</td></tr>`;
+      $("recordsEtiquetadoBody").innerHTML=`<tr><td colspan="10">${e.message}</td></tr>`;
+      $("recordsArmadoBody").innerHTML=`<tr><td colspan="9">${e.message}</td></tr>`;
     }
   }
 
+
+  // ---------- NOVEDADES ----------
+  async function loadNoveltyReport(){
+    const date=$("noveltyDate").value || localISO().slice(0,10);
+    $("noveltyDate").value=date;
+    const proc=$("noveltyProcess").value;
+    const opFilter=$("noveltyOperator").value;
+    const typeFilter=$("noveltyTypeFilter").value;
+
+    try{
+      const snap=await getDocs(
+        query(
+          collection(db,'registros_etiquetado'),
+          where('fecha_local','==',date)
+        )
+      );
+
+      const all=snap.docs.map(d=>({id:d.id,...d.data()}));
+
+      const operatorsForDay=[...new Set(all.map(x=>x.operario).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es'));
+      const opSel=$("noveltyOperator");
+      const current=opSel.value;
+      opSel.innerHTML='<option value="">Todos</option>'+operatorsForDay.map(v=>`<option>${v}</option>`).join('');
+      if(operatorsForDay.includes(current))opSel.value=current;
+
+      let rows=all.filter(x=>{
+        const p=x.proceso||'etiquetado';
+        const t=x.novedad_tipo||'none';
+        return t!=='none'
+          && (proc==='todos'||p===proc)
+          && (!opFilter||x.operario===opFilter)
+          && (typeFilter==='todos'||t===typeFilter);
+      });
+
+      rows.sort((a,b)=>String(a.inicio_local||'').localeCompare(String(b.inicio_local||'')));
+
+      const over=rows.filter(x=>x.novedad_tipo==='sobrante').reduce((s,x)=>s+Number(x.novedad_cantidad||0),0);
+      const short=rows.filter(x=>x.novedad_tipo==='faltante').reduce((s,x)=>s+Number(x.novedad_cantidad||0),0);
+
+      $("noveltyCount").textContent=fmtInt(rows.length);
+      $("noveltyOverQty").textContent=fmtInt(over);
+      $("noveltyShortQty").textContent=fmtInt(short);
+      $("noveltyTotalQty").textContent=fmtInt(over+short);
+
+      $("noveltyBody").innerHTML=rows.length
+        ? rows.map(x=>`<tr>
+            <td>${x.fecha_local||''}</td>
+            <td>${x.operario||''}</td>
+            <td>${processName(x.proceso)}</td>
+            <td>${x.codigo||''}</td>
+            <td>${expiryLabel(x)}</td>
+            <td>${x.novedad_tipo==='sobrante'?'➕ Sobrante':'➖ Faltante'}</td>
+            <td><b>${fmtInt(x.novedad_cantidad||0)}</b></td>
+          </tr>`).join('')
+        : '<tr><td colspan="7">Sin novedades para los filtros seleccionados.</td></tr>';
+    }catch(e){
+      $("noveltyBody").innerHTML=`<tr><td colspan="7">${e.message}</td></tr>`;
+    }
+  }
+
+  $("noveltyDate").value=localISO().slice(0,10);
+  $("loadNoveltyReport").onclick=loadNoveltyReport;
+  $("noveltyProcess").addEventListener('change',loadNoveltyReport);
+  $("noveltyOperator").addEventListener('change',loadNoveltyReport);
+  $("noveltyTypeFilter").addEventListener('change',loadNoveltyReport);
 
   // ---------- REPORTE DIARIO ----------
   let dailyReportRows=[];
