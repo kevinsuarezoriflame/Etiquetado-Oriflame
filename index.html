@@ -603,7 +603,7 @@
     }
     .noveltyToggle{
       display:grid;
-      grid-template-columns:repeat(3,1fr);
+      grid-template-columns:repeat(4,1fr);
       gap:7px;
       margin-bottom:8px;
     }
@@ -762,6 +762,26 @@
     }
     @media(max-width:560px){
       .supGroupChildren{grid-template-columns:1fr}
+    }
+
+  
+    .finishComment textarea{
+      width:100%;
+      min-height:72px;
+      resize:vertical;
+      padding:10px 12px;
+      border:1px solid #ccd7d0;
+      border-radius:12px;
+      background:#fff;
+      outline:none;
+      font:inherit;
+    }
+    .finishComment textarea:focus{
+      border-color:#2fc3a3;
+      box-shadow:0 0 0 3px rgba(47,195,163,.12);
+    }
+    @media(max-width:560px){
+      .noveltyToggle{grid-template-columns:repeat(2,1fr)}
     }
 
   </style>
@@ -934,7 +954,7 @@
               <div class="miniKpi"><span>Promedio u/h</span><strong id="prodAvg">—</strong></div>
               <div class="miniKpi"><span>Mediana u/h</span><strong id="prodMedian">—</strong></div>
             </div>
-            <div class="tableWrap"><table><thead><tr><th id="prodGroupHeader">Operario</th><th>Registros</th><th>Unidades</th><th>Promedio u/h</th><th>Mediana u/h</th><th>Mejor u/h</th><th>Referencia</th></tr></thead><tbody id="productivityBody"><tr><td colspan="7">Sin cargar</td></tr></tbody></table></div>
+            <div class="tableWrap"><table><thead><tr><th id="prodGroupHeader">Operario</th><th>Registros</th><th>Unidades</th><th>Promedio u/h</th><th>Mediana u/h</th><th>Mejor u/h</th><th>Referencia</th></tr></thead><tbody id="productivityBody"><tr><td colspan="8">Sin cargar</td></tr></tbody></table></div>
             <div class="small" style="margin-top:8px">ℹ️ Una sola carga reciente de registros se reutiliza entre las vistas para reducir lecturas en Firebase.</div>
           </div>
 
@@ -968,15 +988,15 @@
 
             <div id="recordsEtiquetadoWrap" class="tableWrap">
               <table>
-                <thead><tr><th>Fecha</th><th>Operario</th><th>Código</th><th>Unidades</th><th>Min netos</th><th>U/H</th><th>Meta</th><th>Caducidad</th><th>Novedad</th><th>Acción</th></tr></thead>
-                <tbody id="recordsEtiquetadoBody"><tr><td colspan="10">Sin cargar</td></tr></tbody>
+                <thead><tr><th>Fecha</th><th>Operario</th><th>Código</th><th>Unidades</th><th>Min netos</th><th>U/H</th><th>Meta</th><th>Caducidad</th><th>Novedad</th><th>Comentario</th><th>Acción</th></tr></thead>
+                <tbody id="recordsEtiquetadoBody"><tr><td colspan="11">Sin cargar</td></tr></tbody>
               </table>
             </div>
 
             <div id="recordsArmadoWrap" class="tableWrap hidden">
               <table>
-                <thead><tr><th>Fecha</th><th>Operario</th><th>Código</th><th>Unidades</th><th>Min netos</th><th>U/H</th><th>Caducidad</th><th>Novedad</th><th>Acción</th></tr></thead>
-                <tbody id="recordsArmadoBody"><tr><td colspan="9">Sin cargar</td></tr></tbody>
+                <thead><tr><th>Fecha</th><th>Operario</th><th>Código</th><th>Unidades</th><th>Min netos</th><th>U/H</th><th>Caducidad</th><th>Novedad</th><th>Comentario</th><th>Acción</th></tr></thead>
+                <tbody id="recordsArmadoBody"><tr><td colspan="10">Sin cargar</td></tr></tbody>
               </table>
             </div>
           </div>
@@ -1060,6 +1080,7 @@
                   <option value="todos">Todas</option>
                   <option value="sobrante">➕ Sobrantes</option>
                   <option value="faltante">➖ Faltantes</option>
+                  <option value="danado">💥 Dañados</option>
                 </select>
               </div>
             </div>
@@ -1068,6 +1089,7 @@
               <div class="miniKpi"><span>Registros con novedad</span><strong id="noveltyCount">—</strong></div>
               <div class="miniKpi"><span>Sobrantes</span><strong id="noveltyOverQty">—</strong></div>
               <div class="miniKpi"><span>Faltantes</span><strong id="noveltyShortQty">—</strong></div>
+              <div class="miniKpi"><span>Dañados</span><strong id="noveltyDamagedQty">—</strong></div>
               <div class="miniKpi"><span>Unidades involucradas</span><strong id="noveltyTotalQty">—</strong></div>
             </div>
 
@@ -1082,6 +1104,7 @@
                     <th>Caducidad</th>
                     <th>Novedad</th>
                     <th>Cantidad</th>
+                    <th>Comentario</th>
                   </tr>
                 </thead>
                 <tbody id="noveltyBody">
@@ -1315,6 +1338,7 @@
       expiryYear:'',
       noveltyType:'',
       noveltyQty:0,
+      comment:'',
       interval:null
     };
   }
@@ -1414,6 +1438,7 @@
               expiryYear:'',
               noveltyType:'',
               noveltyQty:0,
+              comment:'',
               interval:null
             };
 
@@ -1740,8 +1765,9 @@
                   <button id="noveltyNone" class="noveltyBtn ${s.noveltyType==='none'?'active':''}">✅ Sin novedad</button>
                   <button id="noveltyOver" class="noveltyBtn ${s.noveltyType==='sobrante'?'active':''}">➕ Sobrante</button>
                   <button id="noveltyShort" class="noveltyBtn ${s.noveltyType==='faltante'?'active':''}">➖ Faltante</button>
+                  <button id="noveltyDamaged" class="noveltyBtn ${s.noveltyType==='danado'?'active':''}">💥 Dañado</button>
                 </div>
-                ${['sobrante','faltante'].includes(s.noveltyType)?`
+                ${['sobrante','faltante','danado'].includes(s.noveltyType)?`
                   <div class="field noveltyQty">
                     <label>Cantidad ${s.noveltyType}</label>
                     <input id="noveltyQty" type="number" min="1" inputmode="numeric" placeholder="Ej. 2">
@@ -1801,6 +1827,11 @@
                     </select>
                   </div>
                 </div>
+              </div>
+
+              <div class="finishSection finishComment">
+                <div class="finishSectionTitle">4️⃣ 💬 Comentario</div>
+                <textarea id="finishComment" maxlength="300" placeholder="Ej. Producto abierto">${s.comment||''}</textarea>
               </div>
 
               <button id="confirmFinish" class="btn primary" style="width:100%">💾 GUARDAR REGISTRO</button>
@@ -1863,7 +1894,14 @@
       renderWorkspace();
       setTimeout(()=>$("noveltyQty")?.focus(),60);
     });
+    $("noveltyDamaged")?.addEventListener('click',()=>{
+      s.noveltyType='danado';
+      s.noveltyQty=0;
+      renderWorkspace();
+      setTimeout(()=>$("noveltyQty")?.focus(),60);
+    });
     $("noveltyQty")?.addEventListener('input',e=>{s.noveltyQty=Math.floor(safeNum(e.target.value))});
+    $("finishComment")?.addEventListener('input',e=>{s.comment=e.target.value});
 
     $("closeDaySession")?.addEventListener('click',()=>closeOperator(s.operator.id));
 
@@ -2052,13 +2090,13 @@
     if(!noveltyType)return toast('⚠️ Selecciona si existe novedad');
 
     let noveltyQty=0;
-    if(['sobrante','faltante'].includes(noveltyType)){
+    if(['sobrante','faltante','danado'].includes(noveltyType)){
       noveltyQty=Math.floor(safeNum($("noveltyQty")?.value||s.noveltyQty||0));
       if(noveltyQty<=0)return toast(`⚠️ Ingresa la cantidad de ${noveltyType}`);
     }
     const now=s.finishMs||Date.now();
     const netMs=Math.max(0,now-s.startMs-s.pauseTotal); const hours=netMs/3600000; const uph=hours>0?Math.round(qty/hours):0; const meta=s.meta?.meta_u_h||null; const compliance=meta?Math.round((uph/meta)*1000)/10:null;
-    const data={fecha_local:new Date(now).toLocaleDateString('sv-SE'),fin_local:new Date(now).toLocaleString('sv-SE').replace(' ','T'),inicio_local:new Date(s.startMs).toLocaleString('sv-SE').replace(' ','T'),operarioId:s.operator.id,operario:s.operator.nombre,tipo_personal:s.operator.tipo||'',proceso:s.proceso||'etiquetado',codigo:s.code,descripcion:s.product.descripcion||'',categoria:s.product.categoria||'',unidades:qty,modo_registro_unidades:(s.qtyMode||'total'),cajas,unidades_por_caja:unidadesPorCaja,caducidad_mes:expiryMonth,caducidad_anio:Number(expiryYear),novedad_tipo:noveltyType,novedad_cantidad:noveltyQty,tiempo_neto_ms:netMs,tiempo_pausa_ms:s.pauseTotal,productividad_u_h:uph,meta_u_h:meta,cumplimiento_pct:compliance,pausas:s.pauses,creado_en:serverTimestamp()};
+    const data={fecha_local:new Date(now).toLocaleDateString('sv-SE'),fin_local:new Date(now).toLocaleString('sv-SE').replace(' ','T'),inicio_local:new Date(s.startMs).toLocaleString('sv-SE').replace(' ','T'),operarioId:s.operator.id,operario:s.operator.nombre,tipo_personal:s.operator.tipo||'',proceso:s.proceso||'etiquetado',codigo:s.code,descripcion:s.product.descripcion||'',categoria:s.product.categoria||'',unidades:qty,modo_registro_unidades:(s.qtyMode||'total'),cajas,unidades_por_caja:unidadesPorCaja,caducidad_mes:expiryMonth,caducidad_anio:Number(expiryYear),novedad_tipo:noveltyType,novedad_cantidad:noveltyQty,comentario:(s.comment||$("finishComment")?.value||'').trim(),tiempo_neto_ms:netMs,tiempo_pausa_ms:s.pauseTotal,productividad_u_h:uph,meta_u_h:meta,cumplimiento_pct:compliance,pausas:s.pauses,creado_en:serverTimestamp()};
     try{
       await addDoc(collection(db,'registros_etiquetado'),data);
       await setDoc(doc(db,'sesiones_activas',s.operator.id),{...data,deviceId,estado:'finalizada'});
@@ -2686,6 +2724,7 @@
     const type=x.novedad_tipo||'none';
     if(type==='sobrante') return `➕ Sobrante${x.novedad_cantidad?` (${x.novedad_cantidad})`:''}`;
     if(type==='faltante') return `➖ Faltante${x.novedad_cantidad?` (${x.novedad_cantidad})`:''}`;
+    if(type==='danado') return `💥 Dañado${x.novedad_cantidad?` (${x.novedad_cantidad})`:''}`;
     return '✅ Sin novedad';
   }
 
@@ -2711,9 +2750,10 @@
             <td>${x.meta_u_h?fmtInt(x.meta_u_h):'—'}</td>
             <td>${expiryLabel(x)}</td>
             <td>${noveltyLabel(x)}</td>
+            <td>${x.comentario||'—'}</td>
             <td><button class="deleteRecordBtn" data-id="${x.id}">🗑️ Borrar</button></td>
           </tr>`).join('')
-        : '<tr><td colspan="10">Sin registros de etiquetado</td></tr>';
+        : '<tr><td colspan="11">Sin registros de etiquetado</td></tr>';
 
       $("recordsArmadoBody").innerHTML=armado.length
         ? armado.map(x=>`<tr>
@@ -2725,14 +2765,15 @@
             <td><b>${fmtInt(x.productividad_u_h||0)}</b></td>
             <td>${expiryLabel(x)}</td>
             <td>${noveltyLabel(x)}</td>
+            <td>${x.comentario||'—'}</td>
             <td><button class="deleteRecordBtn" data-id="${x.id}">🗑️ Borrar</button></td>
           </tr>`).join('')
-        : '<tr><td colspan="9">Sin registros de armado</td></tr>';
+        : '<tr><td colspan="10">Sin registros de armado</td></tr>';
 
       bindRecordDeleteButtons();
     }catch(e){
-      $("recordsEtiquetadoBody").innerHTML=`<tr><td colspan="10">${e.message}</td></tr>`;
-      $("recordsArmadoBody").innerHTML=`<tr><td colspan="9">${e.message}</td></tr>`;
+      $("recordsEtiquetadoBody").innerHTML=`<tr><td colspan="11">${e.message}</td></tr>`;
+      $("recordsArmadoBody").innerHTML=`<tr><td colspan="10">${e.message}</td></tr>`;
     }
   }
 
@@ -2774,11 +2815,13 @@
 
       const over=rows.filter(x=>x.novedad_tipo==='sobrante').reduce((s,x)=>s+Number(x.novedad_cantidad||0),0);
       const short=rows.filter(x=>x.novedad_tipo==='faltante').reduce((s,x)=>s+Number(x.novedad_cantidad||0),0);
+      const damaged=rows.filter(x=>x.novedad_tipo==='danado').reduce((s,x)=>s+Number(x.novedad_cantidad||0),0);
 
       $("noveltyCount").textContent=fmtInt(rows.length);
       $("noveltyOverQty").textContent=fmtInt(over);
       $("noveltyShortQty").textContent=fmtInt(short);
-      $("noveltyTotalQty").textContent=fmtInt(over+short);
+      $("noveltyDamagedQty").textContent=fmtInt(damaged);
+      $("noveltyTotalQty").textContent=fmtInt(over+short+damaged);
 
       $("noveltyBody").innerHTML=rows.length
         ? rows.map(x=>`<tr>
@@ -2787,12 +2830,13 @@
             <td>${processName(x.proceso)}</td>
             <td>${x.codigo||''}</td>
             <td>${expiryLabel(x)}</td>
-            <td>${x.novedad_tipo==='sobrante'?'➕ Sobrante':'➖ Faltante'}</td>
+            <td>${x.novedad_tipo==='sobrante'?'➕ Sobrante':x.novedad_tipo==='faltante'?'➖ Faltante':'💥 Dañado'}</td>
             <td><b>${fmtInt(x.novedad_cantidad||0)}</b></td>
+            <td>${x.comentario||'—'}</td>
           </tr>`).join('')
-        : '<tr><td colspan="7">Sin novedades para los filtros seleccionados.</td></tr>';
+        : '<tr><td colspan="8">Sin novedades para los filtros seleccionados.</td></tr>';
     }catch(e){
-      $("noveltyBody").innerHTML=`<tr><td colspan="7">${e.message}</td></tr>`;
+      $("noveltyBody").innerHTML=`<tr><td colspan="8">${e.message}</td></tr>`;
     }
   }
 
