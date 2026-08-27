@@ -603,7 +603,7 @@
     }
     .noveltyToggle{
       display:grid;
-      grid-template-columns:repeat(4,1fr);
+      grid-template-columns:repeat(3,1fr);
       gap:7px;
       margin-bottom:8px;
     }
@@ -1062,7 +1062,65 @@
     .managementPill{display:inline-flex;align-items:center;border-radius:999px;padding:4px 8px;font-size:11px;font-weight:850;border:1px solid var(--border)}
     .managementPill.pending{background:#fff8e7;border-color:#efd18b;color:#7d5b00}.managementPill.done{background:#eaf8f3;border-color:#a9ddcf;color:#126b58}
 
-</style>
+
+    /* ===== Supervisor: encabezado y menú visibles al desplazarse ===== */
+    .app.supervisor-wide .topbar{
+      position:sticky;
+      top:0;
+      z-index:120;
+      background:#f7fbf9;
+      padding-top:6px;
+      padding-bottom:6px;
+    }
+    .app.supervisor-wide .supNav{
+      position:sticky;
+      top:78px;
+      align-self:start;
+      max-height:calc(100vh - 92px);
+      overflow:auto;
+      z-index:90;
+    }
+    @media(max-width:900px){
+      .app.supervisor-wide .topbar{
+        top:0;
+      }
+      .app.supervisor-wide .supNav{
+        position:relative;
+        top:auto;
+        max-height:none;
+        overflow:visible;
+      }
+    }
+
+  
+    /* ===== Barra de perfil Supervisor fija ===== */
+    .app.supervisor-wide .topbar{
+      position:relative!important;
+      top:auto!important;
+      z-index:auto!important;
+    }
+    .app.supervisor-wide .mainTabs.profile-selected{
+      position:sticky;
+      top:0;
+      z-index:130;
+      background:#f7fbf9;
+      padding:6px 0;
+      margin-bottom:10px;
+    }
+    .app.supervisor-wide .supNav{
+      top:88px!important;
+    }
+    @media(max-width:900px){
+      .app.supervisor-wide .mainTabs.profile-selected{
+        position:sticky;
+        top:0;
+      }
+      .app.supervisor-wide .supNav{
+        top:auto!important;
+      }
+    }
+
+  </style>
 </head>
 <body>
 <div class="app">
@@ -1486,6 +1544,7 @@
     <div id="recordEditMeta" class="recordEditMeta"></div>
     <div class="recordEditGrid">
       <div class="field"><label>Código</label><input id="editCode" inputmode="numeric"></div>
+      <div class="field"><label>Proceso</label><select id="editProcess"><option value="etiquetado">🏷️ Etiquetado</option><option value="armado">📦 Armado</option></select></div>
       <div class="field"><label>Unidades procesadas</label><input id="editUnits" type="number" min="1" inputmode="numeric"></div>
       <div class="field"><label>Caducidad</label><select id="editExpiryType"><option value="fecha">📅 Caduca</option><option value="no_caduca">♾️ No caduca</option></select></div>
       <div id="editExpiryMonthWrap" class="field"><label>Mes</label><select id="editExpiryMonth"><option value="">Mes</option><option value="01">01</option><option value="02">02</option><option value="03">03</option><option value="04">04</option><option value="05">05</option><option value="06">06</option><option value="07">07</option><option value="08">08</option><option value="09">09</option><option value="10">10</option><option value="11">11</option><option value="12">12</option></select></div>
@@ -1556,7 +1615,12 @@
   }
   function diffChange(field,oldValue,newValue){return String(oldValue??'')===String(newValue??'')?null:{campo:field,anterior:oldValue??'',nuevo:newValue??''}}
   async function openHistory(entidad,id,label=''){
-    $("historyMeta").textContent=label||`${entidad} · ${id}`;$("historyBody").innerHTML='<div class="emptyState">Cargando…</div>';$("historyModal").classList.add('show');
+    let cleanLabel=label||'';
+    if(entidad==='registro'){
+      const rec=recordLookup.get(String(id))||supervisorRecordsCache.find(x=>x.id===String(id));
+      cleanLabel=rec?`${rec.operario||'Operario'} · Código ${rec.codigo||'—'} · ${rec.fecha_local||''}`:'Historial del registro';
+    }
+    $("historyMeta").textContent=cleanLabel||entidad;$("historyBody").innerHTML='<div class="emptyState">Cargando…</div>';$("historyModal").classList.add('show');
     try{const snap=await getDocs(query(collection(db,'historial_cambios'),where('entidad_id','==',String(id))));let rows=snap.docs.map(d=>d.data()).filter(x=>x.entidad===entidad);rows.sort((a,b)=>String(b.fecha_local||'').localeCompare(String(a.fecha_local||'')));$("historyBody").innerHTML=rows.length?rows.map(x=>`<div class="historyItem"><div class="historyItemHead"><strong>${x.accion||'Cambio'}</strong><span class="historyMeta">👤 ${x.usuario||'—'} · ${x.fecha_local||'—'}</span></div>${x.detalle?`<div class="historyMeta" style="margin-bottom:6px">${x.detalle}</div>`:''}<div class="historyChanges">${(Array.isArray(x.cambios)?x.cambios:[]).map(c=>`<div class="historyChange"><b>${c.campo}:</b> ${c.anterior??'—'} → ${c.nuevo??'—'}</div>`).join('')||'<div class="historyMeta">Sin detalle adicional.</div>'}</div></div>`).join(''):'<div class="emptyState">No hay cambios registrados.</div>'}catch(e){$("historyBody").innerHTML=`<div class="message err">${e.message}</div>`}
   }
 
@@ -1707,7 +1771,7 @@
       expiryMode:'date',
       expiryMonth:'',
       expiryYear:'',
-      noveltyType:'',
+      noveltyType:'none',
       noveltyQty:0,
       comment:'',
       interval:null
@@ -1840,7 +1904,7 @@
               expiryMode:'date',
               expiryMonth:'',
               expiryYear:'',
-              noveltyType:'',
+              noveltyType:'none',
               noveltyQty:0,
               comment:'',
               interval:null
@@ -2173,7 +2237,6 @@
               <div class="finishSection" style="margin-top:0;padding-top:0;border-top:0">
                 <div class="finishSectionTitle">1️⃣ ⚠️ Novedad</div>
                 <div class="noveltyToggle">
-                  <button id="noveltyNone" class="noveltyBtn ${s.noveltyType==='none'?'active':''}">✅ Sin novedad</button>
                   <button id="noveltyOver" class="noveltyBtn ${s.noveltyType==='sobrante'?'active':''}">➕ Sobrante</button>
                   <button id="noveltyShort" class="noveltyBtn ${s.noveltyType==='faltante'?'active':''}">➖ Faltante</button>
                   <button id="noveltyDamaged" class="noveltyBtn ${s.noveltyType==='danado'?'active':''}">💥 Dañado</button>
@@ -2312,28 +2375,23 @@
     $("expiryMonth")?.addEventListener('change',e=>{s.expiryMonth=e.target.value});
     $("expiryYear")?.addEventListener('change',e=>{s.expiryYear=e.target.value});
 
-    $("noveltyNone")?.addEventListener('click',()=>{
-      s.noveltyType='none';
-      s.noveltyQty=0;
-      renderWorkspace();
-    });
     $("noveltyOver")?.addEventListener('click',()=>{
-      s.noveltyType='sobrante';
+      s.noveltyType=s.noveltyType==='sobrante'?'none':'sobrante';
       s.noveltyQty=0;
       renderWorkspace();
-      setTimeout(()=>$("noveltyQty")?.focus(),60);
+      if(s.noveltyType==='sobrante')setTimeout(()=>$("noveltyQty")?.focus(),60);
     });
     $("noveltyShort")?.addEventListener('click',()=>{
-      s.noveltyType='faltante';
+      s.noveltyType=s.noveltyType==='faltante'?'none':'faltante';
       s.noveltyQty=0;
       renderWorkspace();
-      setTimeout(()=>$("noveltyQty")?.focus(),60);
+      if(s.noveltyType==='faltante')setTimeout(()=>$("noveltyQty")?.focus(),60);
     });
     $("noveltyDamaged")?.addEventListener('click',()=>{
-      s.noveltyType='danado';
+      s.noveltyType=s.noveltyType==='danado'?'none':'danado';
       s.noveltyQty=0;
       renderWorkspace();
-      setTimeout(()=>$("noveltyQty")?.focus(),60);
+      if(s.noveltyType==='danado')setTimeout(()=>$("noveltyQty")?.focus(),60);
     });
     $("noveltyQty")?.addEventListener('input',e=>{s.noveltyQty=Math.floor(safeNum(e.target.value))});
     $("finishComment")?.addEventListener('input',e=>{s.comment=e.target.value});
@@ -2524,8 +2582,7 @@
     const expiryYear=expiryMode==='none'?'':(s.expiryYear||$("expiryYear")?.value||'');
     if(expiryMode!=='none' && (!expiryMonth||!expiryYear))return toast('⚠️ Selecciona mes y año de caducidad');
 
-    const noveltyType=s.noveltyType||'';
-    if(!noveltyType)return toast('⚠️ Selecciona si existe novedad');
+    const noveltyType=s.noveltyType||'none';
 
     let noveltyQty=0;
     if(['sobrante','faltante','danado'].includes(noveltyType)){
@@ -3109,33 +3166,39 @@
   function openRecordEditor(id){
     const x=recordLookup.get(id)||supervisorRecordsCache.find(r=>r.id===id);if(!x)return toast('⚠️ No se encontró el registro');editingRecordId=id;recordLookup.set(id,x);
     $("recordEditMeta").innerHTML=`<b>${x.operario||'—'}</b> · ${x.fecha_local||'—'} · Código <b>${x.codigo||'—'}</b> · Tiempo neto ${fmtTimer(Number(x.tiempo_neto_ms||0))}`;
-    $("editCode").value=x.codigo||'';$("editUnits").value=Number(x.unidades||0);$("editExpiryType").value=x.caducidad_tipo==='no_caduca'?'no_caduca':'fecha';$("editExpiryMonth").value=x.caducidad_mes||'';$("editExpiryYear").value=x.caducidad_anio||'';$("editNoveltyType").value=x.novedad_tipo||'none';$("editNoveltyQty").value=Number(x.novedad_cantidad||0)||'';$("editComment").value=x.comentario||'';toggleEditFields();$("recordEditModal").classList.add('show');
+    $("editCode").value=x.codigo||'';$("editProcess").value=x.proceso==='armado'?'armado':'etiquetado';$("editUnits").value=Number(x.unidades||0);$("editExpiryType").value=x.caducidad_tipo==='no_caduca'?'no_caduca':'fecha';$("editExpiryMonth").value=x.caducidad_mes||'';$("editExpiryYear").value=x.caducidad_anio||'';$("editNoveltyType").value=x.novedad_tipo||'none';$("editNoveltyQty").value=Number(x.novedad_cantidad||0)||'';$("editComment").value=x.comentario||'';toggleEditFields();$("recordEditModal").classList.add('show');
   }
   $("closeHistoryModal").onclick=()=>$("historyModal").classList.remove('show');
   $("closeRecordEditModal").onclick=()=>$("recordEditModal").classList.remove('show');$("editExpiryType").addEventListener('change',toggleEditFields);$("editNoveltyType").addEventListener('change',toggleEditFields);
   $("saveRecordEdit").onclick=async()=>{
     const x=recordLookup.get(editingRecordId);if(!x)return;
     const newCode=norm($("editCode").value);if(!newCode)return toast('⚠️ Ingresa un código');
+    const newProcess=$("editProcess").value==='armado'?'armado':'etiquetado';
     const units=Math.floor(safeNum($("editUnits").value));if(units<=0)return toast('⚠️ Ingresa unidades válidas');
     const expiryType=$("editExpiryType").value,month=expiryType==='no_caduca'?'':$("editExpiryMonth").value,year=expiryType==='no_caduca'?null:Number($("editExpiryYear").value||0);if(expiryType==='fecha'&&(!month||!year))return toast('⚠️ Selecciona mes y año');
     const novelty=$("editNoveltyType").value;let noveltyQty=novelty==='none'?0:Math.floor(safeNum($("editNoveltyQty").value));if(novelty!=='none'&&noveltyQty<=0)return toast('⚠️ Ingresa la cantidad de novedad');
 
-    let description=x.descripcion||'',category=recordCategory(x),meta=Number(x.meta_u_h||0)||null;
+    let description=x.descripcion||'',category=recordCategory(x),meta=null;
     if(newCode!==String(x.codigo||'')){
       try{
         const product=await getProductByCode(newCode);
         if(!product)return toast('⚠️ El código corregido no existe en la data de productos');
         description=product.descripcion||'';
         category=(await getManualCategory(newCode))||classifyProduct(description).categoria;
+      }catch(e){return toast('⚠️ No se pudo validar el código corregido');}
+    }
+
+    if(newProcess==='etiquetado'){
+      try{
         const metaSnap=await getDoc(doc(db,'metas',newCode));
         meta=metaSnap.exists()?Number(metaSnap.data().meta_u_h||0)||null:null;
-      }catch(e){return toast('⚠️ No se pudo validar el código corregido');}
+      }catch{meta=null}
     }
 
     const netMs=Number(x.tiempo_neto_ms||0),uph=netMs>0?Math.round(units/(netMs/3600000)):0,compliance=meta?Math.round((uph/meta)*1000)/10:null;
     try{
-      const newComment=norm($("editComment").value);const changes=[diffChange('Código',x.codigo,newCode),diffChange('Unidades',x.unidades,units),diffChange('Caducidad',expiryLabel(x),expiryType==='no_caduca'?'No caduca':`${month}/${year}`),diffChange('Novedad',x.novedad_tipo||'none',novelty),diffChange('Cantidad novedad',x.novedad_cantidad||0,noveltyQty),diffChange('Comentario',x.comentario||'',newComment)].filter(Boolean);
-      await updateDoc(doc(db,'registros_etiquetado',editingRecordId),{codigo:newCode,descripcion:description,categoria:category,unidades:units,productividad_u_h:uph,meta_u_h:meta,cumplimiento_pct:compliance,caducidad_tipo:expiryType,caducidad_mes:month,caducidad_anio:year,novedad_tipo:novelty,novedad_cantidad:noveltyQty,comentario:newComment,editado_supervisor:true,editado_por:currentSupervisorUser(),editado_local:localISO()});
+      const newComment=norm($("editComment").value);const changes=[diffChange('Código',x.codigo,newCode),diffChange('Proceso',processName(x.proceso),processName(newProcess)),diffChange('Unidades',x.unidades,units),diffChange('Caducidad',expiryLabel(x),expiryType==='no_caduca'?'No caduca':`${month}/${year}`),diffChange('Novedad',x.novedad_tipo||'none',novelty),diffChange('Cantidad novedad',x.novedad_cantidad||0,noveltyQty),diffChange('Comentario',x.comentario||'',newComment)].filter(Boolean);
+      await updateDoc(doc(db,'registros_etiquetado',editingRecordId),{codigo:newCode,proceso:newProcess,descripcion:description,categoria:category,unidades:units,productividad_u_h:uph,meta_u_h:meta,cumplimiento_pct:compliance,caducidad_tipo:expiryType,caducidad_mes:month,caducidad_anio:year,novedad_tipo:novelty,novedad_cantidad:noveltyQty,comentario:newComment,editado_supervisor:true,editado_por:currentSupervisorUser(),editado_local:localISO()});
       if(changes.length)await logAudit({accion:'Registro editado',entidad:'registro',entidadId:editingRecordId,detalle:`${x.operario||''} · ${x.fecha_local||''}`,cambios:changes});
       $("recordEditModal").classList.remove('show');invalidateRecordCaches();toast('✅ Registro actualizado');
       if($("view-registros").classList.contains('active'))await loadRecords(true);
@@ -3149,7 +3212,7 @@
     const rec=recordLookup.get(id)||supervisorRecordsCache.find(x=>x.id===id);if(!rec)return;const label=`${rec.operario||'Operario'} · ${rec.codigo||'sin código'} · ${rec.fecha_local||''}`;if(!confirm(`¿Borrar este registro?\n\n${label}\n\nEsta acción eliminará este dato de Firebase.`))return;
     try{await logAudit({accion:'Registro eliminado',entidad:'registro',entidadId:id,detalle:label});await deleteDoc(doc(db,'registros_etiquetado',id));invalidateRecordCaches();toast('🗑️ Registro eliminado');await loadRecords(true);if($("view-dashboard")?.classList.contains('active'))await loadDashboard(true)}catch(e){toast('❌ No se pudo borrar: '+e.message)}
   }
-  function bindRecordActionButtons(){document.querySelectorAll('.deleteRecordBtn').forEach(btn=>btn.onclick=()=>deleteSupervisorRecord(btn.dataset.id));document.querySelectorAll('.editRecordBtn').forEach(btn=>btn.onclick=()=>openRecordEditor(btn.dataset.id));document.querySelectorAll('.historyRecordBtn').forEach(btn=>btn.onclick=()=>openHistory('registro',btn.dataset.id,'Registro '+btn.dataset.id))}
+  function bindRecordActionButtons(){document.querySelectorAll('.editRecordBtn').forEach(btn=>btn.onclick=()=>openRecordEditor(btn.dataset.id));document.querySelectorAll('.deleteRecordBtn').forEach(btn=>btn.onclick=()=>deleteSupervisorRecord(btn.dataset.id));document.querySelectorAll('.historyRecordBtn').forEach(btn=>btn.onclick=()=>openHistory('registro',btn.dataset.id))}
 
   function noveltyLabel(x){const type=x.novedad_tipo||'none';if(type==='sobrante')return `➕ Sobrante${x.novedad_cantidad?` (${x.novedad_cantidad})`:''}`;if(type==='faltante')return `➖ Faltante${x.novedad_cantidad?` (${x.novedad_cantidad})`:''}`;if(type==='danado')return `💥 Dañado${x.novedad_cantidad?` (${x.novedad_cantidad})`:''}`;return '✅ Sin novedad'}
   function expiryLabel(x){if(x.caducidad_tipo==='no_caduca')return '♾️ No caduca';if(!x.caducidad_mes||!x.caducidad_anio)return '—';return `${x.caducidad_mes}/${x.caducidad_anio}`}
@@ -3157,8 +3220,8 @@
   async function loadRecords(force=false){
     try{
       const all=await getSupervisorRecords(force);indexRecords(all);const etiquetado=all.filter(x=>(x.proceso||'etiquetado')==='etiquetado'),armado=all.filter(x=>x.proceso==='armado');
-      $("recordsEtiquetadoBody").innerHTML=etiquetado.length?etiquetado.map(x=>`<tr><td>${x.fecha_local||''}</td><td>${x.operario||''}</td><td>${x.codigo||''}</td><td>${fmtInt(x.unidades)}</td><td>${Math.round((x.tiempo_neto_ms||0)/60000)}</td><td><b>${fmtInt(x.productividad_u_h||0)}</b></td><td>${x.meta_u_h?fmtInt(x.meta_u_h):'—'}</td><td>${expiryLabel(x)}</td><td>${noveltyLabel(x)}</td><td>${x.comentario||'—'}</td><td><div class="rowActions"><button class="editRecordBtn" data-id="${x.id}">✏️ Editar</button><button class="deleteRecordBtn" data-id="${x.id}">🗑️ Borrar</button><button class="miniBtn historyRecordBtn" data-id="${x.id}">🕘</button></div></td></tr>`).join(''):'<tr><td colspan="11">Sin registros de etiquetado</td></tr>';
-      $("recordsArmadoBody").innerHTML=armado.length?armado.map(x=>`<tr><td>${x.fecha_local||''}</td><td>${x.operario||''}</td><td>${x.codigo||''}</td><td>${fmtInt(x.unidades)}</td><td>${Math.round((x.tiempo_neto_ms||0)/60000)}</td><td><b>${fmtInt(x.productividad_u_h||0)}</b></td><td>${expiryLabel(x)}</td><td>${noveltyLabel(x)}</td><td>${x.comentario||'—'}</td><td><div class="rowActions"><button class="editRecordBtn" data-id="${x.id}">✏️ Editar</button><button class="deleteRecordBtn" data-id="${x.id}">🗑️ Borrar</button><button class="miniBtn historyRecordBtn" data-id="${x.id}">🕘</button></div></td></tr>`).join(''):'<tr><td colspan="10">Sin registros de armado</td></tr>';bindRecordActionButtons();
+      $("recordsEtiquetadoBody").innerHTML=etiquetado.length?etiquetado.map(x=>`<tr><td>${x.fecha_local||''}</td><td>${x.operario||''}</td><td>${x.codigo||''}</td><td>${fmtInt(x.unidades)}</td><td>${Math.round((x.tiempo_neto_ms||0)/60000)}</td><td><b>${fmtInt(x.productividad_u_h||0)}</b></td><td>${x.meta_u_h?fmtInt(x.meta_u_h):'—'}</td><td>${expiryLabel(x)}</td><td>${noveltyLabel(x)}</td><td>${x.comentario||'—'}</td><td><div class="rowActions"><button class="editRecordBtn" data-id="${x.id}">✏️ Editar</button><button class="miniBtn deleteRecordBtn" data-id="${x.id}" title="Eliminar registro" aria-label="Eliminar registro">🗑️</button><button class="miniBtn historyRecordBtn" data-id="${x.id}" title="Historial">🕘</button></div></td></tr>`).join(''):'<tr><td colspan="11">Sin registros de etiquetado</td></tr>';
+      $("recordsArmadoBody").innerHTML=armado.length?armado.map(x=>`<tr><td>${x.fecha_local||''}</td><td>${x.operario||''}</td><td>${x.codigo||''}</td><td>${fmtInt(x.unidades)}</td><td>${Math.round((x.tiempo_neto_ms||0)/60000)}</td><td><b>${fmtInt(x.productividad_u_h||0)}</b></td><td>${expiryLabel(x)}</td><td>${noveltyLabel(x)}</td><td>${x.comentario||'—'}</td><td><div class="rowActions"><button class="editRecordBtn" data-id="${x.id}">✏️ Editar</button><button class="miniBtn deleteRecordBtn" data-id="${x.id}" title="Eliminar registro" aria-label="Eliminar registro">🗑️</button><button class="miniBtn historyRecordBtn" data-id="${x.id}" title="Historial">🕘</button></div></td></tr>`).join(''):'<tr><td colspan="10">Sin registros de armado</td></tr>';bindRecordActionButtons();
     }catch(e){$("recordsEtiquetadoBody").innerHTML=`<tr><td colspan="11">${e.message}</td></tr>`;$("recordsArmadoBody").innerHTML=`<tr><td colspan="10">${e.message}</td></tr>`}
   }
 
@@ -3217,7 +3280,7 @@
       const over=rows.filter(x=>x.novedad_tipo==='sobrante').reduce((s,x)=>s+Number(x.novedad_cantidad||0),0),short=rows.filter(x=>x.novedad_tipo==='faltante').reduce((s,x)=>s+Number(x.novedad_cantidad||0),0),damaged=rows.filter(x=>x.novedad_tipo==='danado').reduce((s,x)=>s+Number(x.novedad_cantidad||0),0);
       $("noveltyCount").textContent=fmtInt(rows.length);$("noveltyOverQty").textContent=fmtInt(over);$("noveltyShortQty").textContent=fmtInt(short);$("noveltyDamagedQty").textContent=fmtInt(damaged);$("noveltyTotalQty").textContent=fmtInt(over+short+damaged);
       $("noveltyBody").innerHTML=rows.length?rows.map(x=>{const managed=(x.gestion_estado||'pendiente')==='gestionado';return `<tr><td>${x.fecha_local||''}</td><td>${x.operario||''}</td><td>${processName(x.proceso)}</td><td>${x.codigo||''}</td><td>${expiryLabel(x)}</td><td>${x.novedad_tipo==='sobrante'?'➕ Sobrante':x.novedad_tipo==='faltante'?'➖ Faltante':'💥 Dañado'}</td><td><b>${fmtInt(x.novedad_cantidad||0)}</b></td><td>${x.comentario||'—'}</td><td><span class="managementPill ${managed?'done':'pending'}">${managed?'✅ Gestionado':'🟡 Pendiente'}</span></td><td>${managed?`${x.gestion_por||'—'}${x.gestion_fecha_local?` · ${x.gestion_fecha_local.replace('T',' ').slice(0,16)}`:''}`:'—'}</td><td><div class="compactActions"><button class="editRecordBtn" data-id="${x.id}">✏️ Editar</button><button class="miniBtn ${managed?'warn':'ok'} noveltyManageBtn" data-id="${x.id}" data-managed="${managed?'0':'1'}">${managed?'↩️ Reabrir':'✅ Gestionado'}</button><button class="miniBtn historyNoveltyBtn" data-id="${x.id}">🕘</button></div></td></tr>`}).join(''):'<tr><td colspan="11">Sin novedades para los filtros seleccionados.</td></tr>';
-      document.querySelectorAll('#noveltyBody .editRecordBtn').forEach(btn=>btn.onclick=()=>openRecordEditor(btn.dataset.id));document.querySelectorAll('.noveltyManageBtn').forEach(btn=>btn.onclick=()=>setNoveltyManaged(btn.dataset.id,btn.dataset.managed==='1'));document.querySelectorAll('.historyNoveltyBtn').forEach(btn=>btn.onclick=()=>openHistory('registro',btn.dataset.id,'Novedad '+btn.dataset.id));
+      document.querySelectorAll('#noveltyBody .editRecordBtn').forEach(btn=>btn.onclick=()=>openRecordEditor(btn.dataset.id));document.querySelectorAll('.noveltyManageBtn').forEach(btn=>btn.onclick=()=>setNoveltyManaged(btn.dataset.id,btn.dataset.managed==='1'));document.querySelectorAll('.historyNoveltyBtn').forEach(btn=>btn.onclick=()=>openHistory('registro',btn.dataset.id));
     }catch(e){$("noveltyBody").innerHTML=`<tr><td colspan="11">${e.message}</td></tr>`}
   }
   $("noveltyDate").value=localISO().slice(0,10);$("loadNoveltyReport").onclick=loadNoveltyReport;$("noveltyProcess").addEventListener('change',loadNoveltyReport);$("noveltyOperator").addEventListener('change',loadNoveltyReport);$("noveltyManagementFilter").addEventListener('change',loadNoveltyReport);
