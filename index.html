@@ -1309,6 +1309,7 @@
             <div class="supGroupChildren">
               <button class="btn secondary supNavBtn" data-view="operarios">Operarios</button>
               <button class="btn secondary supNavBtn" data-view="data">Data de productos</button>
+              <button class="btn secondary supNavBtn" data-view="categorydata">Categorías por código</button>
             </div>
           </div>
 
@@ -1675,6 +1676,27 @@
             <div class="small">También puedes abrir la carga con <b>Ctrl + Shift + O</b>.</div>
           </div>
 
+          <div id="view-categorydata" class="supView card">
+            <div class="sectionTitle">
+              <h2>🏷️ Categorías por código</h2>
+              <button id="openCategoryModalBtn" class="btn blue">📥 Actualizar categorías</button>
+            </div>
+            <div class="message ok">
+              Esta clasificación tiene prioridad sobre la clasificación automática por descripción.
+              Las correcciones manuales realizadas desde Metas mantienen la prioridad más alta.
+            </div>
+            <div class="dataSummary">
+              <div class="kpi"><span>Versión activa</span><strong id="categoryDataVersion" style="font-size:16px">—</strong></div>
+              <div class="kpi"><span>Códigos clasificados</span><strong id="categoryDataCount">—</strong></div>
+              <div class="kpi"><span>Categorías</span><strong id="categoryDataCategories">—</strong></div>
+              <div class="kpi"><span>Bloques</span><strong id="categoryDataBuckets">—</strong></div>
+            </div>
+            <div class="small" style="margin-top:8px">
+              Prioridad aplicada en toda la web: <b>Corrección manual → Categoría oficial por código → Clasificación automática</b>.
+              Los reportes históricos se corrigen al consultarlos; no es necesario reescribir miles de registros.
+            </div>
+          </div>
+
           <div id="view-operarios" class="supView card">
             <div class="sectionTitle"><h2>👷 Operarios</h2></div>
             <div class="twoCols">
@@ -1690,6 +1712,31 @@
       </div>
     </div>
   </section>
+</div>
+
+<div id="categoryModal" class="modalBackdrop">
+  <div class="modalCard">
+    <div class="modalHead"><h2>🏷️ Categorías por código</h2><button id="closeCategoryModal" class="btn ghost">✕ Cerrar</button></div>
+    <div class="uploadBox">
+      <div style="font-size:32px">📋</div>
+      <strong>Pegar clasificación consolidada</strong>
+      <div class="small" style="margin:6px 0 10px">Pega dos columnas: <b>Code</b> y <b>Category</b>.<br>También acepta <b>Código</b> / <b>Categoría</b> y tablas Markdown.</div>
+      <textarea id="categoryPaste" placeholder="Code&#9;Category&#10;21860&#9;Hair Care&#10;22443&#9;Fragrances" style="width:100%;min-height:180px;resize:vertical;padding:12px;border:1px solid var(--border);border-radius:12px;font:inherit"></textarea>
+      <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:10px">
+        <button id="importPastedCategories" class="btn blue">📥 Guardar categorías pegadas</button>
+        <button id="clearCategoryPaste" class="btn ghost">🧹 Limpiar</button>
+      </div>
+    </div>
+    <details style="margin-top:12px">
+      <summary style="cursor:pointer;font-weight:700">📄 Opción alternativa: cargar archivo</summary>
+      <div class="uploadBox" style="margin-top:10px">
+        <input id="categoryFile" type="file" accept=".xlsx,.xls,.csv,.txt,.md" />
+        <div class="small" style="margin-top:8px">Formatos aceptados: Excel, CSV, TXT o Markdown.</div>
+        <div style="margin-top:10px"><button id="importCategoriesFile" class="btn ghost">⬆️ Cargar archivo</button></div>
+      </div>
+    </details>
+    <div id="categoryImportMsg"></div>
+  </div>
 </div>
 
 <div id="productModal" class="modalBackdrop">
@@ -1891,7 +1938,33 @@
   const safeNum=v=>{const n=Number(String(v).replace(',','.'));return Number.isFinite(n)?n:0};
 
   const manualCategoryCache=new Map();
-  const BASE_CATEGORIES=['PRODUCTOS CAPILARES','DESODORANTES','CUIDADO ORAL','PROTECCIÓN SOLAR','CUIDADO DE PIES','CUIDADO DE MANOS','CUIDADO CORPORAL','HIGIENE CORPORAL','CUIDADO FACIAL','MAQUILLAJE','UÑAS','PERFUMERÍA','BIENESTAR','ACCESORIOS','CUIDADO PERSONAL','OTROS'];
+
+  let activeCategoryMasterConfig=null;
+  const officialCategoryBucketCache=new Map();
+  const officialCategoryCache=new Map();
+  let officialCategoriesFullyLoaded=false;
+
+  const OFFICIAL_CATEGORY_LABELS={
+    'FRAGRANCES':'PERFUMERÍA',
+    'SKIN CARE':'CUIDADO DE LA PIEL',
+    'PERSONAL CARE':'CUIDADO PERSONAL',
+    'COLOUR COSMETICS':'MAQUILLAJE',
+    'COLOR COSMETICS':'MAQUILLAJE',
+    'HAIR CARE':'PRODUCTOS CAPILARES',
+    'ACCESSORIES':'ACCESORIOS',
+    'WELLNESS':'BIENESTAR',
+    'SALES ACTIONS':'ACCIONES DE VENTA',
+    'OTHER CATEGORY':'OTROS'
+  };
+
+  function normalizeOfficialCategory(value){
+    const raw=norm(value);
+    if(!raw)return '';
+    const key=raw.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim();
+    return OFFICIAL_CATEGORY_LABELS[key] || raw.toUpperCase();
+  }
+
+  const BASE_CATEGORIES=['PRODUCTOS CAPILARES','DESODORANTES','CUIDADO ORAL','PROTECCIÓN SOLAR','CUIDADO DE PIES','CUIDADO DE MANOS','CUIDADO CORPORAL','HIGIENE CORPORAL','CUIDADO FACIAL','CUIDADO DE LA PIEL','MAQUILLAJE','UÑAS','PERFUMERÍA','BIENESTAR','ACCESORIOS','ACCIONES DE VENTA','CUIDADO PERSONAL','OTROS'];
 
   async function loadManualCategories(){
     try{const snap=await getDocs(collection(db,'clasificaciones_productos'));manualCategoryCache.clear();snap.docs.forEach(d=>{const x=d.data();if(x.categoria)manualCategoryCache.set(d.id,x.categoria)});}catch(e){console.warn('Clasificaciones manuales',e)}
@@ -1960,7 +2033,7 @@
     if(supervisorUnlocked){
       $("supAuth").classList.add('hidden');
       $("supApp").classList.remove('hidden');
-      loadManualCategories().catch(()=>{});
+      Promise.all([loadManualCategories(),loadOfficialCategoriesAll()]).catch(()=>{});
       loadDashboard().then(()=>startDashboardRealtime()).catch(()=>{});
       loadUsersTable().catch(()=>{});
     }else{
@@ -2745,6 +2818,50 @@
     return String(h % MASTER_BUCKETS).padStart(2,'0');
   }
 
+  async function getActiveCategoryMasterConfig(force=false){
+    if(activeCategoryMasterConfig && !force)return activeCategoryMasterConfig;
+    const snap=await getDoc(doc(db,'configuracion','maestro_categorias'));
+    activeCategoryMasterConfig=(snap.exists()&&snap.data().version_activa)?{mode:'versioned',...snap.data()}:{mode:'none',total_codigos:0,bucket_count:0};
+    return activeCategoryMasterConfig;
+  }
+
+  async function getOfficialCategory(code){
+    const c=String(code||'');
+    if(!c)return '';
+    if(officialCategoryCache.has(c))return officialCategoryCache.get(c);
+    const cfg=await getActiveCategoryMasterConfig();
+    if(cfg.mode!=='versioned')return '';
+    const bucketId=masterBucketId(c);
+    const cacheKey=`${cfg.version_activa}:${bucketId}`;
+    let bucket=officialCategoryBucketCache.get(cacheKey);
+    if(!bucket){
+      const snap=await getDoc(doc(db,'maestros_categorias',cfg.version_activa,'buckets',bucketId));
+      bucket=snap.exists()?(snap.data().items||{}):{};
+      officialCategoryBucketCache.set(cacheKey,bucket);
+    }
+    const category=bucket[c]?.categoria||'';
+    if(category)officialCategoryCache.set(c,category);
+    return category;
+  }
+
+  async function loadOfficialCategoriesAll(force=false){
+    if(officialCategoriesFullyLoaded && !force)return officialCategoryCache;
+    const cfg=await getActiveCategoryMasterConfig(force);
+    officialCategoryCache.clear();officialCategoryBucketCache.clear();
+    if(cfg.mode!=='versioned'){officialCategoriesFullyLoaded=true;return officialCategoryCache;}
+    const count=Number(cfg.bucket_count||MASTER_BUCKETS);
+    for(let i=0;i<count;i+=12){
+      const ids=[];for(let j=i;j<Math.min(i+12,count);j++)ids.push(String(j).padStart(2,'0'));
+      const snaps=await Promise.all(ids.map(id=>getDoc(doc(db,'maestros_categorias',cfg.version_activa,'buckets',id))));
+      snaps.forEach((snap,idx)=>{
+        const id=ids[idx],items=snap.exists()?(snap.data().items||{}):{};
+        officialCategoryBucketCache.set(`${cfg.version_activa}:${id}`,items);
+        Object.entries(items).forEach(([c,item])=>{if(item?.categoria)officialCategoryCache.set(String(c),item.categoria)});
+      });
+    }
+    officialCategoriesFullyLoaded=true;return officialCategoryCache;
+  }
+
   async function getActiveMasterConfig(force=false){
     if(activeMasterConfig && !force) return activeMasterConfig;
 
@@ -2795,7 +2912,7 @@
       s.code=code;s.product=product;
       if(!s.product.descripcion && s.product.description) s.product.descripcion=s.product.description;
       const hierarchy=classifyProduct(s.product.descripcion||s.product.descripcion_producto||s.product.nombre||'');
-      s.product.categoria=(await getManualCategory(code))||hierarchy.categoria;
+      s.product.categoria=(await getManualCategory(code))||(await getOfficialCategory(code))||hierarchy.categoria;
       if(s.proceso==='etiquetado'){
         const ms=await getDoc(doc(db,'metas',code));
         s.meta=ms.exists()?ms.data():null;
@@ -3118,7 +3235,7 @@
     }
 
     const description=product.descripcion||'';
-    const category=(await getManualCategory(code))||classifyProduct(description).categoria;
+    const category=(await getManualCategory(code))||(await getOfficialCategory(code))||classifyProduct(description).categoria;
 
     let meta=null;
     if(process==='etiquetado'){
@@ -3230,11 +3347,11 @@
     return ms>0?units/(ms/3600000):0;
   }
   function recordCategory(x){
-    const manual=manualCategoryCache.get(String(x.codigo||''));if(manual)return manual;
-    const inferred=classifyProduct(x.descripcion||'').categoria;
-    const stored=norm(x.categoria||'');
-    if(inferred && inferred!=='OTROS') return inferred;
-    return stored||'OTROS';
+    const code=String(x.codigo||'');
+    const manual=manualCategoryCache.get(code);if(manual)return manual;
+    const official=officialCategoryCache.get(code);if(official)return official;
+    const stored=norm(x.categoria||'');if(stored)return stored;
+    return classifyProduct(x.descripcion||'').categoria||'OTROS';
   }
   function shortDescription(desc){
     const words=norm(desc).split(/\s+/).filter(Boolean);
@@ -3278,6 +3395,9 @@
       dashboardLiveInterval=null;
     }
 
+    const categoryViews=new Set(['productividad','graficos','comparativo','metas','registros','novedades','caducidad','reporte']);
+    if(categoryViews.has(b.dataset.view)) await loadOfficialCategoriesAll();
+
     if(b.dataset.view==='operarios') await loadUsersTable();
     if(b.dataset.view==='registros') await loadRecords();
     if(b.dataset.view==='novedades') await loadNoveltyReport();
@@ -3289,6 +3409,7 @@
     if(b.dataset.view==='metas') await loadEvaluation();
     if(b.dataset.view==='supervision') await loadSupervision();
     if(b.dataset.view==='data') await loadDataSummary();
+    if(b.dataset.view==='categorydata') await loadCategoryDataSummary();
 
     if(b.dataset.view==='dashboard'){
       await loadDashboard(false);
@@ -3611,7 +3732,7 @@
   let metaByCode=new Map();
 
   function categoryOptions(selected){
-    const cats=[...new Set([...BASE_CATEGORIES,...metaEvaluationRecords.map(recordCategory),...manualCategoryCache.values()])].sort((a,b)=>a.localeCompare(b,'es'));
+    const cats=[...new Set([...BASE_CATEGORIES,...metaEvaluationRecords.map(recordCategory),...manualCategoryCache.values(),...officialCategoryCache.values()])].sort((a,b)=>a.localeCompare(b,'es'));
     return cats.map(c=>`<option value="${c}" ${c===selected?'selected':''}>${c}</option>`).join('');
   }
 
@@ -3635,7 +3756,7 @@
   }
 
   async function saveManualCategory(code){
-    const sel=document.querySelector(`.categorySelect[data-code="${code}"]`);if(!sel)return;const newCat=sel.value,oldCat=manualCategoryCache.get(code)||recordCategory(metaEvaluationRecords.find(x=>String(x.codigo)===String(code))||{});if(newCat===oldCat)return toast('ℹ️ La categoría ya es la seleccionada');
+    const sel=document.querySelector(`.categorySelect[data-code="${code}"]`);if(!sel)return;const newCat=sel.value,oldCat=manualCategoryCache.get(code)||officialCategoryCache.get(code)||recordCategory(metaEvaluationRecords.find(x=>String(x.codigo)===String(code))||{});if(newCat===oldCat)return toast('ℹ️ La categoría ya es la seleccionada');
     try{await setDoc(doc(db,'clasificaciones_productos',code),{codigo:code,categoria:newCat,manual:true,actualizado_por:currentSupervisorUser(),actualizado_local:localISO(),actualizado_en:serverTimestamp()},{merge:true});manualCategoryCache.set(code,newCat);await logAudit({accion:'Categoría modificada',entidad:'categoria_producto',entidadId:code,detalle:`Clasificación manual del código ${code}`,cambios:[{campo:'Categoría',anterior:oldCat,nuevo:newCat}]});toast('✅ Categoría actualizada');renderMetaCategoryTable();if($("view-productividad")?.classList.contains('active'))loadProductivity(true)}catch(e){toast('❌ '+e.message)}
   }
 
@@ -3941,6 +4062,22 @@
   }
   $("openDataModalBtn").onclick=openProductModal;
 
+  async function loadCategoryDataSummary(){
+    try{
+      const cfg=await getActiveCategoryMasterConfig(true);
+      $("categoryDataVersion").textContent=cfg.mode==='versioned'?(cfg.version_activa||'—'):'Sin maestro';
+      $("categoryDataCount").textContent=fmtInt(cfg.total_codigos||0);
+      $("categoryDataCategories").textContent=fmtInt(cfg.total_categorias||0);
+      $("categoryDataBuckets").textContent=cfg.mode==='versioned'?fmtInt(cfg.bucket_count||0):'—';
+    }catch(e){toast('⚠️ Categorías: '+e.message)}
+  }
+  function openCategoryModal(){if(!supervisorUnlocked)return toast('🔒 Ingresa primero como Supervisor');$("categoryModal").classList.add('show')}
+  function closeCategoryModal(){$("categoryModal").classList.remove('show')}
+  $("openCategoryModalBtn").onclick=openCategoryModal;
+  $("closeCategoryModal").onclick=closeCategoryModal;
+  $("categoryModal").addEventListener('click',e=>{if(e.target===$("categoryModal"))closeCategoryModal()});
+  $("clearCategoryPaste").onclick=()=>{$("categoryPaste").value='';$("categoryImportMsg").innerHTML=''};
+
   $("addOperator").onclick=async()=>{
     const nombre=norm($("newOpName").value),tipo=$("newOpType").value;if(!nombre)return;
     try{const id=slug(nombre);await setDoc(doc(db,'operarios',id),{nombre,tipo,activo:true,creado_en:serverTimestamp()},{merge:true});await logAudit({accion:'Operario creado',entidad:'operario',entidadId:id,detalle:nombre,cambios:[{campo:'Estado',anterior:'',nuevo:'Activo'}]});$("userMsg").innerHTML='<div class="message ok">✅ Operario creado.</div>';$("newOpName").value='';await loadUsersTable();await loadOperators();}catch(e){$("userMsg").innerHTML='<div class="message err">❌ '+e.message+'</div>'}
@@ -4017,7 +4154,7 @@
         const product=await getProductByCode(newCode);
         if(!product)return toast('⚠️ El código corregido no existe en la data de productos');
         description=product.descripcion||'';
-        category=(await getManualCategory(newCode))||classifyProduct(description).categoria;
+        category=(await getManualCategory(newCode))||(await getOfficialCategory(newCode))||classifyProduct(description).categoria;
       }catch(e){return toast('⚠️ No se pudo validar el código corregido');}
     }
 
@@ -4472,6 +4609,82 @@
       btn.disabled=false;btn.textContent='⬆️ Cargar productos';
     }
   };
+  function parseCategoryText(raw){
+    const lines=String(raw||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+    if(!lines.length)throw new Error('No encontré filas.');
+    const splitLine=(line)=>{
+      const t=line.trim();
+      if(t.startsWith('|')&&t.endsWith('|'))return t.slice(1,-1).split('|').map(norm);
+      if(line.includes('\t'))return line.split('\t').map(norm);
+      if(line.includes(';'))return line.split(';').map(norm);
+      return line.split(',').map(norm);
+    };
+    const nh=v=>String(v||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim();
+    const rows=lines.map(splitLine).filter(cols=>cols.length&&!cols.every(c=>/^:?-{2,}:?$/.test(norm(c))));
+    if(!rows.length)throw new Error('No encontré filas válidas.');
+    const headers=rows[0].map(nh);
+    const codeAliases=['code','codigo','codigo producto','product code','item code'];
+    const catAliases=['category','categoria','product category'];
+    let codeIdx=headers.findIndex(x=>codeAliases.includes(x)),catIdx=headers.findIndex(x=>catAliases.includes(x)),start=0;
+    if(codeIdx>=0||catIdx>=0){if(codeIdx<0||catIdx<0)throw new Error('Necesito dos columnas: Code y Category.');start=1}else{codeIdx=0;catIdx=1}
+    const map=new Map();let skipped=0;
+    for(let i=start;i<rows.length;i++){
+      const code=norm(rows[i][codeIdx]),sourceCategory=norm(rows[i][catIdx]);
+      if(!code||!sourceCategory){skipped++;continue}
+      const categoria=normalizeOfficialCategory(sourceCategory);if(!categoria){skipped++;continue}
+      map.set(code,{code,categoria,sourceCategory});
+    }
+    return {validRows:[...map.values()],skipped};
+  }
+
+  async function saveCategoryRows(validRows,skipped=0,sourceLabel='carga'){
+    const msg=$("categoryImportMsg");if(!validRows.length)throw new Error('No encontré categorías válidas.');
+    const now=new Date(),pad=n=>String(n).padStart(2,'0');
+    const version=`cat_${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+    msg.innerHTML=`<div class="message warn">🆕 Preparando nueva versión <b>${version}</b>…</div>`;
+    const buckets=new Map(),cats=new Set();
+    for(const row of validRows){const id=masterBucketId(row.code);if(!buckets.has(id))buckets.set(id,{});cats.add(row.categoria);buckets.get(id)[row.code]={codigo:row.code,categoria:row.categoria,categoria_origen:row.sourceCategory,activo:true}}
+    const entries=[...buckets.entries()],GROUP=16;let written=0;
+    for(let i=0;i<entries.length;i+=GROUP){
+      const group=entries.slice(i,i+GROUP),batch=writeBatch(db);
+      for(const [id,items] of group)batch.set(doc(db,'maestros_categorias',version,'buckets',id),{items,cantidad:Object.keys(items).length,version,actualizado_local:localISO()});
+      await batch.commit();written+=group.reduce((a,[,items])=>a+Object.keys(items).length,0);
+      msg.innerHTML=`<div class="message warn">⬆️ Cargando categorías: <b>${written.toLocaleString('es-EC')} / ${validRows.length.toLocaleString('es-EC')}</b></div>`;
+      await new Promise(r=>setTimeout(r,20));
+    }
+    await setDoc(doc(db,'maestros_categorias',version),{version,total_codigos:validRows.length,total_categorias:cats.size,bucket_count:MASTER_BUCKETS,estado:'lista',origen:sourceLabel,filas_omitidas:skipped,creado_local:localISO(),creado_en:serverTimestamp()});
+    const sample=validRows[0],sampleBucket=masterBucketId(sample.code),verify=await getDoc(doc(db,'maestros_categorias',version,'buckets',sampleBucket));
+    const verified=verify.exists()&&verify.data().items&&verify.data().items[sample.code];if(!verified)throw new Error('La nueva clasificación no pasó la verificación final.');
+    await setDoc(doc(db,'configuracion','maestro_categorias'),{version_activa:version,total_codigos:validRows.length,total_categorias:cats.size,bucket_count:MASTER_BUCKETS,actualizado_local:localISO(),actualizado_en:serverTimestamp()});
+    activeCategoryMasterConfig={mode:'versioned',version_activa:version,total_codigos:validRows.length,total_categorias:cats.size,bucket_count:MASTER_BUCKETS};
+    officialCategoryCache.clear();officialCategoryBucketCache.clear();officialCategoriesFullyLoaded=false;await loadOfficialCategoriesAll(true);
+    dailyRecordsCache.clear();supervisorRecordsLoadedAt=0;
+    await logAudit({accion:'Maestro de categorías actualizado',entidad:'maestro_categorias',entidadId:version,detalle:`${validRows.length} códigos · ${cats.size} categorías`,cambios:[{campo:'Versión activa',anterior:'',nuevo:version}]});
+    msg.innerHTML=`<div class="message ok">✅ <b>Categorías activadas correctamente</b><br>🏷️ ${validRows.length.toLocaleString('es-EC')} códigos clasificados<br>🧩 ${cats.size} categorías<br><span class="small">Ejemplo: ${sample.code} → ${verified.categoria}</span></div>`;
+    toast('✅ Categorías actualizadas y aplicadas');await loadCategoryDataSummary();
+  }
+
+  $("importPastedCategories").onclick=async()=>{
+    const raw=$("categoryPaste").value.trim();if(!raw)return toast('⚠️ Pega primero la data de categorías');
+    const btn=$("importPastedCategories");btn.disabled=true;btn.textContent='⏳ Procesando…';
+    try{const {validRows,skipped}=parseCategoryText(raw);await saveCategoryRows(validRows,skipped,'datos pegados')}catch(e){console.error(e);$("categoryImportMsg").innerHTML=`<div class="message err">❌ ${e.message}</div>`;toast('❌ Error cargando categorías')}finally{btn.disabled=false;btn.textContent='📥 Guardar categorías pegadas'}
+  };
+
+  $("importCategoriesFile").onclick=async()=>{
+    const file=$("categoryFile").files?.[0];if(!file)return toast('⚠️ Selecciona un archivo');
+    const btn=$("importCategoriesFile");btn.disabled=true;btn.textContent='⏳ Procesando…';
+    try{
+      let validRows=[],skipped=0;const ext=(file.name.split('.').pop()||'').toLowerCase();
+      if(['xlsx','xls'].includes(ext)){
+        const wb=XLSX.read(await file.arrayBuffer(),{type:'array'}),ws=wb.Sheets[wb.SheetNames[0]],rows=XLSX.utils.sheet_to_json(ws,{defval:'',raw:false});if(!rows.length)throw new Error('El Excel no contiene filas.');
+        const keys=Object.keys(rows[0]),nh=v=>String(v||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim();
+        const codeKey=keys.find(k=>['code','codigo','codigo producto','product code','item code'].includes(nh(k))),catKey=keys.find(k=>['category','categoria','product category'].includes(nh(k)));if(!codeKey||!catKey)throw new Error('No encontré las columnas Code y Category.');
+        const map=new Map();for(const r of rows){const code=norm(r[codeKey]),sourceCategory=norm(r[catKey]);if(!code||!sourceCategory){skipped++;continue}map.set(code,{code,categoria:normalizeOfficialCategory(sourceCategory),sourceCategory})}validRows=[...map.values()];
+      }else{const p=parseCategoryText(await file.text());validRows=p.validRows;skipped=p.skipped}
+      await saveCategoryRows(validRows,skipped,file.name);
+    }catch(e){console.error(e);$("categoryImportMsg").innerHTML=`<div class="message err">❌ ${e.message}</div>`;toast('❌ Error cargando categorías')}finally{btn.disabled=false;btn.textContent='⬆️ Cargar archivo'}
+  };
+
   function classifyProduct(desc){
     const d=(' '+norm(desc).toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')+' ');
     const has=(...terms)=>terms.some(t=>d.includes(t));
