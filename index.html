@@ -1649,6 +1649,7 @@
     document.querySelectorAll('.mainTab').forEach(x=>x.classList.remove('active'));
     document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
     document.querySelector('.app')?.classList.remove('supervisor-wide');
+    stopDashboardRealtime();
   };
 
   // Acceso interno del Supervisor.
@@ -1669,7 +1670,7 @@
       $("supAuth").classList.add('hidden');
       $("supApp").classList.remove('hidden');
       loadManualCategories().catch(()=>{});
-      loadDashboard().catch(()=>{});
+      loadDashboard().then(()=>startDashboardRealtime()).catch(()=>{});
       loadUsersTable().catch(()=>{});
     }else{
       $("supAuth").classList.remove('hidden');
@@ -1693,7 +1694,7 @@
     }
   };
 
-  $("supLogout").onclick=()=>{
+  $("supLogout").onclick=()=>{stopDashboardRealtime();
     supervisorUnlocked=false;supervisorUser='';
     sessionStorage.removeItem('supervisorUnlocked');sessionStorage.removeItem('supervisorUser');
     renderSupervisorAccess();
@@ -2709,6 +2710,13 @@
     if(b.dataset.view==='metas') await loadEvaluation();
     if(b.dataset.view==='supervision') await loadSupervision();
     if(b.dataset.view==='data') await loadDataSummary();
+
+    if(b.dataset.view==='dashboard'){
+      await loadDashboard(false);
+      startDashboardRealtime();
+    }else{
+      stopDashboardRealtime();
+    }
   });
 
 
@@ -2747,6 +2755,32 @@
 
   let dashboardLiveInterval=null;
   let dashboardLiveSessions=[];
+  let dashboardOperatorsCache=[];
+  let dashboardSessionsUnsub=null;
+
+  function dashboardIsVisible(){
+    return supervisorUnlocked && $("view-dashboard")?.classList.contains('active');
+  }
+
+  function stopDashboardRealtime(){
+    if(dashboardSessionsUnsub){
+      try{dashboardSessionsUnsub()}catch{}
+      dashboardSessionsUnsub=null;
+    }
+  }
+
+  function startDashboardRealtime(){
+    if(dashboardSessionsUnsub) return;
+    dashboardSessionsUnsub=onSnapshot(
+      collection(db,'sesiones_activas'),
+      snap=>{
+        if(!dashboardIsVisible() || !dashboardOperatorsCache.length) return;
+        const sessions=snap.docs.map(d=>({operarioId:d.id,...d.data()}));
+        renderDashboardActivity(dashboardOperatorsCache,sessions);
+      },
+      err=>console.warn('Dashboard tiempo real:',err)
+    );
+  }
 
   function activeSessionElapsed(x){
     const start=Number(x.inicio_ms||0);
@@ -2826,6 +2860,42 @@
     });
   }
 
+  function renderDashboardActivity(activeOperators,sessionRows){
+    const sessionMap=new Map((sessionRows||[]).map(x=>[x.operarioId,x]));
+    const openStates=new Set(['idle','running','paused','finishing']);
+    const openSessions=[...sessionMap.values()].filter(x=>openStates.has(x.estado));
+
+    $("kpiSesiones").textContent=fmtInt(openSessions.length);
+
+    const statusOrder={running:0,paused:1,finishing:2,idle:3,no_session:4};
+    const rows=(activeOperators||[]).map(op=>{
+      const ss=sessionMap.get(op.id);
+      const isOpen=ss&&openStates.has(ss.estado);
+      const estado=!isOpen?'no_session':ss.estado;
+      return {operarioId:op.id,operario:op.nombre,tipo:op.tipo||'',...(ss||{}),estado,isOpen};
+    }).sort((a,b)=>(statusOrder[a.estado]??9)-(statusOrder[b.estado]??9)||norm(a.operario).localeCompare(norm(b.operario),'es'));
+
+    dashboardLiveSessions=rows;
+
+    const statusInfo=x=>{
+      if(x.estado==='running')return ['ok','▶️ Trabajando'];
+      if(x.estado==='paused')return ['warn','⏸️ Pausa'];
+      if(x.estado==='finishing')return ['ok','🔵 Finalizando'];
+      if(x.estado==='idle')return ['','⚪ Disponible'];
+      return ['','⚫ Sin sesión'];
+    };
+
+    $("dashActiveSessions").innerHTML=rows.length?`<div class="tableWrap"><table style="min-width:940px"><thead><tr><th>Operario</th><th>Estado</th><th>Proceso</th><th>Código</th><th>⏱️ Tiempo</th><th>Dispositivo</th><th>Acción</th></tr></thead><tbody>${rows.map((x,i)=>{
+      const [klass,label]=statusInfo(x);
+      const action=x.isOpen?`<div class="sessionActionBtns"><button class="sessionCloseBtn" data-id="${x.operarioId}">🔒 Cerrar</button><button class="sessionDeleteBtn" data-id="${x.operarioId}">🗑️ Eliminar</button></div>`:'—';
+      const time=['running','paused','finishing'].includes(x.estado)?`<span class="liveTimer" data-live-index="${i}">00:00:00</span>`:'—';
+      return `<tr><td><b>${x.operario}</b></td><td><span class="statusPill ${klass}">${label}</span></td><td>${x.isOpen&&x.proceso?processName(x.proceso):'—'}</td><td>${['running','paused','finishing'].includes(x.estado)?(x.codigo||'—'):'—'}</td><td>${time}</td><td><span class="small">${x.isOpen&&x.deviceId?String(x.deviceId).slice(-8):'—'}</span></td><td>${action}</td></tr>`;
+    }).join('')}</tbody></table></div>`:'<div class="emptyState">Sin operarios activos configurados.</div>';
+
+    startDashboardLiveClock(rows);
+    bindSupervisorSessionActions();
+  }
+
   async function loadDashboard(force=false){
     try{
       const today=localISO().slice(0,10);
@@ -2839,14 +2909,12 @@
       const ar=todayRecords.filter(x=>x.proceso==='armado');
       const totalUnits=todayRecords.reduce((a,x)=>a+Number(x.unidades||0),0);
       const activeOperators=opsSnap.docs.map(d=>({id:d.id,...d.data()})).filter(x=>x.activo!==false).sort((a,b)=>norm(a.nombre).localeCompare(norm(b.nombre)));
-      const sessionMap=new Map(sessionsSnap.docs.map(d=>[d.id,{operarioId:d.id,...d.data()}]));
-      const openStates=new Set(['idle','running','paused','finishing']);
-      const openSessions=[...sessionMap.values()].filter(x=>openStates.has(x.estado));
+      dashboardOperatorsCache=activeOperators;
+      const sessions=sessionsSnap.docs.map(d=>({operarioId:d.id,...d.data()}));
 
       $("kpiUnitsHoy").textContent=fmtInt(totalUnits);
       $("kpiEtiquetadoHoy").textContent=fmtInt(et.length);
       $("kpiArmadoHoy").textContent=fmtInt(ar.length);
-      $("kpiSesiones").textContent=fmtInt(openSessions.length);
 
       const summary=(arr,label)=>{
         if(!arr.length) return `<div class="emptyState">Sin ${label.toLowerCase()} registrados hoy.</div>`;
@@ -2860,31 +2928,8 @@
       $("dashEtiquetadoResumen").innerHTML=summary(et,'Etiquetados');
       $("dashArmadoResumen").innerHTML=summary(ar,'Armados');
 
-      const statusOrder={running:0,paused:1,finishing:2,idle:3,no_session:4};
-      const rows=activeOperators.map(op=>{
-        const ss=sessionMap.get(op.id);
-        const isOpen=ss&&openStates.has(ss.estado);
-        const estado=!isOpen?'no_session':ss.estado;
-        return {operarioId:op.id,operario:op.nombre,tipo:op.tipo||'',...(ss||{}),estado,isOpen};
-      }).sort((a,b)=>(statusOrder[a.estado]??9)-(statusOrder[b.estado]??9)||norm(a.operario).localeCompare(norm(b.operario),'es'));
-      dashboardLiveSessions=rows;
-
-      const statusInfo=x=>{
-        if(x.estado==='running')return ['ok','▶️ Trabajando'];
-        if(x.estado==='paused')return ['warn','⏸️ Pausa'];
-        if(x.estado==='finishing')return ['ok','🔵 Finalizando'];
-        if(x.estado==='idle')return ['','⚪ Disponible'];
-        return ['','⚫ Sin sesión'];
-      };
-
-      $("dashActiveSessions").innerHTML=rows.length?`<div class="tableWrap"><table style="min-width:940px"><thead><tr><th>Operario</th><th>Estado</th><th>Proceso</th><th>Código</th><th>⏱️ Tiempo</th><th>Dispositivo</th><th>Acción</th></tr></thead><tbody>${rows.map((x,i)=>{
-        const [klass,label]=statusInfo(x);
-        const action=x.isOpen?`<div class="sessionActionBtns"><button class="sessionCloseBtn" data-id="${x.operarioId}">🔒 Cerrar</button><button class="sessionDeleteBtn" data-id="${x.operarioId}">🗑️ Eliminar</button></div>`:'—';
-        const time=['running','paused','finishing'].includes(x.estado)?`<span class="liveTimer" data-live-index="${i}">00:00:00</span>`:'—';
-        return `<tr><td><b>${x.operario}</b></td><td><span class="statusPill ${klass}">${label}</span></td><td>${x.isOpen&&x.proceso?processName(x.proceso):'—'}</td><td>${['running','paused','finishing'].includes(x.estado)?(x.codigo||'—'):'—'}</td><td>${time}</td><td><span class="small">${x.isOpen&&x.deviceId?String(x.deviceId).slice(-8):'—'}</span></td><td>${action}</td></tr>`;
-      }).join('')}</tbody></table></div>`:'<div class="emptyState">Sin operarios activos configurados.</div>';
-      startDashboardLiveClock(rows);
-      bindSupervisorSessionActions();
+      renderDashboardActivity(activeOperators,sessions);
+      startDashboardRealtime();
     }catch(e){toast('⚠️ Dashboard: '+e.message)}
   }
   $("refreshDashboard").onclick=()=>loadDashboard(true);
