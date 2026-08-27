@@ -1120,6 +1120,122 @@
       }
     }
 
+  
+    /* ===== Identificación de grupos y ranking ===== */
+    .operatorDrillBtn.maquilaOperator{
+      color:#a74d56!important;
+      background:#fff0f1!important;
+      border-color:#f1c3c8!important;
+    }
+    .rankMedal{
+      display:inline-block;
+      width:24px;
+      text-align:center;
+      margin-right:5px;
+      font-size:17px;
+      vertical-align:middle;
+    }
+    .comparisonFilters{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+      margin-bottom:10px;
+    }
+    .comparisonSide{
+      border:1px solid var(--border);
+      border-radius:16px;
+      padding:11px;
+      background:#fbfdfc;
+      position:relative;
+    }
+    .comparisonSide.sideB{
+      background:#fff8f8;
+      border-color:#efd4d6;
+    }
+    .comparisonSideTitle{
+      position:absolute;
+      right:10px;
+      top:8px;
+      width:28px;
+      height:28px;
+      border-radius:50%;
+      display:grid;
+      place-items:center;
+      font-weight:900;
+      background:#e9f8f4;
+      color:#11745f;
+    }
+    .sideB .comparisonSideTitle{
+      background:#fde8ea;
+      color:#a34e57;
+    }
+    .comparisonFilterGrid{
+      display:grid;
+      grid-template-columns:repeat(4,minmax(0,1fr));
+      gap:8px;
+      padding-right:34px;
+    }
+    .comparisonSummary{
+      display:grid;
+      grid-template-columns:1fr 1fr .72fr;
+      gap:10px;
+      margin-bottom:10px;
+    }
+    .comparisonCard,.comparisonDifference{
+      border:1px solid var(--border);
+      border-radius:16px;
+      padding:12px;
+      background:#fff;
+    }
+    .comparisonCard.groupB{
+      border-color:#efd4d6;
+      background:#fffafb;
+    }
+    .comparisonCard h3,.comparisonDifference h3{margin:0 0 8px}
+    .comparisonMetrics{
+      display:grid;
+      grid-template-columns:repeat(5,minmax(0,1fr));
+      gap:7px;
+    }
+    .comparisonMetric{
+      border-right:1px solid #e5eeea;
+      padding-right:7px;
+    }
+    .comparisonMetric:last-child{border-right:0}
+    .comparisonMetric span{display:block;font-size:10px;color:var(--muted)}
+    .comparisonMetric strong{display:block;margin-top:3px;font-size:18px}
+    .comparisonDifference{
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      align-items:center;
+      text-align:center;
+      background:#f4fcf9;
+    }
+    .comparisonDifference .bigDiff{font-size:30px;font-weight:950;color:var(--green)}
+    .comparisonDifference.negative .bigDiff{color:#a74d56}
+    .comparisonCharts,.comparisonTables{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+      margin-top:10px;
+    }
+    .groupPillRansa,.groupPillMaquila{
+      display:inline-block;
+      padding:4px 9px;
+      border-radius:999px;
+      font-weight:900;
+      font-size:11px;
+    }
+    .groupPillRansa{background:#e6f7f2;color:#0d735f;border:1px solid #b8e4d8}
+    .groupPillMaquila{background:#fdebec;color:#9a4650;border:1px solid #efc7ca}
+    @media(max-width:1100px){
+      .comparisonFilters,.comparisonCharts,.comparisonTables{grid-template-columns:1fr}
+      .comparisonSummary{grid-template-columns:1fr 1fr}
+      .comparisonDifference{grid-column:1/-1}
+      .comparisonFilterGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+    }
+
   </style>
 </head>
 <body>
@@ -1168,8 +1284,8 @@
           <div class="supMenuGroup open" data-group="dashboard">
             <button type="button" class="btn secondary supGroupBtn">📊 Dashboard <span>⌄</span></button>
             <div class="supGroupChildren">
-              <button class="btn secondary supNavBtn active" data-view="dashboard">Resumen</button>
-              <button class="btn secondary supNavBtn" data-view="supervision">Supervisión</button>
+              <button class="btn secondary supNavBtn active" data-view="dashboard">Operación en vivo</button>
+              <button class="btn secondary supNavBtn" data-view="supervision">Control de pausas</button>
             </div>
           </div>
 
@@ -1179,6 +1295,7 @@
               <button class="btn secondary supNavBtn" data-view="productividad">Productividad</button>
               <button class="btn secondary supNavBtn" data-view="graficos">Gráficos</button>
               <button class="btn secondary supNavBtn" data-view="metas">Metas</button>
+              <button class="btn secondary supNavBtn" data-view="comparativo">Comparativo</button>
             </div>
           </div>
 
@@ -1309,6 +1426,72 @@
 
             <div class="familyRefTitle"><h3>🔬 Productos en evaluación</h3></div>
             <div class="tableWrap"><table><thead><tr><th>Código</th><th>Descripción</th><th>Categoría</th><th>Registros</th><th>Operarios</th><th>Promedio u/h</th><th>Estado</th></tr></thead><tbody id="evaluationBody"><tr><td colspan="7">Presiona Analizar</td></tr></tbody></table></div>
+          </div>
+
+          <div id="view-comparativo" class="supView card">
+            <div class="sectionTitle">
+              <h2>⚖️ Comparativo operativo</h2>
+              <button id="refreshComparison" class="btn ghost">🔄 Comparar</button>
+            </div>
+
+            <div class="comparisonFilters">
+              <div class="comparisonSide sideA">
+                <div class="comparisonSideTitle">A</div>
+                <div class="comparisonFilterGrid">
+                  <div class="field"><label>Grupo</label><select id="cmpTypeA"><option value="Ransa">Ransa</option><option value="Maquila">Maquila</option></select></div>
+                  <div class="field"><label>Fecha</label><input id="cmpDateA" type="date"></div>
+                  <div class="field"><label>Proceso</label><select id="cmpProcessA"><option value="etiquetado">🏷️ Etiquetado</option><option value="armado">📦 Armado</option><option value="todos">Todos</option></select></div>
+                  <div class="field"><label>Categoría</label><select id="cmpCategoryA"><option value="">Todas</option></select></div>
+                </div>
+              </div>
+              <div class="comparisonSide sideB">
+                <div class="comparisonSideTitle">B</div>
+                <div class="comparisonFilterGrid">
+                  <div class="field"><label>Grupo</label><select id="cmpTypeB"><option value="Maquila">Maquila</option><option value="Ransa">Ransa</option></select></div>
+                  <div class="field"><label>Fecha</label><input id="cmpDateB" type="date"></div>
+                  <div class="field"><label>Proceso</label><select id="cmpProcessB"><option value="etiquetado">🏷️ Etiquetado</option><option value="armado">📦 Armado</option><option value="todos">Todos</option></select></div>
+                  <div class="field"><label>Categoría</label><select id="cmpCategoryB"><option value="">Todas</option></select></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="comparisonSummary">
+              <div id="cmpCardA" class="comparisonCard"></div>
+              <div id="cmpCardB" class="comparisonCard"></div>
+              <div id="cmpDifference" class="comparisonDifference"></div>
+            </div>
+
+            <div class="comparisonCharts">
+              <div class="chartCard">
+                <h3>⚡ Productividad A vs B</h3>
+                <div class="chartCanvasWrap"><canvas id="cmpProductivityChart"></canvas></div>
+              </div>
+              <div class="chartCard">
+                <h3>🧩 Comparación por categoría</h3>
+                <div class="chartCanvasWrap"><canvas id="cmpCategoryChart"></canvas></div>
+              </div>
+            </div>
+
+            <div class="comparisonTables">
+              <div class="subCard">
+                <h3>👥 Resumen por grupo</h3>
+                <div class="tableWrap">
+                  <table>
+                    <thead><tr><th>Grupo</th><th>Fecha</th><th>Operarios</th><th>Registros</th><th>Unidades</th><th>Horas netas</th><th>Prod. grupo u/h</th><th>Prom. persona u/h</th></tr></thead>
+                    <tbody id="cmpGroupBody"><tr><td colspan="8">Sin comparar</td></tr></tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="subCard">
+                <h3>👤 Detalle individual</h3>
+                <div class="tableWrap">
+                  <table>
+                    <thead><tr><th>Operario</th><th>Grupo</th><th>Unidades</th><th>Horas netas</th><th>Promedio u/h</th></tr></thead>
+                    <tbody id="cmpPeopleBody"><tr><td colspan="5">Sin comparar</td></tr></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div id="view-registros" class="supView card">
@@ -1471,19 +1654,19 @@
           </div>
 
           <div id="view-supervision" class="supView card">
-            <div class="sectionTitle"><h2>👀 Supervisión y auditoría</h2><button id="refreshSupervision" class="btn ghost">🔄 Revisar</button></div>
+            <div class="sectionTitle"><h2>⏸️ Control de pausas</h2><button id="refreshSupervision" class="btn ghost">🔄 Actualizar</button></div>
             <div class="filterGrid auditFilters">
               <div class="field"><label>Desde</label><input id="auditFrom" type="date"></div>
               <div class="field"><label>Hasta</label><input id="auditTo" type="date"></div>
               <div class="field"><label>Operario</label><select id="auditOperator"><option value="">Todos</option></select></div>
             </div>
             <div class="miniKpis">
-              <div class="miniKpi"><span>Registros revisados</span><strong id="auditReviewed">—</strong></div>
-              <div class="miniKpi"><span>Alertas</span><strong id="auditAlerts">—</strong></div>
-              <div class="miniKpi"><span>Pausas altas</span><strong id="auditPauses">—</strong></div>
-              <div class="miniKpi"><span>Duraciones largas</span><strong id="auditLong">—</strong></div>
+              <div class="miniKpi"><span>Registros con pausa</span><strong id="auditReviewed">—</strong></div>
+              <div class="miniKpi"><span>Total pausas</span><strong id="auditAlerts">—</strong></div>
+              <div class="miniKpi"><span>Tiempo total pausa</span><strong id="auditPauses">—</strong></div>
+              <div class="miniKpi"><span>Pausas ≥ 60 min</span><strong id="auditLong">—</strong></div>
             </div>
-            <div class="tableWrap"><table><thead><tr><th>Fecha</th><th>Operario</th><th>Proceso</th><th>Código</th><th>U/H</th><th>Tiempo neto</th><th>Pausa</th><th>Motivo(s) pausa</th><th>Alerta</th></tr></thead><tbody id="auditBody"><tr><td colspan="9">Sin revisar</td></tr></tbody></table></div>
+            <div class="tableWrap"><table><thead><tr><th>Fecha</th><th>Operario</th><th>Proceso</th><th>Código</th><th>Tiempo neto</th><th>Tiempo pausa</th><th>Motivo(s)</th><th># pausas</th></tr></thead><tbody id="auditBody"><tr><td colspan="8">Sin cargar</td></tr></tbody></table></div>
           </div>
 
           <div id="view-data" class="supView card">
@@ -1557,6 +1740,119 @@
   </div>
 </div>
 
+
+
+<div id="manualRecordModal" class="modalBackdrop">
+  <div class="modalCard" style="width:min(760px,96vw)">
+    <div class="modalHead">
+      <h2>📝 Ingreso manual de registro</h2>
+      <button id="closeManualRecordModal" class="btn ghost">✕ Cerrar</button>
+    </div>
+
+    <div class="recordEditMeta">
+      Registro excepcional para trabajos que no fueron marcados desde Operarios.
+    </div>
+
+    <div class="recordEditGrid">
+      <div class="field">
+        <label>Fecha</label>
+        <input id="manualDate" type="date">
+      </div>
+
+      <div class="field">
+        <label>Operario</label>
+        <select id="manualOperator"><option value="">Seleccionar</option></select>
+      </div>
+
+      <div class="field">
+        <label>Proceso</label>
+        <select id="manualProcess">
+          <option value="etiquetado">🏷️ Etiquetado</option>
+          <option value="armado">📦 Armado</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Código</label>
+        <input id="manualCode" inputmode="numeric" placeholder="Ej. 46966">
+      </div>
+
+      <div class="field">
+        <label>Unidades</label>
+        <input id="manualUnits" type="number" min="1" inputmode="numeric" placeholder="Ej. 500">
+      </div>
+
+      <div class="field">
+        <label>Pausa total (min)</label>
+        <input id="manualPauseMinutes" type="number" min="0" inputmode="numeric" value="0">
+      </div>
+
+      <div class="field">
+        <label>Hora inicio</label>
+        <input id="manualStartTime" type="time">
+      </div>
+
+      <div class="field">
+        <label>Hora fin</label>
+        <input id="manualEndTime" type="time">
+      </div>
+
+      <div class="field">
+        <label>Caducidad</label>
+        <select id="manualExpiryType">
+          <option value="fecha">📅 Caduca</option>
+          <option value="no_caduca">♾️ No caduca</option>
+        </select>
+      </div>
+
+      <div id="manualExpiryMonthWrap" class="field">
+        <label>Mes</label>
+        <select id="manualExpiryMonth">
+          <option value="">Mes</option>
+          <option value="01">01</option><option value="02">02</option><option value="03">03</option>
+          <option value="04">04</option><option value="05">05</option><option value="06">06</option>
+          <option value="07">07</option><option value="08">08</option><option value="09">09</option>
+          <option value="10">10</option><option value="11">11</option><option value="12">12</option>
+        </select>
+      </div>
+
+      <div id="manualExpiryYearWrap" class="field">
+        <label>Año</label>
+        <select id="manualExpiryYear"><option value="">Año</option></select>
+      </div>
+
+      <div class="field">
+        <label>Novedad</label>
+        <select id="manualNoveltyType">
+          <option value="none">✅ Sin novedad</option>
+          <option value="sobrante">➕ Sobrante</option>
+          <option value="faltante">➖ Faltante</option>
+          <option value="danado">💥 Dañado</option>
+        </select>
+      </div>
+
+      <div id="manualNoveltyQtyWrap" class="field hidden">
+        <label>Cantidad novedad</label>
+        <input id="manualNoveltyQty" type="number" min="1" inputmode="numeric">
+      </div>
+
+      <div class="field full">
+        <label>Comentario</label>
+        <textarea id="manualComment" maxlength="300"
+          placeholder="Ej. Registro ingresado manualmente porque no se inició el cronómetro."
+          style="width:100%;min-height:82px;resize:vertical;padding:10px 12px;border:1px solid #ccd7d0;border-radius:12px;font:inherit"></textarea>
+      </div>
+    </div>
+
+    <div id="manualCalcPreview" class="recordEditMeta" style="margin-top:10px">
+      Tiempo neto: — · Productividad: —
+    </div>
+
+    <div class="recordEditActions">
+      <button id="saveManualRecord" class="btn primary">💾 Guardar registro manual</button>
+    </div>
+  </div>
+</div>
 
 <div id="historyModal" class="modalBackdrop">
   <div class="modalCard" style="width:min(720px,96vw)">
@@ -1769,6 +2065,9 @@
       pauseTotal:0,
       pauses:[],
       qtyMode:'total',
+      qtyTotal:'',
+      qtyBoxes:'',
+      qtyPerBox:'',
       expiryMode:'date',
       expiryMonth:'',
       expiryYear:'',
@@ -1902,6 +2201,9 @@
               pauseTotal:Number(x.pausa_total_ms||0),
               pauses:Array.isArray(x.pausas)?x.pausas:[],
               qtyMode:'total',
+              qtyTotal:'',
+              qtyBoxes:'',
+              qtyPerBox:'',
               expiryMode:'date',
               expiryMonth:'',
               expiryYear:'',
@@ -2245,7 +2547,7 @@
                 ${['sobrante','faltante','danado'].includes(s.noveltyType)?`
                   <div class="field noveltyQty">
                     <label>Cantidad ${s.noveltyType}</label>
-                    <input id="noveltyQty" type="number" min="1" inputmode="numeric" placeholder="Ej. 2">
+                    <input id="noveltyQty" type="number" min="1" inputmode="numeric" placeholder="Ej. 2" value="${s.noveltyQty||''}">
                   </div>
                 `:''}
               </div>
@@ -2261,20 +2563,20 @@
                 ${(s.qtyMode||'total')==='total'?`
                   <div class="field">
                     <label>Unidades procesadas</label>
-                    <input id="qtyInput" type="number" min="1" inputmode="numeric" placeholder="Ej. 1080">
+                    <input id="qtyInput" type="number" min="1" inputmode="numeric" placeholder="Ej. 1080" value="${s.qtyTotal||''}">
                   </div>
                 `:`
                   <div class="qtyBoxesGrid">
                     <div class="field">
                       <label>N.º cajas</label>
-                      <input id="qtyBoxes" type="number" min="1" inputmode="numeric" placeholder="Ej. 12">
+                      <input id="qtyBoxes" type="number" min="1" inputmode="numeric" placeholder="Ej. 12" value="${s.qtyBoxes||''}">
                     </div>
                     <div class="field">
                       <label>Unidades/caja</label>
-                      <input id="qtyPerBox" type="number" min="1" inputmode="numeric" placeholder="Ej. 90">
+                      <input id="qtyPerBox" type="number" min="1" inputmode="numeric" placeholder="Ej. 90" value="${s.qtyPerBox||''}">
                     </div>
                   </div>
-                  <div id="qtyCalculated" class="qtyCalculated">0 unidades</div>
+                  <div id="qtyCalculated" class="qtyCalculated">${((Number(s.qtyBoxes)||0)*(Number(s.qtyPerBox)||0)).toLocaleString('es-EC')} unidades</div>
                 `}
               </div>
 
@@ -2329,6 +2631,17 @@
         <button id="closeDaySession" class="btn ghost">🚪 Cerrar sesión del día</button>
       </div>`:''}`;
 
+    const preserveFinishInputs=()=>{
+      if(s.state!=='finishing')return;
+      if($("qtyInput"))s.qtyTotal=$("qtyInput").value;
+      if($("qtyBoxes"))s.qtyBoxes=$("qtyBoxes").value;
+      if($("qtyPerBox"))s.qtyPerBox=$("qtyPerBox").value;
+      if($("noveltyQty"))s.noveltyQty=Math.floor(safeNum($("noveltyQty").value));
+      if($("expiryMonth"))s.expiryMonth=$("expiryMonth").value;
+      if($("expiryYear"))s.expiryYear=$("expiryYear").value;
+      if($("finishComment"))s.comment=$("finishComment").value;
+    };
+
     $("changeProcessBtn")?.addEventListener('click',()=>{s.processMenuOpen=!s.processMenuOpen;renderWorkspace()});
     $("switchEtiquetado")?.addEventListener('click',()=>changeOperatorProcess(s,'etiquetado'));
     $("switchArmado")?.addEventListener('click',()=>changeOperatorProcess(s,'armado'));
@@ -2339,11 +2652,13 @@
     $("resumeBtn")?.addEventListener('click',()=>resumeWork(s));
     $("finishBtn")?.addEventListener('click',()=>showFinish(s));
     $("qtyModeTotal")?.addEventListener('click',()=>{
+      preserveFinishInputs();
       s.qtyMode='total';
       renderWorkspace();
       setTimeout(()=>$("qtyInput")?.focus(),60);
     });
     $("qtyModeBoxes")?.addEventListener('click',()=>{
+      preserveFinishInputs();
       s.qtyMode='boxes';
       renderWorkspace();
       setTimeout(()=>$("qtyBoxes")?.focus(),60);
@@ -2352,9 +2667,12 @@
     const updateQtyCalculated=()=>{
       const boxes=Number($("qtyBoxes")?.value||0);
       const perBox=Number($("qtyPerBox")?.value||0);
+      s.qtyBoxes=$("qtyBoxes")?.value||'';
+      s.qtyPerBox=$("qtyPerBox")?.value||'';
       const total=boxes*perBox;
       if($("qtyCalculated"))$("qtyCalculated").textContent=`${total.toLocaleString('es-EC')} unidades`;
     };
+    $("qtyInput")?.addEventListener('input',e=>{s.qtyTotal=e.target.value});
     $("qtyBoxes")?.addEventListener('input',updateQtyCalculated);
     $("qtyPerBox")?.addEventListener('input',updateQtyCalculated);
 
@@ -2363,10 +2681,12 @@
     $("qtyBoxes")?.addEventListener('keydown',e=>{if(e.key==='Enter')$("qtyPerBox")?.focus()});
     $("qtyPerBox")?.addEventListener('keydown',e=>{if(e.key==='Enter')confirmFinish(s)});
     $("expiryModeDate")?.addEventListener('click',()=>{
+      preserveFinishInputs();
       s.expiryMode='date';
       renderWorkspace();
     });
     $("expiryModeNone")?.addEventListener('click',()=>{
+      preserveFinishInputs();
       s.expiryMode='none';
       s.expiryMonth='';
       s.expiryYear='';
@@ -2377,18 +2697,21 @@
     $("expiryYear")?.addEventListener('change',e=>{s.expiryYear=e.target.value});
 
     $("noveltyOver")?.addEventListener('click',()=>{
+      preserveFinishInputs();
       s.noveltyType=s.noveltyType==='sobrante'?'none':'sobrante';
       s.noveltyQty=0;
       renderWorkspace();
       if(s.noveltyType==='sobrante')setTimeout(()=>$("noveltyQty")?.focus(),60);
     });
     $("noveltyShort")?.addEventListener('click',()=>{
+      preserveFinishInputs();
       s.noveltyType=s.noveltyType==='faltante'?'none':'faltante';
       s.noveltyQty=0;
       renderWorkspace();
       if(s.noveltyType==='faltante')setTimeout(()=>$("noveltyQty")?.focus(),60);
     });
     $("noveltyDamaged")?.addEventListener('click',()=>{
+      preserveFinishInputs();
       s.noveltyType=s.noveltyType==='danado'?'none':'danado';
       s.noveltyQty=0;
       renderWorkspace();
@@ -2524,6 +2847,11 @@
     renderOpTabs();renderWorkspace();
   }
   async function showFinish(s){
+    s.qtyTotal=s.qtyTotal||'';
+    s.qtyBoxes=s.qtyBoxes||'';
+    s.qtyPerBox=s.qtyPerBox||'';
+    s.noveltyType=s.noveltyType||'none';
+    s.comment=s.comment||'';
     if(!['running','paused'].includes(s.state)) return;
 
     const now=Date.now();
@@ -2569,12 +2897,12 @@
     let unidadesPorCaja=null;
 
     if((s.qtyMode||'total')==='boxes'){
-      cajas=Math.floor(safeNum($("qtyBoxes")?.value));
-      unidadesPorCaja=Math.floor(safeNum($("qtyPerBox")?.value));
+      cajas=Math.floor(safeNum($("qtyBoxes")?.value||s.qtyBoxes));
+      unidadesPorCaja=Math.floor(safeNum($("qtyPerBox")?.value||s.qtyPerBox));
       if(cajas<=0||unidadesPorCaja<=0)return toast('⚠️ Ingresa cajas y unidades por caja');
       qty=cajas*unidadesPorCaja;
     }else{
-      qty=Math.floor(safeNum($("qtyInput")?.value));
+      qty=Math.floor(safeNum($("qtyInput")?.value||s.qtyTotal));
       if(qty<=0)return toast('⚠️ Ingresa las unidades procesadas');
     }
 
@@ -2604,7 +2932,7 @@
   function startTimerLoop(s){if(s.interval)clearInterval(s.interval);s.interval=setInterval(()=>{if(activeOpId!==s.operator.id)return;const el=$("timer");if(el)el.textContent=fmtTimer(currentElapsed(s));},500)}
 
 
-  // Data de productos oculta: Ctrl + Shift + O
+  // Opciones ocultas: Ctrl + Shift + O
   function openProductModal(){
     if(!supervisorUnlocked){
       toast('🔒 Ingresa primero como Supervisor');
@@ -2613,15 +2941,270 @@
     $("productModal").classList.add('show');
   }
   function closeProductModal(){ $("productModal").classList.remove('show'); }
+
   document.addEventListener('keydown',e=>{
     if(e.ctrlKey && e.shiftKey && e.key.toLowerCase()==='o'){
       e.preventDefault();
-      openProductModal();
+
+      if(!supervisorUnlocked){
+        toast('🔒 Ingresa primero como Supervisor');
+        return;
+      }
+
+      if($("view-registros")?.classList.contains('active')){
+        openManualRecordModal();
+      }else{
+        openProductModal();
+      }
     }
-    if(e.key==='Escape') closeProductModal();
+
+    if(e.key==='Escape'){
+      closeProductModal();
+      closeManualRecordModal();
+    }
   });
+
   $("closeProductModal").onclick=closeProductModal;
   $("productModal").addEventListener('click',e=>{if(e.target===$("productModal"))closeProductModal()});
+
+  // ---------- INGRESO MANUAL DE REGISTRO ----------
+  function manualLocalDateTime(date,time){
+    return `${date}T${time}:00`;
+  }
+
+  function manualDateMs(date,time){
+    const d=new Date(`${date}T${time}:00`);
+    return Number.isNaN(d.getTime())?null:d.getTime();
+  }
+
+  function fillManualYears(){
+    const sel=$("manualExpiryYear");
+    if(!sel)return;
+    const current=new Date().getFullYear();
+    sel.innerHTML='<option value="">Año</option>'+
+      Array.from({length:20},(_,i)=>`<option value="${current+i}">${current+i}</option>`).join('');
+  }
+
+  function toggleManualFields(){
+    const noExpiry=$("manualExpiryType")?.value==='no_caduca';
+    $("manualExpiryMonthWrap")?.classList.toggle('hidden',noExpiry);
+    $("manualExpiryYearWrap")?.classList.toggle('hidden',noExpiry);
+
+    const noNovelty=$("manualNoveltyType")?.value==='none';
+    $("manualNoveltyQtyWrap")?.classList.toggle('hidden',noNovelty);
+    updateManualPreview();
+  }
+
+  function updateManualPreview(){
+    const date=$("manualDate")?.value;
+    const start=$("manualStartTime")?.value;
+    const end=$("manualEndTime")?.value;
+    const units=Math.floor(safeNum($("manualUnits")?.value));
+    const pauseMin=Math.max(0,safeNum($("manualPauseMinutes")?.value));
+
+    if(!date||!start||!end){
+      if($("manualCalcPreview"))$("manualCalcPreview").textContent='Tiempo neto: — · Productividad: —';
+      return;
+    }
+
+    const startMs=manualDateMs(date,start),endMs=manualDateMs(date,end);
+    if(startMs===null||endMs===null||endMs<=startMs){
+      if($("manualCalcPreview"))$("manualCalcPreview").textContent='⚠️ Revisa hora de inicio y fin';
+      return;
+    }
+
+    const netMs=Math.max(0,endMs-startMs-(pauseMin*60000));
+    const uph=netMs>0&&units>0?Math.round(units/(netMs/3600000)):0;
+    if($("manualCalcPreview")){
+      $("manualCalcPreview").textContent=`Tiempo neto: ${fmtTimer(netMs)} · Productividad: ${uph?fmtInt(uph)+' u/h':'—'}`;
+    }
+  }
+
+  async function populateManualOperators(){
+    const sel=$("manualOperator");
+    if(!sel)return;
+
+    try{
+      let list=operators;
+      if(!list.length){
+        const snap=await getDocs(collection(db,'operarios'));
+        list=snap.docs.map(d=>({id:d.id,...d.data()}));
+      }
+
+      list=[...list]
+        .filter(x=>x.activo!==false)
+        .sort((a,b)=>norm(a.nombre).localeCompare(norm(b.nombre),'es'));
+
+      sel.innerHTML='<option value="">Seleccionar</option>'+
+        list.map(x=>`<option value="${x.id}">${x.nombre} · ${x.tipo||''}</option>`).join('');
+    }catch(e){
+      sel.innerHTML='<option value="">No se pudieron cargar operarios</option>';
+    }
+  }
+
+  async function openManualRecordModal(){
+    if(!supervisorUnlocked)return toast('🔒 Ingresa primero como Supervisor');
+
+    fillManualYears();
+    await populateManualOperators();
+
+    const now=new Date();
+    const z=n=>String(n).padStart(2,'0');
+    const today=`${now.getFullYear()}-${z(now.getMonth()+1)}-${z(now.getDate())}`;
+
+    $("manualDate").value=today;
+    $("manualProcess").value='etiquetado';
+    $("manualCode").value='';
+    $("manualUnits").value='';
+    $("manualPauseMinutes").value='0';
+    $("manualStartTime").value='';
+    $("manualEndTime").value='';
+    $("manualExpiryType").value='fecha';
+    $("manualExpiryMonth").value='';
+    $("manualExpiryYear").value='';
+    $("manualNoveltyType").value='none';
+    $("manualNoveltyQty").value='';
+    $("manualComment").value='';
+
+    toggleManualFields();
+    $("manualRecordModal").classList.add('show');
+  }
+
+  function closeManualRecordModal(){
+    $("manualRecordModal")?.classList.remove('show');
+  }
+
+  $("closeManualRecordModal").onclick=closeManualRecordModal;
+  $("manualRecordModal").addEventListener('click',e=>{
+    if(e.target===$("manualRecordModal"))closeManualRecordModal();
+  });
+
+  ["manualDate","manualStartTime","manualEndTime","manualUnits","manualPauseMinutes"].forEach(id=>{
+    $(id)?.addEventListener('input',updateManualPreview);
+    $(id)?.addEventListener('change',updateManualPreview);
+  });
+
+  $("manualExpiryType").addEventListener('change',toggleManualFields);
+  $("manualNoveltyType").addEventListener('change',toggleManualFields);
+
+  $("saveManualRecord").onclick=async()=>{
+    const date=$("manualDate").value;
+    const operatorId=$("manualOperator").value;
+    const process=$("manualProcess").value==='armado'?'armado':'etiquetado';
+    const code=norm($("manualCode").value);
+    const units=Math.floor(safeNum($("manualUnits").value));
+    const startTime=$("manualStartTime").value;
+    const endTime=$("manualEndTime").value;
+    const pauseMinutes=Math.max(0,safeNum($("manualPauseMinutes").value));
+
+    if(!date)return toast('⚠️ Selecciona la fecha');
+    if(!operatorId)return toast('⚠️ Selecciona el operario');
+    if(!code)return toast('⚠️ Ingresa el código');
+    if(units<=0)return toast('⚠️ Ingresa las unidades');
+    if(!startTime||!endTime)return toast('⚠️ Ingresa hora de inicio y fin');
+
+    const startMs=manualDateMs(date,startTime);
+    const endMs=manualDateMs(date,endTime);
+    if(startMs===null||endMs===null||endMs<=startMs)return toast('⚠️ La hora fin debe ser posterior a la hora inicio');
+
+    const pauseMs=Math.round(pauseMinutes*60000);
+    const netMs=endMs-startMs-pauseMs;
+    if(netMs<=0)return toast('⚠️ La pausa no puede ser igual o mayor al tiempo trabajado');
+
+    const op=operators.find(x=>x.id===operatorId);
+    if(!op)return toast('⚠️ No se encontró el operario');
+
+    let product;
+    try{
+      product=await getProductByCode(code);
+      if(!product)return toast('⚠️ El código no existe en la data de productos');
+    }catch(e){
+      return toast('⚠️ No se pudo validar el código');
+    }
+
+    const description=product.descripcion||'';
+    const category=(await getManualCategory(code))||classifyProduct(description).categoria;
+
+    let meta=null;
+    if(process==='etiquetado'){
+      try{
+        const metaSnap=await getDoc(doc(db,'metas',code));
+        meta=metaSnap.exists()?Number(metaSnap.data().meta_u_h||0)||null:null;
+      }catch{}
+    }
+
+    const uph=Math.round(units/(netMs/3600000));
+    const compliance=meta?Math.round((uph/meta)*1000)/10:null;
+
+    const expiryType=$("manualExpiryType").value;
+    const expiryMonth=expiryType==='no_caduca'?'':$("manualExpiryMonth").value;
+    const expiryYear=expiryType==='no_caduca'?null:Number($("manualExpiryYear").value||0);
+    if(expiryType==='fecha'&&(!expiryMonth||!expiryYear))return toast('⚠️ Selecciona mes y año de caducidad');
+
+    const noveltyType=$("manualNoveltyType").value||'none';
+    const noveltyQty=noveltyType==='none'?0:Math.floor(safeNum($("manualNoveltyQty").value));
+    if(noveltyType!=='none'&&noveltyQty<=0)return toast('⚠️ Ingresa la cantidad de novedad');
+
+    const comment=norm($("manualComment").value);
+
+    const data={
+      fecha_local:date,
+      inicio_local:manualLocalDateTime(date,startTime),
+      fin_local:manualLocalDateTime(date,endTime),
+      operarioId:op.id,
+      operario:op.nombre,
+      tipo_personal:op.tipo||'',
+      proceso:process,
+      codigo:code,
+      descripcion:description,
+      categoria:category,
+      unidades:units,
+      modo_registro_unidades:'manual',
+      cajas:null,
+      unidades_por_caja:null,
+      caducidad_tipo:expiryType,
+      caducidad_mes:expiryMonth,
+      caducidad_anio:expiryYear,
+      novedad_tipo:noveltyType,
+      novedad_cantidad:noveltyQty,
+      comentario:comment,
+      tiempo_neto_ms:netMs,
+      tiempo_pausa_ms:pauseMs,
+      productividad_u_h:uph,
+      meta_u_h:meta,
+      cumplimiento_pct:compliance,
+      pausas:[],
+      registro_manual:true,
+      creado_por_supervisor:currentSupervisorUser(),
+      creado_local:localISO(),
+      creado_en:serverTimestamp()
+    };
+
+    try{
+      const ref=await addDoc(collection(db,'registros_etiquetado'),data);
+
+      await logAudit({
+        accion:'Registro manual creado',
+        entidad:'registro',
+        entidadId:ref.id,
+        detalle:`${op.nombre} · ${code} · ${date}`,
+        cambios:[
+          {campo:'Proceso',anterior:'',nuevo:processName(process)},
+          {campo:'Unidades',anterior:'',nuevo:units},
+          {campo:'Tiempo neto',anterior:'',nuevo:fmtTimer(netMs)}
+        ]
+      });
+
+      invalidateRecordCaches();
+      closeManualRecordModal();
+      toast(`✅ Registro manual guardado · ${fmtInt(uph)} u/h`);
+      await loadRecords(true);
+
+      if($("view-dashboard")?.classList.contains('active'))await loadDashboard(true);
+    }catch(e){
+      toast('❌ No se pudo guardar el registro manual: '+e.message);
+    }
+  };
 
   // ---------- SUPERVISOR ----------
   let supervisorRecordsCache=[];
@@ -2707,6 +3290,7 @@
     if(b.dataset.view==='reporte') await loadDailyReport();
     if(b.dataset.view==='productividad') await loadProductivity();
     if(b.dataset.view==='graficos') await loadCharts();
+    if(b.dataset.view==='comparativo') await loadComparison(false);
     if(b.dataset.view==='metas') await loadEvaluation();
     if(b.dataset.view==='supervision') await loadSupervision();
     if(b.dataset.view==='data') await loadDataSummary();
@@ -2934,6 +3518,14 @@
   }
   $("refreshDashboard").onclick=()=>loadDashboard(true);
 
+  function operatorTypeByName(name){
+    const op=operators.find(o=>norm(o.nombre).toLocaleLowerCase('es')===norm(name).toLocaleLowerCase('es'));
+    return op?.tipo||'Ransa';
+  }
+  function isMaquilaName(name){
+    return norm(operatorTypeByName(name)).toLocaleLowerCase('es').includes('maquila');
+  }
+
   function fillProductivityFilters(records){
     const ops=[...new Set(records.map(x=>x.operario).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
     const fams=[...new Set(records.map(x=>recordCategory(x)).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
@@ -2986,9 +3578,11 @@
     }).sort((a,b)=>b.average-a.average);
 
     let html='';
-    data.forEach(g=>{
+    data.forEach((g,rankIndex)=>{
       const clickable=groupBy==='operario';
-      html+=`<tr><td>${clickable?`<button class="operatorDrillBtn" data-operator="${g.key}">${productivityExpandedOperator===g.key?'▾':'▸'} ${g.key}</button>`:`<b>${g.key}</b>`}</td><td>${fmtInt(g.records)}</td><td>${fmtInt(g.units)}</td><td><b>${fmtInt(g.average)}</b></td><td>${fmtInt(g.best)}</td><td>${g.ref}</td></tr>`;
+      const medal=clickable&&rankIndex<3?['🥇','🥈','🥉'][rankIndex]:'';
+      const maquilaClass=clickable&&isMaquilaName(g.key)?' maquilaOperator':'';
+      html+=`<tr><td>${clickable?`<span class="rankMedal">${medal}</span><button class="operatorDrillBtn${maquilaClass}" data-operator="${g.key}">${productivityExpandedOperator===g.key?'▾':'▸'} ${g.key}</button>`:`<b>${g.key}</b>`}</td><td>${fmtInt(g.records)}</td><td>${fmtInt(g.units)}</td><td><b>${fmtInt(g.average)}</b></td><td>${fmtInt(g.best)}</td><td>${g.ref}</td></tr>`;
       if(clickable&&productivityExpandedOperator===g.key){
         const details=[...g.arr].sort((a,b)=>String(a.inicio_local||'').localeCompare(String(b.inicio_local||'')));
         html+=`<tr class="detailRow"><td colspan="6"><div class="operatorDetailBox"><div class="tableWrap"><table style="min-width:880px"><thead><tr><th>Código</th><th>Descripción</th><th>Categoría</th><th>Unidades</th><th>Min netos</th><th>U/H</th><th>Novedad</th><th>Comentario</th></tr></thead><tbody>${details.map(x=>`<tr><td>${x.codigo||'—'}</td><td title="${x.descripcion||''}">${shortDescription(x.descripcion)}</td><td>${recordCategory(x)}</td><td>${fmtInt(x.unidades)}</td><td>${Math.round(Number(x.tiempo_neto_ms||0)/60000)}</td><td><b>${fmtInt(x.productividad_u_h||0)}</b></td><td>${noveltyLabel(x)}</td><td>${x.comentario||'—'}</td></tr>`).join('')}</tbody></table></div></div></td></tr>`;
@@ -3070,27 +3664,226 @@
 
   async function loadSupervision(force=false){
     try{
-      const today=localISO().slice(0,10);const from=$("auditFrom").value||today,to=$("auditTo").value||today;$("auditFrom").value=from;$("auditTo").value=to;
+      const today=localISO().slice(0,10);
+      const from=$("auditFrom").value||today,to=$("auditTo").value||today;
+      $("auditFrom").value=from;$("auditTo").value=to;
       if(from>to)return toast('⚠️ La fecha Desde no puede ser mayor que Hasta');
+
       const all=await getRecordsByRange(from,to);
-      const ops=[...new Set(all.map(x=>x.operario).filter(Boolean))].sort((a,b)=>a.localeCompare(b));const sel=$("auditOperator"),cur=sel.value;sel.innerHTML='<option value="">Todos</option>'+ops.map(v=>`<option>${v}</option>`).join('');if(ops.includes(cur))sel.value=cur;
-      const op=sel.value;const records=all.filter(x=>!op||x.operario===op);
-      const alerts=[];let pauseHigh=0,longCount=0;
+      const ops=[...new Set(all.map(x=>x.operario).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+      const sel=$("auditOperator"),cur=sel.value;
+      sel.innerHTML='<option value="">Todos</option>'+ops.map(v=>`<option>${v}</option>`).join('');
+      if(ops.includes(cur))sel.value=cur;
+
+      const op=sel.value;
+      const records=all.filter(x=>(!op||x.operario===op)&&Number(x.tiempo_pausa_ms||0)>0);
+
+      let totalPauseMs=0,totalPauses=0,highPause=0;
       records.forEach(x=>{
-        const net=Number(x.tiempo_neto_ms||0),pause=Number(x.tiempo_pausa_ms||0),uph=Number(x.productividad_u_h||0),meta=Number(x.meta_u_h||0),proc=x.proceso||'etiquetado';const reasons=[];
-        if(net>=8*3600000){reasons.push('Duración neta ≥ 8 h');longCount++}
-        if(pause>=60*60000){reasons.push('Pausa acumulada ≥ 60 min');pauseHigh++}
-        if(proc==='etiquetado'&&meta>0&&uph>0){if(uph<meta*.35)reasons.push('Muy por debajo de meta');if(uph>meta*2.5)reasons.push('Productividad atípicamente alta')}
-        if(proc==='etiquetado'&&!meta&&uph>0&&uph<150)reasons.push('Productividad muy baja sin meta');
-        if(reasons.length)alerts.push({x,reasons});
+        const pauses=Array.isArray(x.pausas)?x.pausas:[];
+        totalPauses+=pauses.length;
+        totalPauseMs+=Number(x.tiempo_pausa_ms||0);
+        if(Number(x.tiempo_pausa_ms||0)>=60*60000)highPause++;
       });
-      $("auditReviewed").textContent=fmtInt(records.length);$("auditAlerts").textContent=fmtInt(alerts.length);$("auditPauses").textContent=fmtInt(pauseHigh);$("auditLong").textContent=fmtInt(longCount);
-      $("auditBody").innerHTML=alerts.length?alerts.map(({x,reasons})=>`<tr><td>${x.fecha_local||'—'}</td><td>${x.operario||'—'}</td><td>${processName(x.proceso)}</td><td>${x.codigo||'—'}</td><td>${fmtInt(x.productividad_u_h||0)}</td><td>${fmtTimer(Number(x.tiempo_neto_ms||0))}</td><td>${fmtTimer(Number(x.tiempo_pausa_ms||0))}</td><td class="pauseReasons">${pauseReasonsLabel(x)}</td><td><span class="statusPill warn">⚠️ ${reasons.join(' · ')}</span></td></tr>`).join(''):'<tr><td colspan="9"><div class="emptyState">✅ No se detectaron alertas para los filtros seleccionados.</div></td></tr>';
-    }catch(e){$("auditBody").innerHTML=`<tr><td colspan="9">${e.message}</td></tr>`}
+
+      $("auditReviewed").textContent=fmtInt(records.length);
+      $("auditAlerts").textContent=fmtInt(totalPauses);
+      $("auditPauses").textContent=fmtTimer(totalPauseMs);
+      $("auditLong").textContent=fmtInt(highPause);
+
+      $("auditBody").innerHTML=records.length?records
+        .sort((a,b)=>String(a.fecha_local||'').localeCompare(String(b.fecha_local||''))||String(a.inicio_local||'').localeCompare(String(b.inicio_local||'')))
+        .map(x=>{
+          const pauses=Array.isArray(x.pausas)?x.pausas:[];
+          return `<tr>
+            <td>${x.fecha_local||'—'}</td>
+            <td>${x.operario||'—'}</td>
+            <td>${processName(x.proceso)}</td>
+            <td>${x.codigo||'—'}</td>
+            <td>${fmtTimer(Number(x.tiempo_neto_ms||0))}</td>
+            <td><b>${fmtTimer(Number(x.tiempo_pausa_ms||0))}</b></td>
+            <td class="pauseReasons">${pauseReasonsLabel(x)}</td>
+            <td>${fmtInt(pauses.length)}</td>
+          </tr>`;
+        }).join('')
+        :'<tr><td colspan="8"><div class="emptyState">Sin pausas para los filtros seleccionados.</div></td></tr>';
+    }catch(e){
+      $("auditBody").innerHTML=`<tr><td colspan="8">${e.message}</td></tr>`;
+    }
   }
   const auditToday=localISO().slice(0,10);$("auditFrom").value=auditToday;$("auditTo").value=auditToday;
   $("refreshSupervision").onclick=()=>loadSupervision(true);
   $("auditFrom").addEventListener('change',()=>loadSupervision(false));$("auditTo").addEventListener('change',()=>loadSupervision(false));$("auditOperator").addEventListener('change',()=>loadSupervision(false));
+
+  // ---------- COMPARATIVO OPERATIVO ----------
+  let comparisonCharts={productivity:null,category:null};
+
+  function groupBadge(type){
+    return type==='Maquila'
+      ? '<span class="groupPillMaquila">Maquila</span>'
+      : '<span class="groupPillRansa">Ransa</span>';
+  }
+
+  function groupFilteredRows(records,type,process,category){
+    return records.filter(x=>{
+      const p=x.proceso||'etiquetado';
+      const t=operatorTypeByName(x.operario);
+      return norm(t).toLocaleLowerCase('es')===norm(type).toLocaleLowerCase('es')
+        && (process==='todos'||p===process)
+        && (!category||recordCategory(x)===category)
+        && Number(x.tiempo_neto_ms||0)>0;
+    });
+  }
+
+  function comparisonStats(rows){
+    const operatorsMap=new Map();
+    rows.forEach(x=>{
+      const name=x.operario||'Sin operario';
+      if(!operatorsMap.has(name))operatorsMap.set(name,[]);
+      operatorsMap.get(name).push(x);
+    });
+    const personRows=[...operatorsMap.entries()].map(([name,arr])=>({
+      name,
+      units:arr.reduce((s,x)=>s+Number(x.unidades||0),0),
+      hours:arr.reduce((s,x)=>s+Number(x.tiempo_neto_ms||0),0)/3600000,
+      uph:weightedUph(arr)
+    })).sort((a,b)=>b.uph-a.uph);
+
+    const totalMs=rows.reduce((s,x)=>s+Number(x.tiempo_neto_ms||0),0);
+    const prod=weightedUph(rows);
+    const promPersona=personRows.length?Math.round(personRows.reduce((s,x)=>s+x.uph,0)/personRows.length):0;
+    return {
+      operators:personRows.length,
+      records:rows.length,
+      units:rows.reduce((s,x)=>s+Number(x.unidades||0),0),
+      hours:totalMs/3600000,
+      prod,
+      promPersona,
+      people:personRows
+    };
+  }
+
+  function fillComparisonCategories(recordsA,recordsB){
+    const cats=[...new Set([...recordsA,...recordsB].map(x=>recordCategory(x)).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es'));
+    ['cmpCategoryA','cmpCategoryB'].forEach(id=>{
+      const sel=$(id),cur=sel.value;
+      sel.innerHTML='<option value="">Todas</option>'+cats.map(c=>`<option>${c}</option>`).join('');
+      if(cats.includes(cur))sel.value=cur;
+    });
+  }
+
+  function comparisonCardHtml(type,date,stats){
+    return `<h3>${groupBadge(type)} · ${date.split('-').reverse().join('/')}</h3>
+      <div class="comparisonMetrics">
+        <div class="comparisonMetric"><span>Operarios</span><strong>${fmtInt(stats.operators)}</strong></div>
+        <div class="comparisonMetric"><span>Unidades</span><strong>${fmtInt(stats.units)}</strong></div>
+        <div class="comparisonMetric"><span>Horas netas</span><strong>${stats.hours.toLocaleString('es-EC',{maximumFractionDigits:1})}</strong></div>
+        <div class="comparisonMetric"><span>Prod. grupo</span><strong>${fmtInt(stats.prod)} u/h</strong></div>
+        <div class="comparisonMetric"><span>Prom. persona</span><strong>${fmtInt(stats.promPersona)} u/h</strong></div>
+      </div>`;
+  }
+
+  function destroyComparisonCharts(){
+    Object.keys(comparisonCharts).forEach(k=>{if(comparisonCharts[k]){comparisonCharts[k].destroy();comparisonCharts[k]=null}});
+  }
+
+  async function loadComparison(force=false){
+    const dateA=$("cmpDateA").value||localISO().slice(0,10);
+    const dateB=$("cmpDateB").value||localISO().slice(0,10);
+    $("cmpDateA").value=dateA;$("cmpDateB").value=dateB;
+
+    const typeA=$("cmpTypeA").value,typeB=$("cmpTypeB").value;
+    const processA=$("cmpProcessA").value,processB=$("cmpProcessB").value;
+    try{
+      const [allA,allB]=await Promise.all([getRecordsByDate(dateA,force),getRecordsByDate(dateB,force)]);
+      fillComparisonCategories(allA,allB);
+      const catA=$("cmpCategoryA").value,catB=$("cmpCategoryB").value;
+      const rowsA=groupFilteredRows(allA,typeA,processA,catA);
+      const rowsB=groupFilteredRows(allB,typeB,processB,catB);
+      const a=comparisonStats(rowsA),b=comparisonStats(rowsB);
+
+      $("cmpCardA").className='comparisonCard';
+      $("cmpCardB").className='comparisonCard groupB';
+      $("cmpCardA").innerHTML=comparisonCardHtml(typeA,dateA,a);
+      $("cmpCardB").innerHTML=comparisonCardHtml(typeB,dateB,b);
+
+      const diff=a.prod>0?((b.prod-a.prod)/a.prod)*100:0;
+      const winner=diff>0?typeB:diff<0?typeA:'Igual';
+      const diffBox=$("cmpDifference");
+      diffBox.className='comparisonDifference'+(diff<0?' negative':'');
+      diffBox.innerHTML=`<h3>📈 Diferencia</h3><div class="bigDiff">${diff>=0?'+':''}${diff.toLocaleString('es-EC',{maximumFractionDigits:1})}%</div><div><b>${winner==='Igual'?'Mismo rendimiento':winner+' supera a '+(winner===typeA?typeB:typeA)}</b></div><div class="small">Comparación por productividad de grupo</div>`;
+
+      $("cmpGroupBody").innerHTML=[
+        {type:typeA,date:dateA,s:a},
+        {type:typeB,date:dateB,s:b}
+      ].map(x=>`<tr><td>${groupBadge(x.type)}</td><td>${x.date}</td><td>${fmtInt(x.s.operators)}</td><td>${fmtInt(x.s.records)}</td><td>${fmtInt(x.s.units)}</td><td>${x.s.hours.toLocaleString('es-EC',{maximumFractionDigits:1})}</td><td><b>${fmtInt(x.s.prod)}</b></td><td>${fmtInt(x.s.promPersona)}</td></tr>`).join('');
+
+      const people=[
+        ...a.people.map(x=>({...x,type:typeA})),
+        ...b.people.map(x=>({...x,type:typeB}))
+      ].sort((x,y)=>y.uph-x.uph);
+      $("cmpPeopleBody").innerHTML=people.length?people.map(x=>`<tr><td><b>${x.name}</b></td><td>${groupBadge(x.type)}</td><td>${fmtInt(x.units)}</td><td>${x.hours.toLocaleString('es-EC',{maximumFractionDigits:1})}</td><td><b>${fmtInt(x.uph)}</b></td></tr>`).join(''):'<tr><td colspan="5">Sin datos para la comparación.</td></tr>';
+
+      destroyComparisonCharts();
+      if(window.Chart){
+        const prodCanvas=$("cmpProductivityChart");
+        comparisonCharts.productivity=new Chart(prodCanvas,{
+          type:'bar',
+          data:{
+            labels:[typeA,typeB],
+            datasets:[{
+              label:'Productividad grupo u/h',
+              data:[a.prod,b.prod],
+              backgroundColor:['rgba(47,195,163,.62)','rgba(220,116,126,.48)'],
+              borderColor:['#159a80','#c35e69'],
+              borderWidth:1.5,
+              borderRadius:8
+            }]
+          },
+          plugins:[dataLabelsPlugin],
+          options:{
+            responsive:true,maintainAspectRatio:false,indexAxis:'y',
+            layout:{padding:{right:55}},
+            plugins:{legend:{display:false},professionalDataLabels:{suffix:' u/h'}},
+            scales:{x:{beginAtZero:true,grid:{color:'rgba(20,55,40,.06)'}},y:{grid:{display:false}}}
+          }
+        });
+
+        const cats=[...new Set([...rowsA,...rowsB].map(x=>recordCategory(x)).filter(Boolean))];
+        const catRows=cats.map(cat=>{
+          const ca=rowsA.filter(x=>recordCategory(x)===cat),cb=rowsB.filter(x=>recordCategory(x)===cat);
+          return {cat,a:ca.length?weightedUph(ca):0,b:cb.length?weightedUph(cb):0};
+        }).filter(x=>x.a||x.b).sort((x,y)=>Math.max(y.a,y.b)-Math.max(x.a,x.b)).slice(0,10);
+
+        const catCanvas=$("cmpCategoryChart");
+        catCanvas.parentElement.style.height=Math.max(280,catRows.length*36+80)+'px';
+        comparisonCharts.category=new Chart(catCanvas,{
+          type:'bar',
+          data:{
+            labels:catRows.map(x=>x.cat),
+            datasets:[
+              {label:typeA,data:catRows.map(x=>Math.round(x.a)),backgroundColor:'rgba(47,195,163,.60)',borderColor:'#159a80',borderWidth:1,borderRadius:6},
+              {label:typeB,data:catRows.map(x=>Math.round(x.b)),backgroundColor:'rgba(220,116,126,.42)',borderColor:'#c35e69',borderWidth:1,borderRadius:6}
+            ]
+          },
+          options:{
+            responsive:true,maintainAspectRatio:false,indexAxis:'y',
+            plugins:{legend:{position:'top',align:'end'}},
+            scales:{x:{beginAtZero:true,grid:{color:'rgba(20,55,40,.06)'}},y:{grid:{display:false}}}
+          }
+        });
+      }
+    }catch(e){
+      toast('⚠️ Comparativo: '+e.message);
+    }
+  }
+
+  const compareToday=localISO().slice(0,10);
+  $("cmpDateA").value=compareToday;$("cmpDateB").value=compareToday;
+  $("refreshComparison").onclick=()=>loadComparison(true);
+  ["cmpTypeA","cmpDateA","cmpProcessA","cmpCategoryA","cmpTypeB","cmpDateB","cmpProcessB","cmpCategoryB"].forEach(id=>{
+    $(id)?.addEventListener('change',()=>loadComparison(false));
+  });
 
   // ---------- GRÁFICOS DEL DÍA ----------
   let supervisorCharts={unitsWorker:null,productivityWorker:null,unitsHour:null,categoryProductivity:null};
