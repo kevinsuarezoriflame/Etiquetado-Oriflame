@@ -1122,11 +1122,6 @@
 
   
     /* ===== Identificación de grupos y ranking ===== */
-    .operatorDrillBtn.maquilaOperator{
-      color:#a74d56!important;
-      background:#fff0f1!important;
-      border-color:#f1c3c8!important;
-    }
     .rankMedal{
       display:inline-block;
       width:24px;
@@ -3581,8 +3576,8 @@
     data.forEach((g,rankIndex)=>{
       const clickable=groupBy==='operario';
       const medal=clickable&&rankIndex<3?['🥇','🥈','🥉'][rankIndex]:'';
-      const maquilaClass=clickable&&isMaquilaName(g.key)?' maquilaOperator':'';
-      html+=`<tr><td>${clickable?`<span class="rankMedal">${medal}</span><button class="operatorDrillBtn${maquilaClass}" data-operator="${g.key}">${productivityExpandedOperator===g.key?'▾':'▸'} ${g.key}</button>`:`<b>${g.key}</b>`}</td><td>${fmtInt(g.records)}</td><td>${fmtInt(g.units)}</td><td><b>${fmtInt(g.average)}</b></td><td>${fmtInt(g.best)}</td><td>${g.ref}</td></tr>`;
+      const displayName=clickable&&isMaquilaName(g.key)?`${g.key} (Maquila)`:g.key;
+      html+=`<tr><td>${clickable?`<span class="rankMedal">${medal}</span><button class="operatorDrillBtn" data-operator="${g.key}">${productivityExpandedOperator===g.key?'▾':'▸'} ${displayName}</button>`:`<b>${g.key}</b>`}</td><td>${fmtInt(g.records)}</td><td>${fmtInt(g.units)}</td><td><b>${fmtInt(g.average)}</b></td><td>${fmtInt(g.best)}</td><td>${g.ref}</td></tr>`;
       if(clickable&&productivityExpandedOperator===g.key){
         const details=[...g.arr].sort((a,b)=>String(a.inicio_local||'').localeCompare(String(b.inicio_local||'')));
         html+=`<tr class="detailRow"><td colspan="6"><div class="operatorDetailBox"><div class="tableWrap"><table style="min-width:880px"><thead><tr><th>Código</th><th>Descripción</th><th>Categoría</th><th>Unidades</th><th>Min netos</th><th>U/H</th><th>Novedad</th><th>Comentario</th></tr></thead><tbody>${details.map(x=>`<tr><td>${x.codigo||'—'}</td><td title="${x.descripcion||''}">${shortDescription(x.descripcion)}</td><td>${recordCategory(x)}</td><td>${fmtInt(x.unidades)}</td><td>${Math.round(Number(x.tiempo_neto_ms||0)/60000)}</td><td><b>${fmtInt(x.productividad_u_h||0)}</b></td><td>${noveltyLabel(x)}</td><td>${x.comentario||'—'}</td></tr>`).join('')}</tbody></table></div></div></td></tr>`;
