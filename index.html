@@ -1053,6 +1053,10 @@
     .categoryDetailRow td{background:#fbfefd;padding:8px 12px}
     .categoryDetailBox{border:1px solid #d4e9e2;border-radius:12px;overflow:hidden}
     .categorySelect{min-width:170px;padding:7px 8px;border:1px solid #cbdad4;border-radius:9px;background:#fff}
+    .categoryTargetControls{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+    .categoryTargetControls select,.categoryTargetControls input{padding:7px 8px;border:1px solid #cbdad4;border-radius:9px;background:#fff;font:inherit}
+    .categoryTargetControls select{min-width:145px}
+    .categoryTargetControls input{width:96px}
     .historyList{display:grid;gap:10px}
     .historyItem{border:1px solid #dce8e3;border-radius:14px;padding:12px;background:#fbfdfc}
     .historyItemHead{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:6px}
@@ -1368,7 +1372,7 @@
               </div>
 
               <div class="chartCard">
-                <h3>⚡ Productividad por trabajador</h3>
+                <h3>⚡ Productividad por trabajador</h3><div class="small" style="margin:4px 0 8px">Ranking simple por promedio u/h.</div>
                 <div class="chartCanvasWrap"><canvas id="chartProductivityWorker"></canvas></div>
               </div>
 
@@ -1378,7 +1382,7 @@
               </div>
 
               <div class="chartCard">
-                <h3>🧩 Productividad por categoría</h3>
+                <h3>🧩 Productividad por categoría</h3><div class="small" style="margin:4px 0 8px">La línea naranja marca el target y el porcentaje indica el cumplimiento.</div>
                 <div class="chartCanvasWrap"><canvas id="chartCategoryProductivity"></canvas></div>
               </div>
             </div>
@@ -1421,7 +1425,7 @@
             <div id="metaMsg"></div>
 
             <div class="familyRefTitle"><h3>🧩 Referencias por categoría</h3><span class="familyTag">Código → Categoría</span></div>
-            <div class="tableWrap"><table><thead><tr><th>Categoría</th><th>Registros</th><th>Operarios</th><th>Promedio u/h</th><th>Estado</th></tr></thead><tbody id="familyTargetsBody"><tr><td colspan="5">Presiona Actualizar</td></tr></tbody></table></div>
+            <div class="tableWrap"><table><thead><tr><th>Categoría</th><th>Registros</th><th>Operarios</th><th>Promedio u/h</th><th>Target u/h</th><th>Definir target</th><th>Estado</th></tr></thead><tbody id="familyTargetsBody"><tr><td colspan="7">Presiona Actualizar</td></tr></tbody></table></div>
 
             <div class="familyRefTitle"><h3>🔬 Productos en evaluación</h3></div>
             <div class="tableWrap"><table><thead><tr><th>Código</th><th>Descripción</th><th>Categoría</th><th>Registros</th><th>Operarios</th><th>Promedio u/h</th><th>Estado</th></tr></thead><tbody id="evaluationBody"><tr><td colspan="7">Presiona Actualizar</td></tr></tbody></table></div>
@@ -2939,8 +2943,8 @@
       const hierarchy=classifyProduct(s.product.descripcion||s.product.descripcion_producto||s.product.nombre||'');
       s.product.categoria=(await getOfficialCategory(code))||(await getManualCategory(code))||hierarchy.categoria;
       if(s.proceso==='etiquetado'){
-        const ms=await getDoc(doc(db,'metas',code));
-        s.meta=ms.exists()?ms.data():null;
+        const categoryTarget=await getCategoryTarget(s.product.categoria||'');
+        s.meta=categoryTarget?{meta_u_h:categoryTarget,fuente:'categoria',categoria:s.product.categoria||''}:null;
       }else{
         s.meta=null;
       }
@@ -3690,6 +3694,7 @@
 
   async function loadProductivity(force=false){
     try{
+      await loadCategoryTargets(force);
       const date=$("prodDate").value||localISO().slice(0,10);$("prodDate").value=date;
       const records=await getRecordsByDate(date,force);
       currentProductivityRecords=records;indexRecords(records);
@@ -3721,10 +3726,18 @@
     const data=[...groups.entries()].map(([key,arr])=>{
       const units=arr.reduce((a,x)=>a+Number(x.unidades||0),0),average=weightedUph(arr),best=Math.max(...arr.map(x=>Number(x.productividad_u_h||0)),0);
       let ref='<span class="statusPill ok">Histórico</span>';
-      if(proc!=='armado'&&groupBy==='codigo'){
-        const manual=arr.map(x=>Number(x.meta_u_h||0)).find(v=>v>0);
-        ref=manual?`<span class="statusPill ok">Meta ${fmtInt(manual)}</span>`:'<span class="statusPill">Referencia por categoría</span>';
-      }else if(proc!=='armado'&&groupBy==='operario')ref='<span class="statusPill">Variable por SKU</span>';
+      if(proc!=='armado'){
+        if(groupBy==='categoria'){
+          const target=Number(categoryTargetByName.get(key)?.target_u_h||0);
+          ref=target?`<span class="statusPill ok">Target ${fmtInt(target)}</span>`:'<span class="statusPill">Sin target</span>';
+        }else if(groupBy==='codigo'){
+          const target=Number(categoryTargetByName.get(recordCategory(arr[0]))?.target_u_h||0);
+          ref=target?`<span class="statusPill ok">Target cat. ${fmtInt(target)}</span>`:'<span class="statusPill">Sin target categoría</span>';
+        }else if(groupBy==='operario'){
+          const t=targetForRecords(arr);
+          ref=t.target?`<span class="statusPill ok">Target mix ${fmtInt(t.target)}</span>`:'<span class="statusPill">Target incompleto</span>';
+        }
+      }
       return {key,arr,records:arr.length,units,average,best,ref};
     }).sort((a,b)=>b.average-a.average);
 
@@ -3766,6 +3779,59 @@
   let metaEvaluationRecords=[];
   let metaByCode=new Map();
 
+  let categoryTargetByName=new Map();
+
+  function categoryTargetDocId(category){
+    return encodeURIComponent(String(category||'').trim());
+  }
+
+  async function loadCategoryTargets(force=false){
+    if(categoryTargetByName.size && !force)return categoryTargetByName;
+    categoryTargetByName.clear();
+    const snap=await getDocs(collection(db,'metas_categorias'));
+    snap.docs.forEach(d=>{
+      const x=d.data()||{};
+      if(x.categoria)categoryTargetByName.set(String(x.categoria),x);
+    });
+    return categoryTargetByName;
+  }
+
+  async function getCategoryTarget(category){
+    const cat=String(category||'').trim();
+    if(!cat)return null;
+    if(categoryTargetByName.has(cat)){
+      const x=categoryTargetByName.get(cat);
+      return Number(x?.target_u_h||0)>0?Number(x.target_u_h):null;
+    }
+    try{
+      const snap=await getDoc(doc(db,'metas_categorias',categoryTargetDocId(cat)));
+      if(snap.exists()){
+        const x=snap.data();
+        categoryTargetByName.set(cat,x);
+        return Number(x?.target_u_h||0)>0?Number(x.target_u_h):null;
+      }
+    }catch{}
+    return null;
+  }
+
+  function targetForRecords(records){
+    let expected=0,totalHours=0,coveredHours=0;
+    (records||[]).forEach(x=>{
+      const hours=Number(x.tiempo_neto_ms||0)/3600000;
+      if(hours<=0)return;
+      totalHours+=hours;
+      const target=Number(categoryTargetByName.get(recordCategory(x))?.target_u_h||0);
+      if(target>0){
+        expected+=target*hours;
+        coveredHours+=hours;
+      }
+    });
+    if(totalHours<=0||coveredHours<=0)return {target:null,coverage:0};
+    const coverage=coveredHours/totalHours;
+    return {target:coverage>=0.999?expected/coveredHours:null,coverage};
+  }
+
+
   function categoryOptions(selected){
     const cats=[...new Set([...BASE_CATEGORIES,...metaEvaluationRecords.map(recordCategory),...manualCategoryCache.values(),...officialCategoryCache.values()])].sort((a,b)=>a.localeCompare(b,'es'));
     return cats.map(c=>`<option value="${c}" ${c===selected?'selected':''}>${c}</option>`).join('');
@@ -3773,21 +3839,113 @@
 
   function renderMetaCategoryTable(){
     const records=metaEvaluationRecords;
-    const categoryGroups=new Map();records.forEach(x=>{const cat=recordCategory(x);if(!categoryGroups.has(cat))categoryGroups.set(cat,[]);categoryGroups.get(cat).push(x)});
-    const data=[...categoryGroups.entries()].map(([categoria,arr])=>{const ops=new Set(arr.map(x=>x.operario).filter(Boolean));let state='<span class="statusPill warn">En evaluación</span>';if(arr.length>=5&&ops.size>=2)state='<span class="statusPill ok">Base útil</span>';if(arr.length>=12&&ops.size>=3)state='<span class="statusPill ok">Base sólida</span>';return {categoria,arr,records:arr.length,ops:ops.size,avg:weightedUph(arr),state}}).sort((a,b)=>a.categoria.localeCompare(b.categoria));
+    const categoryGroups=new Map();
+    records.forEach(x=>{
+      const cat=recordCategory(x);
+      if(!categoryGroups.has(cat))categoryGroups.set(cat,[]);
+      categoryGroups.get(cat).push(x);
+    });
+
+    const data=[...categoryGroups.entries()].map(([categoria,arr])=>{
+      const ops=new Set(arr.map(x=>x.operario).filter(Boolean));
+      let state='<span class="statusPill warn">En evaluación</span>';
+      if(arr.length>=5&&ops.size>=2)state='<span class="statusPill ok">Base útil</span>';
+      if(arr.length>=12&&ops.size>=3)state='<span class="statusPill ok">Base sólida</span>';
+      const saved=categoryTargetByName.get(categoria)||null;
+      const target=Number(saved?.target_u_h||0)||null;
+      return {categoria,arr,records:arr.length,ops:ops.size,avg:weightedUph(arr),state,saved,target};
+    }).sort((a,b)=>a.categoria.localeCompare(b.categoria));
+
     let html='';
     data.forEach(g=>{
-      html+=`<tr><td><button class="categoryToggle" data-cat="${g.categoria}">${expandedMetaCategory===g.categoria?'⌄':'›'} ${g.categoria}</button></td><td>${g.records}</td><td>${g.ops}</td><td><b>${fmtInt(g.avg)}</b></td><td>${g.state}</td></tr>`;
+      const mode=g.saved?.modo||'none';
+      const targetLabel=g.target?`<span class="statusPill ok">${fmtInt(g.target)} u/h</span>`:'<span class="statusPill">Sin target</span>';
+
+      html+=`<tr>
+        <td><button class="categoryToggle" data-cat="${g.categoria}">${expandedMetaCategory===g.categoria?'⌄':'›'} ${g.categoria}</button></td>
+        <td>${g.records}</td>
+        <td>${g.ops}</td>
+        <td><b>${fmtInt(g.avg)}</b></td>
+        <td>${targetLabel}</td>
+        <td><div class="categoryTargetControls">
+          <select class="categoryTargetMode" data-cat="${g.categoria}">
+            <option value="none" ${mode==='none'?'selected':''}>Sin target</option>
+            <option value="average" ${mode==='average'?'selected':''}>Usar promedio actual</option>
+            <option value="manual" ${mode==='manual'?'selected':''}>Definir manual</option>
+          </select>
+          <input class="categoryTargetInput" data-cat="${g.categoria}" type="number" min="1"
+            value="${mode==='manual'&&g.target?Math.round(g.target):''}"
+            placeholder="${Math.round(g.avg)}" ${mode==='manual'?'':'disabled'}>
+          <button class="miniBtn ok saveCategoryTargetBtn" data-cat="${g.categoria}" data-avg="${Math.round(g.avg)}">💾 Guardar</button>
+        </div></td>
+        <td>${g.state}</td>
+      </tr>`;
+
       if(expandedMetaCategory===g.categoria){
-        const codeGroups=new Map();g.arr.forEach(x=>{const c=x.codigo||'';if(!c)return;if(!codeGroups.has(c))codeGroups.set(c,[]);codeGroups.get(c).push(x)});
+        const codeGroups=new Map();
+        g.arr.forEach(x=>{const c=x.codigo||'';if(!c)return;if(!codeGroups.has(c))codeGroups.set(c,[]);codeGroups.get(c).push(x)});
         const rows=[...codeGroups.entries()].map(([code,arr])=>({code,arr,desc:arr[0]?.descripcion||'—',ops:new Set(arr.map(x=>x.operario).filter(Boolean)).size,avg:weightedUph(arr),meta:metaByCode.get(code)||null})).sort((a,b)=>a.code.localeCompare(b.code));
-        html+=`<tr class="categoryDetailRow"><td colspan="5"><div class="categoryDetailBox"><table style="min-width:980px"><thead><tr><th>Código</th><th>Descripción</th><th>Registros</th><th>Operarios</th><th>Promedio u/h</th><th>Meta propia</th><th>Categoría</th><th>Acción</th></tr></thead><tbody>${rows.map(r=>`<tr><td><b>${r.code}</b></td><td>${shortDescription(r.desc)}</td><td>${r.arr.length}</td><td>${r.ops}</td><td><b>${fmtInt(r.avg)}</b></td><td>${r.meta?fmtInt(r.meta.meta_u_h):'—'}</td><td><select class="categorySelect" data-code="${r.code}" ${officialCategoryCache.has(String(r.code))?'disabled title="Categoría definida por tu documento"':''}>${categoryOptions(recordCategory(r.arr[0]||{}))}</select></td><td><div class="compactActions">${officialCategoryCache.has(String(r.code))?'<span class="statusPill ok">📄 Oficial</span>':`<button class="miniBtn ok saveCategoryBtn" data-code="${r.code}">💾 Cambiar</button>`}<button class="miniBtn historyCategoryBtn" data-code="${r.code}">🕘</button></div></td></tr>`).join('')}</tbody></table></div></td></tr>`;
+        html+=`<tr class="categoryDetailRow"><td colspan="7"><div class="categoryDetailBox"><table style="min-width:980px"><thead><tr><th>Código</th><th>Descripción</th><th>Registros</th><th>Operarios</th><th>Promedio u/h</th><th>Meta propia</th><th>Categoría</th><th>Acción</th></tr></thead><tbody>${rows.map(r=>`<tr><td><b>${r.code}</b></td><td>${shortDescription(r.desc)}</td><td>${r.arr.length}</td><td>${r.ops}</td><td><b>${fmtInt(r.avg)}</b></td><td>${r.meta?fmtInt(r.meta.meta_u_h):'—'}</td><td><select class="categorySelect" data-code="${r.code}" ${officialCategoryCache.has(String(r.code))?'disabled title="Categoría definida por tu maestro"':''}>${categoryOptions(recordCategory(r.arr[0]||{}))}</select></td><td><div class="compactActions">${officialCategoryCache.has(String(r.code))?'<span class="statusPill ok">📄 Oficial</span>':`<button class="miniBtn ok saveCategoryBtn" data-code="${r.code}">💾 Cambiar</button>`}<button class="miniBtn historyCategoryBtn" data-code="${r.code}">🕘</button></div></td></tr>`).join('')}</tbody></table></div></td></tr>`;
       }
     });
-    $("familyTargetsBody").innerHTML=html||'<tr><td colspan="5">Aún no hay histórico suficiente.</td></tr>';
+
+    $("familyTargetsBody").innerHTML=html||'<tr><td colspan="7">Aún no hay histórico suficiente.</td></tr>';
+
     document.querySelectorAll('.categoryToggle').forEach(b=>b.onclick=()=>{expandedMetaCategory=expandedMetaCategory===b.dataset.cat?'':b.dataset.cat;renderMetaCategoryTable()});
+    document.querySelectorAll('.categoryTargetMode').forEach(sel=>sel.onchange=()=>{
+      const input=[...document.querySelectorAll('.categoryTargetInput')].find(x=>x.dataset.cat===sel.dataset.cat);
+      if(input)input.disabled=sel.value!=='manual';
+    });
+    document.querySelectorAll('.saveCategoryTargetBtn').forEach(b=>b.onclick=()=>saveCategoryTarget(b.dataset.cat,Number(b.dataset.avg||0)));
     document.querySelectorAll('.saveCategoryBtn').forEach(b=>b.onclick=()=>saveManualCategory(b.dataset.code));
     document.querySelectorAll('.historyCategoryBtn').forEach(b=>b.onclick=()=>openHistory('categoria_producto',b.dataset.code,`Código ${b.dataset.code}`));
+  }
+
+  async function saveCategoryTarget(category,currentAverage){
+    const modeEl=[...document.querySelectorAll('.categoryTargetMode')].find(x=>x.dataset.cat===category);
+    const inputEl=[...document.querySelectorAll('.categoryTargetInput')].find(x=>x.dataset.cat===category);
+    if(!modeEl)return;
+
+    const mode=modeEl.value;
+    let target=null;
+    if(mode==='average'){
+      target=Math.round(Number(currentAverage||0));
+      if(target<=0)return toast('⚠️ No hay promedio válido para usar como target');
+    }else if(mode==='manual'){
+      target=Math.round(Number(inputEl?.value||0));
+      if(target<=0)return toast('⚠️ Ingresa un target manual válido');
+    }
+
+    try{
+      const ref=doc(db,'metas_categorias',categoryTargetDocId(category));
+      const prev=await getDoc(ref);
+      const oldTarget=prev.exists()?Number(prev.data().target_u_h||0)||null:null;
+
+      await setDoc(ref,{
+        categoria:category,
+        modo:mode,
+        target_u_h:target,
+        promedio_base:Math.round(Number(currentAverage||0)),
+        actualizado_por:currentSupervisorUser(),
+        actualizado_local:localISO(),
+        actualizado_en:serverTimestamp()
+      });
+
+      categoryTargetByName.set(category,{categoria:category,modo:mode,target_u_h:target,promedio_base:Math.round(Number(currentAverage||0))});
+
+      await logAudit({
+        accion:'Target de categoría modificado',
+        entidad:'meta_categoria',
+        entidadId:category,
+        detalle:mode==='none'?'Sin target':mode==='average'?'Target según promedio actual':'Target manual',
+        cambios:[{campo:'Target u/h',anterior:oldTarget??'',nuevo:target??''}]
+      });
+
+      toast(mode==='none'?`✅ ${category}: sin target`:`✅ ${category}: target ${fmtInt(target)} u/h`);
+      renderMetaCategoryTable();
+      if($("view-graficos")?.classList.contains('active'))await loadCharts();
+      if($("view-productividad")?.classList.contains('active'))await loadProductivity(true);
+    }catch(e){toast('❌ '+e.message)}
   }
 
   async function saveManualCategory(code){
@@ -3840,6 +3998,7 @@
     try{
       await loadOfficialCategoriesAll();
       await loadManualCategories();
+      await loadCategoryTargets(force);
 
       const categoryCfg=await getActiveCategoryMasterConfig();
       if($("metaCategorySource")){
@@ -4118,30 +4277,140 @@
   };
 
   function professionalBar(canvasId,labels,values,label,target=null,suffix=''){
-    const canvas=$(canvasId);if(!canvas||!window.Chart)return null;
-    const wrap=canvas.parentElement;if(wrap)wrap.style.height=Math.max(270,labels.length*38+70)+'px';
-    const datasets=[{label,data:values,backgroundColor:'rgba(47,195,163,.62)',borderColor:'#159a80',borderWidth:1.4,borderRadius:8,borderSkipped:false,barThickness:22,maxBarThickness:25}];
-    if(target!==null&&labels.length)datasets.push({type:'line',label:'Referencia base',data:labels.map(()=>target),borderColor:'#f0a43a',borderWidth:2,pointRadius:0,tension:0});
-    return new Chart(canvas,{type:'bar',data:{labels,datasets},plugins:[dataLabelsPlugin],options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',layout:{padding:{right:48,top:6,bottom:2}},animation:{duration:450},plugins:{legend:{display:target!==null,position:'top',align:'end',labels:{boxWidth:18,usePointStyle:true}},tooltip:{enabled:true},professionalDataLabels:{suffix}},scales:{x:{beginAtZero:true,grid:{color:'rgba(20,55,40,.06)'},ticks:{color:'#64766f'}},y:{grid:{display:false},ticks:{color:'#4f625b',autoSkip:false}}}}});
+    const canvas=$(canvasId);
+    if(!canvas||!window.Chart)return null;
+
+    const hasTargets=Array.isArray(target)
+      ? target.some(v=>Number(v)>0)
+      : (target!==null&&Number(target)>0);
+
+    canvas.parentElement.style.height=Math.max(300,labels.length*42+92)+'px';
+
+    const targetData=Array.isArray(target)
+      ? target.map(v=>Number(v)>0?Number(v):null)
+      : (target!==null&&labels.length?labels.map(()=>Number(target)>0?Number(target):null):null);
+
+    const barData=values.map(v=>Number(v||0));
+
+    const targetMarkerPlugin={
+      id:'targetMarkerPlugin',
+      afterDatasetsDraw(chart){
+        if(!targetData||!targetData.some(v=>Number(v)>0))return;
+
+        const {ctx,scales:{x,y}}=chart;
+        ctx.save();
+
+        targetData.forEach((t,i)=>{
+          if(!t||!Number.isFinite(t))return;
+
+          const yPos=y.getPixelForValue(i);
+          const xPos=x.getPixelForValue(t);
+          const value=barData[i]||0;
+          const pct=t>0?Math.round((value/t)*100):0;
+
+          ctx.strokeStyle='#f0a43a';
+          ctx.lineWidth=3;
+          ctx.beginPath();
+          ctx.moveTo(xPos,yPos-13);
+          ctx.lineTo(xPos,yPos+13);
+          ctx.stroke();
+
+          ctx.font='700 10px system-ui, -apple-system, Segoe UI, sans-serif';
+          ctx.fillStyle='#9a6116';
+          ctx.textAlign='center';
+          ctx.textBaseline='bottom';
+          ctx.fillText(`T ${Math.round(t).toLocaleString('es-EC')}`,xPos,yPos-16);
+
+          ctx.font='700 10px system-ui, -apple-system, Segoe UI, sans-serif';
+          ctx.fillStyle=pct>=100?'#08745f':'#9a6116';
+          ctx.textAlign='right';
+          ctx.textBaseline='middle';
+          ctx.fillText(`${pct}%`,chart.width-10,yPos);
+        });
+
+        ctx.restore();
+      }
+    };
+
+    const datasets=[{
+      type:'bar',
+      label,
+      data:barData,
+      backgroundColor:barData.map((v,i)=>{
+        const t=targetData?.[i];
+        if(!t)return 'rgba(47,195,163,.55)';
+        return v>=t?'rgba(47,195,163,.62)':'rgba(247,187,92,.35)';
+      }),
+      borderColor:barData.map((v,i)=>{
+        const t=targetData?.[i];
+        if(!t)return '#159a80';
+        return v>=t?'#159a80':'#d7962f';
+      }),
+      borderWidth:2,
+      borderRadius:8,
+      barPercentage:.58,
+      categoryPercentage:.78
+    }];
+
+    return new Chart(canvas,{
+      type:'bar',
+      data:{labels,datasets},
+      plugins:hasTargets?[dataLabelsPlugin,targetMarkerPlugin]:[dataLabelsPlugin],
+      options:{
+        responsive:true,
+        maintainAspectRatio:false,
+        indexAxis:'y',
+        layout:{padding:{right:hasTargets?92:18,top:24,bottom:2}},
+        animation:{duration:450},
+        plugins:{
+          legend:{display:false},
+          tooltip:{
+            enabled:true,
+            callbacks:{
+              afterLabel(ctx){
+                const t=targetData?.[ctx.dataIndex];
+                if(!t)return '';
+                const v=barData[ctx.dataIndex]||0;
+                const pct=Math.round((v/t)*100);
+                return [`Target: ${Math.round(t).toLocaleString('es-EC')} u/h`,`Cumplimiento: ${pct}%`];
+              }
+            }
+          },
+          professionalDataLabels:{suffix}
+        },
+        scales:{
+          x:{beginAtZero:true,grid:{color:'rgba(20,55,40,.06)'},ticks:{color:'#64766f'}},
+          y:{grid:{display:false},ticks:{color:'#4f625b',autoSkip:false}}
+        }
+      }
+    });
   }
 
   async function loadCharts(){
     const date=$("chartsDate").value||localISO().slice(0,10);$("chartsDate").value=date;const proc=$("chartsProcess").value;
     try{
+      await loadCategoryTargets(false);
       let rows=await getRecordsByDate(date,false);rows=rows.filter(x=>proc==='todos'||(x.proceso||'etiquetado')===proc);
       const totalUnits=rows.reduce((a,x)=>a+Number(x.unidades||0),0),workers=[...new Set(rows.map(x=>x.operario).filter(Boolean))];
       $("chartsTotalUnits").textContent=fmtInt(totalUnits);$("chartsWorkers").textContent=fmtInt(workers.length);$("chartsAvg").textContent=rows.length?fmtInt(weightedUph(rows))+' u/h':'—';
 
       const byWorker=new Map();rows.forEach(x=>{const k=x.operario||'Sin operario';if(!byWorker.has(k))byWorker.set(k,[]);byWorker.get(k).push(x)});
-      const workerRows=[...byWorker.entries()].map(([name,arr])=>({name,units:arr.reduce((a,x)=>a+Number(x.unidades||0),0),uph:weightedUph(arr)})).sort((a,b)=>b.units-a.units);
+      const workerRows=[...byWorker.entries()].map(([name,arr])=>{
+        const t=targetForRecords(arr);
+        return {name,arr,units:arr.reduce((a,x)=>a+Number(x.unidades||0),0),uph:weightedUph(arr),target:t.target};
+      }).sort((a,b)=>b.units-a.units);
       destroySupervisorChart('unitsWorker');supervisorCharts.unitsWorker=professionalBar('chartUnitsWorker',workerRows.map(x=>x.name),workerRows.map(x=>x.units),'Unidades',null,'');
-      const prodRows=[...workerRows].sort((a,b)=>b.uph-a.uph);destroySupervisorChart('productivityWorker');supervisorCharts.productivityWorker=professionalBar('chartProductivityWorker',prodRows.map(x=>x.name),prodRows.map(x=>Math.round(x.uph)),'u/h',proc==='etiquetado'?500:null,' u/h');
+      const prodRows=[...workerRows].sort((a,b)=>b.uph-a.uph);
+      destroySupervisorChart('productivityWorker');
+      supervisorCharts.productivityWorker=professionalBar('chartProductivityWorker',prodRows.map(x=>x.name),prodRows.map(x=>Math.round(x.uph)),'u/h',null,' u/h');
 
       const hourly=new Map();rows.forEach(x=>{const h=extractHour(x.inicio_local);if(h===null)return;hourly.set(h,(hourly.get(h)||0)+Number(x.unidades||0))});const hours=[...hourly.keys()].sort((a,b)=>a-b);
       destroySupervisorChart('unitsHour');const hourCanvas=$("chartUnitsHour");if(hourCanvas&&window.Chart){hourCanvas.parentElement.style.height='300px';supervisorCharts.unitsHour=new Chart(hourCanvas,{type:'line',data:{labels:hours.map(h=>String(h).padStart(2,'0')+':00'),datasets:[{label:'Unidades',data:hours.map(h=>hourly.get(h)),borderColor:'#159a80',backgroundColor:'rgba(47,195,163,.12)',borderWidth:3,pointRadius:5,pointHoverRadius:7,pointBackgroundColor:'#fff',pointBorderColor:'#159a80',pointBorderWidth:3,tension:.32,fill:true}]},plugins:[dataLabelsPlugin],options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:24,right:18}},plugins:{legend:{display:false},tooltip:{enabled:true},professionalDataLabels:{suffix:''}},scales:{y:{beginAtZero:true,grid:{color:'rgba(20,55,40,.06)'},ticks:{color:'#64766f'}},x:{grid:{display:false},ticks:{color:'#64766f'}}}}})}
 
-      const byFamily=new Map();rows.forEach(x=>{const fam=recordCategory(x);if(!byFamily.has(fam))byFamily.set(fam,[]);byFamily.get(fam).push(x)});const famRows=[...byFamily.entries()].map(([fam,arr])=>({fam,uph:weightedUph(arr)})).filter(x=>x.uph>0).sort((a,b)=>b.uph-a.uph);
-      destroySupervisorChart('categoryProductivity');supervisorCharts.categoryProductivity=professionalBar('chartCategoryProductivity',famRows.map(x=>x.fam),famRows.map(x=>Math.round(x.uph)),'u/h',proc==='etiquetado'?500:null,' u/h');
+      const byFamily=new Map();rows.forEach(x=>{const fam=recordCategory(x);if(!byFamily.has(fam))byFamily.set(fam,[]);byFamily.get(fam).push(x)});
+      const famRows=[...byFamily.entries()].map(([fam,arr])=>({fam,uph:weightedUph(arr),target:Number(categoryTargetByName.get(fam)?.target_u_h||0)||null})).filter(x=>x.uph>0).sort((a,b)=>b.uph-a.uph);
+      destroySupervisorChart('categoryProductivity');
+      supervisorCharts.categoryProductivity=professionalBar('chartCategoryProductivity',famRows.map(x=>x.fam),famRows.map(x=>Math.round(x.uph)),'u/h',proc==='etiquetado'?famRows.map(x=>x.target):null,' u/h');
       if(!rows.length)toast('ℹ️ No hay registros para la fecha y proceso seleccionados');
     }catch(e){toast('⚠️ Gráficos: '+e.message)}
   }
