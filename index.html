@@ -1309,6 +1309,7 @@
             <div class="supGroupChildren">
               <button class="btn secondary supNavBtn" data-view="operarios">Operarios</button>
               <button class="btn secondary supNavBtn" data-view="data">Data de productos</button>
+              <button class="btn secondary supNavBtn" data-view="categorydata" style="display:none">Categorías por código</button>
             </div>
           </div>
 
@@ -1407,44 +1408,23 @@
           </div>
 
           <div id="view-metas" class="supView card">
-            <div class="sectionTitle">
-              <h2>🎯 Meta/Categoría</h2>
-              <button id="refreshMetasAnalysis" type="button" class="btn ghost">🔄 Actualizar</button>
+            <div class="sectionTitle"><h2>🎯 Meta/Categoría</h2><button id="refreshMetasAnalysis" class="btn ghost">🔄 Actualizar</button></div>
+            <div id="metaCategorySource" class="message ok" style="padding:8px 10px;margin-bottom:10px">
+              🏷️ Clasificación: verificando maestro oficial…
             </div>
-
-            <div id="metaCategorySource" class="message warn" style="padding:9px 11px;margin-bottom:10px">
-              📦 La categoría se obtiene del maestro único de Configuración → Data de productos.
-            </div>
-
             <div class="twoCols">
               <div class="field"><label>Código</label><input id="metaCode" placeholder="Ej. 46966"></div>
               <div class="field"><label>Meta u/h</label><input id="metaValue" type="number" min="1" placeholder="Ej. 700"></div>
             </div>
             <div class="field"><label>Motivo / observación</label><input id="metaReason" placeholder="Meta aprobada según histórico"></div>
-            <div class="compactActions">
-              <button id="saveMeta" class="btn primary">💾 Guardar meta por código</button>
-              <button id="metaHistoryBtn" class="miniBtn">🕘 Historial del código</button>
-            </div>
+            <div class="compactActions"><button id="saveMeta" class="btn primary">💾 Guardar meta por código</button><button id="metaHistoryBtn" class="miniBtn">🕘 Historial del código</button></div>
             <div id="metaMsg"></div>
 
-            <div class="familyRefTitle">
-              <h3>🧩 Referencias por categoría</h3>
-              <span class="familyTag">Maestro único</span>
-            </div>
-            <div class="tableWrap">
-              <table>
-                <thead><tr><th>Categoría</th><th>Registros</th><th>Operarios</th><th>Promedio u/h</th><th>Estado</th></tr></thead>
-                <tbody id="familyTargetsBody"><tr><td colspan="5">Presiona Actualizar.</td></tr></tbody>
-              </table>
-            </div>
+            <div class="familyRefTitle"><h3>🧩 Referencias por categoría</h3><span class="familyTag">Código → Categoría</span></div>
+            <div class="tableWrap"><table><thead><tr><th>Categoría</th><th>Registros</th><th>Operarios</th><th>Promedio u/h</th><th>Estado</th></tr></thead><tbody id="familyTargetsBody"><tr><td colspan="5">Presiona Actualizar</td></tr></tbody></table></div>
 
             <div class="familyRefTitle"><h3>🔬 Productos en evaluación</h3></div>
-            <div class="tableWrap">
-              <table>
-                <thead><tr><th>Código</th><th>Descripción</th><th>Categoría</th><th>Registros</th><th>Operarios</th><th>Promedio u/h</th><th>Estado</th></tr></thead>
-                <tbody id="evaluationBody"><tr><td colspan="7">Presiona Actualizar.</td></tr></tbody>
-              </table>
-            </div>
+            <div class="tableWrap"><table><thead><tr><th>Código</th><th>Descripción</th><th>Categoría</th><th>Registros</th><th>Operarios</th><th>Promedio u/h</th><th>Estado</th></tr></thead><tbody id="evaluationBody"><tr><td colspan="7">Presiona Actualizar</td></tr></tbody></table></div>
           </div>
 
           <div id="view-comparativo" class="supView card">
@@ -1690,7 +1670,7 @@
 
           <div id="view-data" class="supView card">
             <div class="sectionTitle"><h2>📦 Data de productos</h2><button id="openDataModalBtn" class="btn blue">📥 Actualizar data</button></div>
-            <div class="message ok"><b>Maestro único de toda la web.</b> Cada código guarda su Descripción y Categoría y alimenta Operarios, Productividad, Gráficos, Meta/Categoría, Comparativo, Registros y Caducidad.</div>
+            <div class="message ok"><b>Maestro único de toda la web.</b> Carga Code + Description (eng) + Category. Esta data define la descripción y categoría usadas en todas las pestañas.</div>
             <div class="dataSummary">
               <div class="kpi"><span>Versión activa</span><strong id="dataVersion" style="font-size:16px">—</strong></div>
               <div class="kpi"><span>Productos activos</span><strong id="dataProducts">—</strong></div>
@@ -1698,6 +1678,27 @@
               <div class="kpi"><span>Bloques</span><strong id="dataBuckets">—</strong></div>
             </div>
             <div class="small">También puedes abrir la carga con <b>Ctrl + Shift + O</b>.</div>
+          </div>
+
+          <div id="view-categorydata" class="supView card">
+            <div class="sectionTitle">
+              <h2>🏷️ Categorías por código</h2>
+              <button id="openCategoryModalBtn" class="btn blue">📥 Actualizar categorías</button>
+            </div>
+            <div class="message ok">
+              Tu documento consolidado por código es la fuente principal de clasificación.
+              La clasificación manual solo se usa cuando un código no existe en ese documento.
+            </div>
+            <div class="dataSummary">
+              <div class="kpi"><span>Versión activa</span><strong id="categoryDataVersion" style="font-size:16px">—</strong></div>
+              <div class="kpi"><span>Códigos clasificados</span><strong id="categoryDataCount">—</strong></div>
+              <div class="kpi"><span>Categorías</span><strong id="categoryDataCategories">—</strong></div>
+              <div class="kpi"><span>Bloques</span><strong id="categoryDataBuckets">—</strong></div>
+            </div>
+            <div class="small" style="margin-top:8px">
+              Prioridad aplicada en toda la web: <b>Tu documento por código → Clasificación manual solo para códigos ausentes → Clasificación automática</b>.
+              Los reportes históricos se corrigen al consultarlos; no es necesario reescribir miles de registros.
+            </div>
           </div>
 
           <div id="view-operarios" class="supView card">
@@ -1717,27 +1718,49 @@
   </section>
 </div>
 
+<div id="categoryModal" class="modalBackdrop">
+  <div class="modalCard">
+    <div class="modalHead"><h2>🏷️ Categorías por código</h2><button id="closeCategoryModal" class="btn ghost">✕ Cerrar</button></div>
+    <div class="uploadBox">
+      <div style="font-size:32px">📋</div>
+      <strong>Pegar clasificación consolidada</strong>
+      <div class="small" style="margin:6px 0 10px">Pega dos columnas: <b>Code</b> y <b>Category</b>.<br>También acepta <b>Código</b> / <b>Categoría</b> y tablas Markdown.</div>
+      <textarea id="categoryPaste" placeholder="Code&#9;Category&#10;21860&#9;Hair Care&#10;22443&#9;Fragrances" style="width:100%;min-height:180px;resize:vertical;padding:12px;border:1px solid var(--border);border-radius:12px;font:inherit"></textarea>
+      <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:10px">
+        <button id="importPastedCategories" class="btn blue">📥 Guardar categorías pegadas</button>
+        <button id="clearCategoryPaste" class="btn ghost">🧹 Limpiar</button>
+      </div>
+    </div>
+    <details style="margin-top:12px">
+      <summary style="cursor:pointer;font-weight:700">📄 Opción alternativa: cargar archivo</summary>
+      <div class="uploadBox" style="margin-top:10px">
+        <input id="categoryFile" type="file" accept=".xlsx,.xls,.csv,.txt,.md" />
+        <div class="small" style="margin-top:8px">Formatos aceptados: Excel, CSV, TXT o Markdown.</div>
+        <div style="margin-top:10px"><button id="importCategoriesFile" class="btn ghost">⬆️ Cargar archivo</button></div>
+      </div>
+    </details>
+    <div id="categoryImportMsg"></div>
+  </div>
+</div>
+
 <div id="productModal" class="modalBackdrop">
   <div class="modalCard">
     <div class="modalHead"><h2>📦 Data de productos</h2><button id="closeProductModal" class="btn ghost">✕ Cerrar</button></div>
     <div class="uploadBox">
       <div style="font-size:32px">📋</div>
       <strong>Pegar data de productos</strong>
-      <div class="small" style="margin:6px 0 10px">Copia desde Excel las tres columnas <b>Code</b>, <b>Description (eng)</b> y <b>Category</b> y pégalas aquí.<br><span class="small">⚡ La nueva versión se carga aparte y solo se activa cuando termina y pasa la verificación. El maestro actual no se interrumpe.</span></div>
+      <div class="small" style="margin:6px 0 10px">Copia desde Excel las columnas <b>Code</b>, <b>Description (eng)</b> y <b>Category</b> y pégalas aquí.<br><span class="small">⚡ La nueva versión se carga aparte y solo se activa cuando termina y pasa la verificación. El maestro actual no se interrumpe.</span></div>
       <textarea id="productPaste" placeholder="Code\tDescription (eng)\tCategory\n12760\tTender Care Natural Multi-purpose Balm\tSkin Care" style="width:100%;min-height:180px;resize:vertical;padding:12px;border:1px solid var(--border);border-radius:12px;font:inherit"></textarea>
       <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:10px">
-        <button id="importPastedProducts" type="button" class="btn blue">📥 Guardar datos pegados</button>
-        <button id="clearProductPaste" type="button" class="btn ghost"
-      onclick="document.getElementById('productPaste').value='';document.getElementById('importMsg').innerHTML='';">
-      🧹 Limpiar
-    </button>
+        <button id="importPastedProducts" class="btn blue">📥 Guardar datos pegados</button>
+        <button id="clearProductPaste" class="btn ghost">🧹 Limpiar</button>
       </div>
     </div>
     <details style="margin-top:12px">
       <summary style="cursor:pointer;font-weight:700">📄 Opción alternativa: cargar Excel</summary>
       <div class="uploadBox" style="margin-top:10px">
         <input id="productFile" type="file" accept=".xlsx,.xls" />
-        <div style="margin-top:10px"><button id="importProducts" type="button" class="btn ghost">⬆️ Cargar Excel</button></div>
+        <div style="margin-top:10px"><button id="importProducts" class="btn ghost">⬆️ Cargar Excel</button></div>
       </div>
     </details>
     <div id="importMsg"></div>
@@ -1920,16 +1943,29 @@
 
   const manualCategoryCache=new Map();
 
-  // Cache completo del MAESTRO ÚNICO de productos.
-  // Cada item: {codigo, descripcion, categoria}
-  let unifiedMasterCache=new Map();
-  let unifiedMasterLoadedVersion='';
-  let unifiedMasterFullyLoaded=false;
+  let activeCategoryMasterConfig=null;
+  const officialCategoryBucketCache=new Map();
+  const officialCategoryCache=new Map();
+  let officialCategoriesFullyLoaded=false;
 
-  function normalizeCategoryCode(value){
-    let s=String(value??'').trim();
-    if(/^\d+\.0+$/.test(s))s=s.replace(/\.0+$/,'');
-    return s;
+  const OFFICIAL_CATEGORY_LABELS={
+    'FRAGRANCES':'PERFUMERÍA',
+    'SKIN CARE':'CUIDADO DE LA PIEL',
+    'PERSONAL CARE':'CUIDADO PERSONAL',
+    'COLOUR COSMETICS':'MAQUILLAJE',
+    'COLOR COSMETICS':'MAQUILLAJE',
+    'HAIR CARE':'PRODUCTOS CAPILARES',
+    'ACCESSORIES':'ACCESORIOS',
+    'WELLNESS':'BIENESTAR',
+    'SALES ACTIONS':'ACCIONES DE VENTA',
+    'OTHER CATEGORY':'OTROS'
+  };
+
+  function normalizeOfficialCategory(value){
+    const raw=norm(value);
+    if(!raw)return '';
+    const key=raw.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim();
+    return OFFICIAL_CATEGORY_LABELS[key] || raw.toUpperCase();
   }
 
   const BASE_CATEGORIES=['PRODUCTOS CAPILARES','DESODORANTES','CUIDADO ORAL','PROTECCIÓN SOLAR','CUIDADO DE PIES','CUIDADO DE MANOS','CUIDADO CORPORAL','HIGIENE CORPORAL','CUIDADO FACIAL','CUIDADO DE LA PIEL','MAQUILLAJE','UÑAS','PERFUMERÍA','BIENESTAR','ACCESORIOS','ACCIONES DE VENTA','CUIDADO PERSONAL','OTROS'];
@@ -2021,7 +2057,7 @@
     if(supervisorUnlocked){
       $("supAuth").classList.add('hidden');
       $("supApp").classList.remove('hidden');
-      Promise.all([loadManualCategories(),loadUnifiedMasterAll()]).catch(()=>{});
+      Promise.all([loadManualCategories(),loadOfficialCategoriesAll()]).catch(()=>{});
       loadDashboard().then(()=>startDashboardRealtime()).catch(()=>{});
       loadUsersTable().catch(()=>{});
     }else{
@@ -2806,86 +2842,49 @@
     return String(h % MASTER_BUCKETS).padStart(2,'0');
   }
 
-  async function loadUnifiedMasterAll(force=false){
+  async function getActiveCategoryMasterConfig(force=false){
     const cfg=await getActiveMasterConfig(force);
-
-    if(
-      unifiedMasterFullyLoaded &&
-      !force &&
-      unifiedMasterLoadedVersion===(cfg.version_activa||'legacy')
-    ){
-      return unifiedMasterCache;
-    }
-
-    unifiedMasterCache=new Map();
-
-    if(cfg.mode==='legacy'){
-      const snap=await getDocs(collection(db,'productos'));
-      snap.docs.forEach(d=>{
-        const p=d.data()||{};
-        const code=normalizeCategoryCode(p.codigo||d.id);
-        if(!code)return;
-        unifiedMasterCache.set(code,{
-          codigo:code,
-          descripcion:p.descripcion||p.description||p.nombre||'',
-          categoria:p.categoria||''
-        });
-      });
-      unifiedMasterLoadedVersion='legacy';
-      unifiedMasterFullyLoaded=true;
-      return unifiedMasterCache;
-    }
-
-    // Se consultan los 64 buckets determinísticos. Así no importa cuáles estén vacíos.
-    const ids=Array.from({length:MASTER_BUCKETS},(_,i)=>String(i).padStart(2,'0'));
-    const snaps=await Promise.all(
-      ids.map(id=>getDoc(doc(db,'maestros_productos',cfg.version_activa,'buckets',id)))
-    );
-
-    snaps.forEach(snap=>{
-      if(!snap.exists())return;
-      const items=snap.data()?.items||{};
-      Object.entries(items).forEach(([key,p])=>{
-        const code=normalizeCategoryCode(p?.codigo||key);
-        if(!code)return;
-        unifiedMasterCache.set(code,{
-          codigo:code,
-          descripcion:p?.descripcion||p?.description||p?.nombre||'',
-          categoria:p?.categoria||''
-        });
-      });
-    });
-
-    unifiedMasterLoadedVersion=cfg.version_activa||'';
-    unifiedMasterFullyLoaded=true;
-    return unifiedMasterCache;
+    return cfg.mode==='versioned'
+      ? {mode:'versioned',version_activa:cfg.version_activa,total_codigos:Number(cfg.total_productos||0),
+         total_categorias:Number(cfg.total_categorias||0),bucket_count:Number(cfg.bucket_count||MASTER_BUCKETS)}
+      : {mode:'none',total_codigos:0,total_categorias:0,bucket_count:0};
   }
 
   async function getOfficialCategory(code){
-    const c=normalizeCategoryCode(code);
+    const c=String(code||'').trim();
     if(!c)return '';
-
-    const direct=await getProductByCode(c);
-    return direct?.categoria||'';
+    if(officialCategoryCache.has(c))return officialCategoryCache.get(c);
+    const p=await getProductByCode(c);
+    const cat=p?.categoria||'';
+    if(cat)officialCategoryCache.set(c,cat);
+    return cat;
   }
 
-  function masterProductForRecord(x){
-    return unifiedMasterCache.get(normalizeCategoryCode(x?.codigo||''))||null;
-  }
+  async function loadOfficialCategoriesAll(force=false){
+    if(officialCategoriesFullyLoaded&&!force)return officialCategoryCache;
+    const cfg=await getActiveMasterConfig(force);
+    officialCategoryCache.clear();
+    officialCategoryBucketCache.clear();
 
-  function recordDescription(x){
-    const master=masterProductForRecord(x);
-    return master?.descripcion || x?.descripcion || x?.description || '—';
-  }
+    if(cfg.mode!=='versioned'){
+      officialCategoriesFullyLoaded=true;
+      return officialCategoryCache;
+    }
 
-  function enrichRecordFromMaster(x){
-    const master=masterProductForRecord(x);
-    if(!master)return x;
-    return {
-      ...x,
-      descripcion:master.descripcion||x.descripcion||'',
-      categoria:master.categoria||x.categoria||''
-    };
+    const ids=Array.from({length:MASTER_BUCKETS},(_,i)=>String(i).padStart(2,'0'));
+    for(let i=0;i<ids.length;i+=12){
+      const group=ids.slice(i,i+12);
+      const snaps=await Promise.all(group.map(id=>getDoc(doc(db,'maestros_productos',cfg.version_activa,'buckets',id))));
+      snaps.forEach((snap,idx)=>{
+        const items=snap.exists()?(snap.data().items||{}):{};
+        officialCategoryBucketCache.set(`${cfg.version_activa}:${group[idx]}`,items);
+        Object.entries(items).forEach(([code,item])=>{
+          if(item?.categoria)officialCategoryCache.set(String(code),item.categoria);
+        });
+      });
+    }
+    officialCategoriesFullyLoaded=true;
+    return officialCategoryCache;
   }
 
   async function getActiveMasterConfig(force=false){
@@ -2938,7 +2937,7 @@
       s.code=code;s.product=product;
       if(!s.product.descripcion && s.product.description) s.product.descripcion=s.product.description;
       const hierarchy=classifyProduct(s.product.descripcion||s.product.descripcion_producto||s.product.nombre||'');
-      s.product.categoria=s.product.categoria||(await getManualCategory(code))||hierarchy.categoria;
+      s.product.categoria=(await getOfficialCategory(code))||(await getManualCategory(code))||hierarchy.categoria;
       if(s.proceso==='etiquetado'){
         const ms=await getDoc(doc(db,'metas',code));
         s.meta=ms.exists()?ms.data():null;
@@ -3261,7 +3260,7 @@
     }
 
     const description=product.descripcion||'';
-    const category=product?.categoria||(await getManualCategory(code))||classifyProduct(description).categoria;
+    const category=(await getOfficialCategory(code))||(await getManualCategory(code))||classifyProduct(description).categoria;
 
     let meta=null;
     if(process==='etiquetado'){
@@ -3373,20 +3372,21 @@
     return ms>0?units/(ms/3600000):0;
   }
   function recordCategory(x){
-    const code=normalizeCategoryCode(x.codigo||'');
-    const master=unifiedMasterCache.get(code);
+    const code=String(x.codigo||'');
 
-    // PRIORIDAD: categoría del maestro único cargado en Configuración.
-    if(master?.categoria)return master.categoria;
+    // 1. El documento consolidado por código tiene prioridad absoluta.
+    const official=officialCategoryCache.get(code);
+    if(official)return official;
 
-    // Si el código no está en el maestro o no tiene categoría, usar respaldo anterior.
+    // 2. Solo si el código NO existe en el documento, usar clasificación manual.
     const manual=manualCategoryCache.get(code);
     if(manual)return manual;
 
+    // 3. Respaldo histórico y, finalmente, clasificación automática.
     const stored=norm(x.categoria||'');
     if(stored)return stored;
 
-    return classifyProduct(recordDescription(x)).categoria||'OTROS';
+    return classifyProduct(x.descripcion||'').categoria||'OTROS';
   }
   function shortDescription(desc){
     const words=norm(desc).split(/\s+/).filter(Boolean);
@@ -3395,20 +3395,15 @@
   function indexRecords(rows){rows.forEach(x=>{if(x?.id)recordLookup.set(x.id,x)})}
   async function getRecordsByDate(date,force=false){
     if(!force&&dailyRecordsCache.has(date))return dailyRecordsCache.get(date);
-    await loadUnifiedMasterAll(force);
     const snap=await getDocs(query(collection(db,'registros_etiquetado'),where('fecha_local','==',date)));
-    const rows=snap.docs.map(d=>enrichRecordFromMaster({id:d.id,...d.data()}));
+    const rows=snap.docs.map(d=>({id:d.id,...d.data()}));
     dailyRecordsCache.set(date,rows);indexRecords(rows);return rows;
   }
   async function getRecordsByRange(from,to){
-    await loadUnifiedMasterAll();
     let q;
     if(from===to) q=query(collection(db,'registros_etiquetado'),where('fecha_local','==',from));
     else q=query(collection(db,'registros_etiquetado'),where('fecha_local','>=',from),where('fecha_local','<=',to),limit(1000));
-    const snap=await getDocs(q);
-    const rows=snap.docs.map(d=>enrichRecordFromMaster({id:d.id,...d.data()}));
-    indexRecords(rows);
-    return rows;
+    const snap=await getDocs(q);const rows=snap.docs.map(d=>({id:d.id,...d.data()}));indexRecords(rows);return rows;
   }
   function invalidateRecordCaches(){
     supervisorRecordsCache=[];supervisorRecordsLoadedAt=0;dailyRecordsCache.clear();recordLookup.clear();
@@ -3419,11 +3414,8 @@
     if(!force && supervisorRecordsCache.length && (Date.now()-supervisorRecordsLoadedAt)<SUP_CACHE_MS){
       return supervisorRecordsCache;
     }
-
-    await loadUnifiedMasterAll(force);
-
     const snap=await getDocs(query(collection(db,'registros_etiquetado'),orderBy('creado_en','desc'),limit(SUP_RECORD_LIMIT)));
-    supervisorRecordsCache=snap.docs.map(d=>enrichRecordFromMaster({id:d.id,...d.data()}));
+    supervisorRecordsCache=snap.docs.map(d=>({id:d.id,...d.data()}));
     supervisorRecordsLoadedAt=Date.now();
     return supervisorRecordsCache;
   }
@@ -3439,6 +3431,7 @@
     }
 
     const categoryViews=new Set(['productividad','graficos','comparativo','metas','registros','novedades','caducidad','reporte']);
+    if(categoryViews.has(b.dataset.view)) await loadOfficialCategoriesAll();
 
     if(b.dataset.view==='operarios') await loadUsersTable();
     if(b.dataset.view==='registros') await loadRecords();
@@ -3451,6 +3444,7 @@
     if(b.dataset.view==='metas') await loadEvaluation();
     if(b.dataset.view==='supervision') await loadSupervision();
     if(b.dataset.view==='data') await loadDataSummary();
+    if(b.dataset.view==='categorydata') await loadCategoryDataSummary();
 
     if(b.dataset.view==='dashboard'){
       await loadDashboard(false);
@@ -3787,18 +3781,20 @@
       if(expandedMetaCategory===g.categoria){
         const codeGroups=new Map();g.arr.forEach(x=>{const c=x.codigo||'';if(!c)return;if(!codeGroups.has(c))codeGroups.set(c,[]);codeGroups.get(c).push(x)});
         const rows=[...codeGroups.entries()].map(([code,arr])=>({code,arr,desc:arr[0]?.descripcion||'—',ops:new Set(arr.map(x=>x.operario).filter(Boolean)).size,avg:weightedUph(arr),meta:metaByCode.get(code)||null})).sort((a,b)=>a.code.localeCompare(b.code));
-        html+=`<tr class="categoryDetailRow"><td colspan="5"><div class="categoryDetailBox"><table style="min-width:980px"><thead><tr><th>Código</th><th>Descripción</th><th>Registros</th><th>Operarios</th><th>Promedio u/h</th><th>Meta propia</th><th>Categoría</th><th>Acción</th></tr></thead><tbody>${rows.map(r=>`<tr><td><b>${r.code}</b></td><td>${shortDescription(r.desc)}</td><td>${r.arr.length}</td><td>${r.ops}</td><td><b>${fmtInt(r.avg)}</b></td><td>${r.meta?fmtInt(r.meta.meta_u_h):'—'}</td><td><b>${recordCategory(r.arr[0]||{})}</b></td><td><span class="statusPill ok">📦 Maestro</span></td></tr>`).join('')}</tbody></table></div></td></tr>`;
+        html+=`<tr class="categoryDetailRow"><td colspan="5"><div class="categoryDetailBox"><table style="min-width:980px"><thead><tr><th>Código</th><th>Descripción</th><th>Registros</th><th>Operarios</th><th>Promedio u/h</th><th>Meta propia</th><th>Categoría</th><th>Acción</th></tr></thead><tbody>${rows.map(r=>`<tr><td><b>${r.code}</b></td><td>${shortDescription(r.desc)}</td><td>${r.arr.length}</td><td>${r.ops}</td><td><b>${fmtInt(r.avg)}</b></td><td>${r.meta?fmtInt(r.meta.meta_u_h):'—'}</td><td><select class="categorySelect" data-code="${r.code}" ${officialCategoryCache.has(String(r.code))?'disabled title="Categoría definida por tu documento"':''}>${categoryOptions(recordCategory(r.arr[0]||{}))}</select></td><td><div class="compactActions">${officialCategoryCache.has(String(r.code))?'<span class="statusPill ok">📄 Oficial</span>':`<button class="miniBtn ok saveCategoryBtn" data-code="${r.code}">💾 Cambiar</button>`}<button class="miniBtn historyCategoryBtn" data-code="${r.code}">🕘</button></div></td></tr>`).join('')}</tbody></table></div></td></tr>`;
       }
     });
     $("familyTargetsBody").innerHTML=html||'<tr><td colspan="5">Aún no hay histórico suficiente.</td></tr>';
     document.querySelectorAll('.categoryToggle').forEach(b=>b.onclick=()=>{expandedMetaCategory=expandedMetaCategory===b.dataset.cat?'':b.dataset.cat;renderMetaCategoryTable()});
+    document.querySelectorAll('.saveCategoryBtn').forEach(b=>b.onclick=()=>saveManualCategory(b.dataset.code));
+    document.querySelectorAll('.historyCategoryBtn').forEach(b=>b.onclick=()=>openHistory('categoria_producto',b.dataset.code,`Código ${b.dataset.code}`));
   }
 
   async function saveManualCategory(code){
     const sel=document.querySelector(`.categorySelect[data-code="${code}"]`);
     if(!sel)return;
 
-    const official=officialCategoryCache.get(normalizeCategoryCode(code));
+    const official=officialCategoryCache.get(String(code||''));
     if(official){
       sel.value=official;
       return toast(`🏷️ ${code} ya está clasificado por tu documento: ${official}. La data oficial tiene prioridad.`);
@@ -3809,7 +3805,7 @@
     if(newCat===oldCat)return toast('ℹ️ La categoría ya es la seleccionada');
     try{
       const cfg=await getActiveCategoryMasterConfig();
-      const activeVersion=cfg?.mode==='meta_categoria'?(cfg.version_activa||''):'';
+      const activeVersion=cfg?.mode==='versioned'?(cfg.version_activa||''):'';
 
       await setDoc(doc(db,'clasificaciones_productos',code),{
         codigo:code,
@@ -3842,109 +3838,34 @@
 
   async function loadEvaluation(force=false){
     try{
-      // Actualizar = volver a leer el maestro único y volver a agrupar.
-      await loadUnifiedMasterAll(force);
+      await loadOfficialCategoriesAll();
       await loadManualCategories();
 
-      const cfg=await getActiveMasterConfig(force);
-      const categories=new Set(
-        [...unifiedMasterCache.values()].map(x=>x.categoria).filter(Boolean)
-      );
-      const hasUnifiedMaster=cfg.mode==='versioned' && unifiedMasterCache.size>0;
-
-      if(hasUnifiedMaster){
-        $("metaCategorySource").className='message ok';
-        $("metaCategorySource").innerHTML=
-          `📦 Maestro único activo: <b>${cfg.version_activa}</b> · `+
-          `${fmtInt(unifiedMasterCache.size)} productos · ${fmtInt(categories.size)} categorías.`;
-      }else{
-        $("metaCategorySource").className='message warn';
-        $("metaCategorySource").innerHTML=
-          '⚠️ No hay maestro único activo. Cárgalo en Configuración → Data de productos con Code + Description (eng) + Category.';
+      const categoryCfg=await getActiveCategoryMasterConfig();
+      if($("metaCategorySource")){
+        if(categoryCfg.mode==='versioned'){
+          $("metaCategorySource").innerHTML=`📄 Maestro por código activo: <b>${categoryCfg.version_activa}</b> · ${fmtInt(categoryCfg.total_codigos||0)} códigos`;
+        }else{
+          $("metaCategorySource").innerHTML='⚠️ El maestro actual no tiene categorías. Carga Code + Description (eng) + Category en Configuración → Data de productos.';
+          $("metaCategorySource").className='message warn';
+        }
       }
 
-      const records=(await getSupervisorRecords(force))
-        .filter(x=>(x.proceso||'etiquetado')==='etiquetado'&&Number(x.productividad_u_h||0)>0);
-
-      metaEvaluationRecords=records;
-
-      const metasSnap=await getDocs(collection(db,'metas'));
-      metaByCode=new Map(metasSnap.docs.map(d=>[d.id,d.data()]));
-
-      if(hasUnifiedMaster){
-        renderMetaCategoryTable();
-      }else{
-        expandedMetaCategory='';
-        $("familyTargetsBody").innerHTML=
-          '<tr><td colspan="5">📦 Carga primero el maestro único en Configuración → Data de productos.</td></tr>';
-      }
-
-      const groups=new Map();
-      records.forEach(x=>{
-        const code=normalizeCategoryCode(x.codigo||'');
-        if(!code)return;
-        if(!groups.has(code))groups.set(code,[]);
-        groups.get(code).push(x);
-      });
-
-      const data=[...groups.entries()].map(([code,arr])=>{
-        const ops=new Set(arr.map(x=>x.operario).filter(Boolean));
-        let state='<span class="statusPill warn">En evaluación</span>';
-        if(arr.length>=3&&ops.size>=2)state='<span class="statusPill ok">Meta provisional</span>';
-        if(arr.length>=5&&ops.size>=2)state='<span class="statusPill ok">Apto para revisar meta</span>';
-
-        const master=unifiedMasterCache.get(code);
-
-        return {
-          code,
-          desc:master?.descripcion||arr[0]?.descripcion||'—',
-          categoria:master?.categoria||recordCategory(arr[0]),
-          records:arr.length,
-          ops:ops.size,
-          avg:weightedUph(arr),
-          state
-        };
-      }).sort((a,b)=>b.records-a.records);
-
-      $("evaluationBody").innerHTML=data.length
-        ? data.map(x=>`<tr>
-            <td><b>${x.code}</b></td>
-            <td>${shortDescription(x.desc)}</td>
-            <td>${x.categoria}</td>
-            <td>${x.records}</td>
-            <td>${x.ops}</td>
-            <td><b>${fmtInt(x.avg)}</b></td>
-            <td>${x.state}</td>
-          </tr>`).join('')
-        : '<tr><td colspan="7">Aún no hay registros de etiquetado.</td></tr>';
-
-    }catch(e){
-      console.error('Meta/Categoría',e);
-      $("familyTargetsBody").innerHTML=`<tr><td colspan="5">${e.message}</td></tr>`;
-      $("evaluationBody").innerHTML=`<tr><td colspan="7">${e.message}</td></tr>`;
-    }
+      const records=(await getSupervisorRecords(force)).filter(x=>(x.proceso||'etiquetado')==='etiquetado'&&Number(x.productividad_u_h||0)>0);metaEvaluationRecords=records;
+      const metasSnap=await getDocs(collection(db,'metas'));metaByCode=new Map(metasSnap.docs.map(d=>[d.id,d.data()]));
+      renderMetaCategoryTable();
+      const groups=new Map();records.forEach(x=>{const code=x.codigo||'';if(!code)return;if(!groups.has(code))groups.set(code,[]);groups.get(code).push(x)});
+      const data=[...groups.entries()].map(([code,arr])=>{const ops=new Set(arr.map(x=>x.operario).filter(Boolean));let state='<span class="statusPill warn">En evaluación</span>';if(arr.length>=3&&ops.size>=2)state='<span class="statusPill ok">Meta provisional</span>';if(arr.length>=5&&ops.size>=2)state='<span class="statusPill ok">Apto para revisar meta</span>';return {code,desc:arr[0].descripcion||'—',categoria:recordCategory(arr[0]),records:arr.length,ops:ops.size,avg:weightedUph(arr),state}}).sort((a,b)=>b.records-a.records);
+      $("evaluationBody").innerHTML=data.length?data.map(x=>`<tr><td><b>${x.code}</b></td><td>${shortDescription(x.desc)}</td><td>${x.categoria}</td><td>${x.records}</td><td>${x.ops}</td><td><b>${fmtInt(x.avg)}</b></td><td>${x.state}</td></tr>`).join(''):'<tr><td colspan="7">Aún no hay registros de etiquetado.</td></tr>';
+    }catch(e){$("familyTargetsBody").innerHTML=`<tr><td colspan="5">${e.message}</td></tr>`;$("evaluationBody").innerHTML=`<tr><td colspan="7">${e.message}</td></tr>`}
   }
-
   $("refreshMetasAnalysis").onclick=async()=>{
-    const btn=$("refreshMetasAnalysis");
-    btn.disabled=true;
-    const original=btn.textContent;
-    btn.textContent='⏳ Actualizando…';
-
-    try{
-      activeMasterConfig=null;
-      masterBucketCache.clear();
-      unifiedMasterCache=new Map();
-      unifiedMasterLoadedVersion='';
-      unifiedMasterFullyLoaded=false;
-      invalidateRecordCaches();
-
-      await loadEvaluation(true);
-      toast('✅ Datos actualizados desde el maestro único');
-    }finally{
-      btn.disabled=false;
-      btn.textContent=original;
-    }
+    activeMasterConfig=null;masterBucketCache.clear();
+    officialCategoryCache.clear();officialCategoryBucketCache.clear();officialCategoriesFullyLoaded=false;
+    dailyRecordsCache.clear();supervisorRecordsLoadedAt=0;
+    await loadOfficialCategoriesAll(true);
+    await loadEvaluation(true);
+    toast('✅ Meta/Categoría actualizado');
   };
 
   function pauseReasonsLabel(x){
@@ -4237,258 +4158,451 @@
   }
   $("openDataModalBtn").onclick=openProductModal;
 
+  async function loadCategoryDataSummary(){
+    try{
+      const cfg=await getActiveCategoryMasterConfig(true);
+      $("categoryDataVersion").textContent=cfg.mode==='versioned'?(cfg.version_activa||'—'):'Sin maestro';
+      $("categoryDataCount").textContent=fmtInt(cfg.total_codigos||0);
+      $("categoryDataCategories").textContent=fmtInt(cfg.total_categorias||0);
+      $("categoryDataBuckets").textContent=cfg.mode==='versioned'?fmtInt(cfg.bucket_count||0):'—';
+    }catch(e){toast('⚠️ Categorías: '+e.message)}
+  }
+  function openCategoryModal(){if(!supervisorUnlocked)return toast('🔒 Ingresa primero como Supervisor');$("categoryModal").classList.add('show')}
+  function closeCategoryModal(){$("categoryModal").classList.remove('show')}
+  $("openCategoryModalBtn").onclick=openCategoryModal;
+  $("closeCategoryModal").onclick=closeCategoryModal;
+  $("categoryModal").addEventListener('click',e=>{if(e.target===$("categoryModal"))closeCategoryModal()});
+  $("clearCategoryPaste").onclick=()=>{$("categoryPaste").value='';$("categoryImportMsg").innerHTML=''};
 
+  $("addOperator").onclick=async()=>{
+    const nombre=norm($("newOpName").value),tipo=$("newOpType").value;if(!nombre)return;
+    try{const id=slug(nombre);await setDoc(doc(db,'operarios',id),{nombre,tipo,activo:true,creado_en:serverTimestamp()},{merge:true});await logAudit({accion:'Operario creado',entidad:'operario',entidadId:id,detalle:nombre,cambios:[{campo:'Estado',anterior:'',nuevo:'Activo'}]});$("userMsg").innerHTML='<div class="message ok">✅ Operario creado.</div>';$("newOpName").value='';await loadUsersTable();await loadOperators();}catch(e){$("userMsg").innerHTML='<div class="message err">❌ '+e.message+'</div>'}
+  };
+  async function setOperatorActive(id,active){
+    try{await updateDoc(doc(db,'operarios',id),{activo:active,actualizado_local:localISO(),actualizado_por:currentSupervisorUser()});await logAudit({accion:active?'Operario reactivado':'Operario desactivado',entidad:'operario',entidadId:id,cambios:[{campo:'Activo',anterior:!active,nuevo:active}]});toast(active?'✅ Operario reactivado':'⏸️ Operario desactivado');await loadUsersTable();await loadOperators()}catch(e){toast('❌ '+e.message)}
+  }
+  async function deleteOperator(id,name){
+    try{
+      const ss=await getDoc(doc(db,'sesiones_activas',id));if(ss.exists()&&['idle','running','paused','finishing'].includes(ss.data().estado))return toast('⚠️ Cierra primero la sesión de este operario');
+      if(!confirm(`¿Eliminar definitivamente a ${name}?\n\nSus registros históricos no se borrarán.`))return;
+      await logAudit({accion:'Operario eliminado',entidad:'operario',entidadId:id,detalle:name});await deleteDoc(doc(db,'operarios',id));toast('🗑️ Operario eliminado');await loadUsersTable();await loadOperators();
+    }catch(e){toast('❌ '+e.message)}
+  }
+  async function loadUsersTable(){
+    try{
+      const snap=await getDocs(collection(db,'operarios'));const arr=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>norm(a.nombre).localeCompare(norm(b.nombre)));
+      $("usersBody").innerHTML=arr.length?arr.map(x=>`<tr><td><b>${x.nombre}</b></td><td>${x.tipo||''}</td><td>${x.activo!==false?'<span class="statusPill ok">Activo</span>':'<span class="statusPill">Desactivado</span>'}</td><td><div class="rowActions">${x.activo!==false?`<button class="operatorDeactivateBtn" data-id="${x.id}">⏸️ Desactivar</button>`:`<button class="operatorReactivateBtn" data-id="${x.id}">▶️ Reactivar</button>`}<button class="operatorDeleteBtn" data-id="${x.id}" data-name="${x.nombre}">🗑️ Eliminar</button><button class="miniBtn operatorHistoryBtn" data-id="${x.id}" data-name="${x.nombre}">🕘</button></div></td></tr>`).join(''):'<tr><td colspan="4">Sin operarios</td></tr>';
+      document.querySelectorAll('.operatorDeactivateBtn').forEach(b=>b.onclick=()=>setOperatorActive(b.dataset.id,false));document.querySelectorAll('.operatorReactivateBtn').forEach(b=>b.onclick=()=>setOperatorActive(b.dataset.id,true));document.querySelectorAll('.operatorDeleteBtn').forEach(b=>b.onclick=()=>deleteOperator(b.dataset.id,b.dataset.name));document.querySelectorAll('.operatorHistoryBtn').forEach(b=>b.onclick=()=>openHistory('operario',b.dataset.id,b.dataset.name));
+    }catch(e){$("usersBody").innerHTML=`<tr><td colspan="4">${e.message}</td></tr>`}
+  }
+
+  $("saveMeta").onclick=async()=>{
+    const code=norm($("metaCode").value),meta=Math.floor(safeNum($("metaValue").value)),reason=norm($("metaReason").value);if(!code||meta<=0)return;
+    try{
+      const prev=await getDoc(doc(db,'metas',code));const old=prev.exists()?prev.data().meta_u_h:null;
+      await setDoc(doc(db,'metas',code),{codigo:code,meta_u_h:meta,estado:'aprobada',motivo:reason,actualizado_local:localISO(),actualizado_en:serverTimestamp()},{merge:true});
+      await addDoc(collection(db,'historial_metas'),{codigo:code,meta_anterior:old,meta_nueva:meta,motivo:reason,fecha_local:localISO(),usuario_uid:auth.currentUser?.uid||'',usuario:currentSupervisorUser(),creado_en:serverTimestamp()});await logAudit({accion:'Meta modificada',entidad:'meta',entidadId:code,detalle:reason,cambios:[{campo:'Meta u/h',anterior:old??'',nuevo:meta}]});
+      $("metaMsg").innerHTML=`<div class="message ok">✅ Meta ${code}: ${meta.toLocaleString('es-EC')} u/h guardada.</div>`;await loadDashboard();
+    }catch(e){$("metaMsg").innerHTML='<div class="message err">❌ '+e.message+'</div>'}
+  };
+
+  $("metaHistoryBtn").onclick=()=>{const code=norm($("metaCode").value);if(!code)return toast('⚠️ Ingresa un código para ver su historial');openHistory('meta',code,`Meta del código ${code}`)};
+
+  $("loadRecords").onclick=()=>loadRecords(true);
+
+  $("recordsEtiquetadoBtn").onclick=()=>{
+    $("recordsEtiquetadoBtn").classList.add('active');
+    $("recordsArmadoBtn").classList.remove('active');
+    $("recordsEtiquetadoWrap").classList.remove('hidden');
+    $("recordsArmadoWrap").classList.add('hidden');
+  };
+
+  $("recordsArmadoBtn").onclick=()=>{
+    $("recordsArmadoBtn").classList.add('active');
+    $("recordsEtiquetadoBtn").classList.remove('active');
+    $("recordsArmadoWrap").classList.remove('hidden');
+    $("recordsEtiquetadoWrap").classList.add('hidden');
+  };
+
+  let editingRecordId='';
+  function toggleEditFields(){
+    const noExpiry=$("editExpiryType").value==='no_caduca';$("editExpiryMonthWrap").classList.toggle('hidden',noExpiry);$("editExpiryYearWrap").classList.toggle('hidden',noExpiry);
+    const noNovelty=$("editNoveltyType").value==='none';$("editNoveltyQtyWrap").classList.toggle('hidden',noNovelty);
+  }
+  function openRecordEditor(id){
+    const x=recordLookup.get(id)||supervisorRecordsCache.find(r=>r.id===id);if(!x)return toast('⚠️ No se encontró el registro');editingRecordId=id;recordLookup.set(id,x);
+    $("recordEditMeta").innerHTML=`<b>${x.operario||'—'}</b> · ${x.fecha_local||'—'} · Código <b>${x.codigo||'—'}</b> · Tiempo neto ${fmtTimer(Number(x.tiempo_neto_ms||0))}`;
+    $("editCode").value=x.codigo||'';$("editProcess").value=x.proceso==='armado'?'armado':'etiquetado';$("editUnits").value=Number(x.unidades||0);$("editExpiryType").value=x.caducidad_tipo==='no_caduca'?'no_caduca':'fecha';$("editExpiryMonth").value=x.caducidad_mes||'';$("editExpiryYear").value=x.caducidad_anio||'';$("editNoveltyType").value=x.novedad_tipo||'none';$("editNoveltyQty").value=Number(x.novedad_cantidad||0)||'';$("editComment").value=x.comentario||'';toggleEditFields();$("recordEditModal").classList.add('show');
+  }
+  $("closeHistoryModal").onclick=()=>$("historyModal").classList.remove('show');
+  $("closeRecordEditModal").onclick=()=>$("recordEditModal").classList.remove('show');$("editExpiryType").addEventListener('change',toggleEditFields);$("editNoveltyType").addEventListener('change',toggleEditFields);
+  $("saveRecordEdit").onclick=async()=>{
+    const x=recordLookup.get(editingRecordId);if(!x)return;
+    const newCode=norm($("editCode").value);if(!newCode)return toast('⚠️ Ingresa un código');
+    const newProcess=$("editProcess").value==='armado'?'armado':'etiquetado';
+    const units=Math.floor(safeNum($("editUnits").value));if(units<=0)return toast('⚠️ Ingresa unidades válidas');
+    const expiryType=$("editExpiryType").value,month=expiryType==='no_caduca'?'':$("editExpiryMonth").value,year=expiryType==='no_caduca'?null:Number($("editExpiryYear").value||0);if(expiryType==='fecha'&&(!month||!year))return toast('⚠️ Selecciona mes y año');
+    const novelty=$("editNoveltyType").value;let noveltyQty=novelty==='none'?0:Math.floor(safeNum($("editNoveltyQty").value));if(novelty!=='none'&&noveltyQty<=0)return toast('⚠️ Ingresa la cantidad de novedad');
+
+    let description=x.descripcion||'',category=recordCategory(x),meta=null;
+    if(newCode!==String(x.codigo||'')){
+      try{
+        const product=await getProductByCode(newCode);
+        if(!product)return toast('⚠️ El código corregido no existe en la data de productos');
+        description=product.descripcion||'';
+        category=(await getOfficialCategory(newCode))||(await getManualCategory(newCode))||classifyProduct(description).categoria;
+      }catch(e){return toast('⚠️ No se pudo validar el código corregido');}
+    }
+
+    if(newProcess==='etiquetado'){
+      try{
+        const metaSnap=await getDoc(doc(db,'metas',newCode));
+        meta=metaSnap.exists()?Number(metaSnap.data().meta_u_h||0)||null:null;
+      }catch{meta=null}
+    }
+
+    const netMs=Number(x.tiempo_neto_ms||0),uph=netMs>0?Math.round(units/(netMs/3600000)):0,compliance=meta?Math.round((uph/meta)*1000)/10:null;
+    try{
+      const newComment=norm($("editComment").value);const changes=[diffChange('Código',x.codigo,newCode),diffChange('Proceso',processName(x.proceso),processName(newProcess)),diffChange('Unidades',x.unidades,units),diffChange('Caducidad',expiryLabel(x),expiryType==='no_caduca'?'No caduca':`${month}/${year}`),diffChange('Novedad',x.novedad_tipo||'none',novelty),diffChange('Cantidad novedad',x.novedad_cantidad||0,noveltyQty),diffChange('Comentario',x.comentario||'',newComment)].filter(Boolean);
+      await updateDoc(doc(db,'registros_etiquetado',editingRecordId),{codigo:newCode,proceso:newProcess,descripcion:description,categoria:category,unidades:units,productividad_u_h:uph,meta_u_h:meta,cumplimiento_pct:compliance,caducidad_tipo:expiryType,caducidad_mes:month,caducidad_anio:year,novedad_tipo:novelty,novedad_cantidad:noveltyQty,comentario:newComment,editado_supervisor:true,editado_por:currentSupervisorUser(),editado_local:localISO()});
+      if(changes.length)await logAudit({accion:'Registro editado',entidad:'registro',entidadId:editingRecordId,detalle:`${x.operario||''} · ${x.fecha_local||''}`,cambios:changes});
+      $("recordEditModal").classList.remove('show');invalidateRecordCaches();toast('✅ Registro actualizado');
+      if($("view-registros").classList.contains('active'))await loadRecords(true);
+      if($("view-novedades").classList.contains('active'))await loadNoveltyReport();
+      if($("view-productividad").classList.contains('active'))await loadProductivity(true);
+      if($("view-caducidad")?.classList.contains('active'))await loadExpiryReport();
+    }catch(e){toast('❌ No se pudo editar: '+e.message)}
+  };
+
+  async function deleteSupervisorRecord(id){
+    const rec=recordLookup.get(id)||supervisorRecordsCache.find(x=>x.id===id);if(!rec)return;const label=`${rec.operario||'Operario'} · ${rec.codigo||'sin código'} · ${rec.fecha_local||''}`;if(!confirm(`¿Borrar este registro?\n\n${label}\n\nEsta acción eliminará este dato de Firebase.`))return;
+    try{await logAudit({accion:'Registro eliminado',entidad:'registro',entidadId:id,detalle:label});await deleteDoc(doc(db,'registros_etiquetado',id));invalidateRecordCaches();toast('🗑️ Registro eliminado');await loadRecords(true);if($("view-dashboard")?.classList.contains('active'))await loadDashboard(true)}catch(e){toast('❌ No se pudo borrar: '+e.message)}
+  }
+  function bindRecordActionButtons(){document.querySelectorAll('.editRecordBtn').forEach(btn=>btn.onclick=()=>openRecordEditor(btn.dataset.id));document.querySelectorAll('.deleteRecordBtn').forEach(btn=>btn.onclick=()=>deleteSupervisorRecord(btn.dataset.id));document.querySelectorAll('.historyRecordBtn').forEach(btn=>btn.onclick=()=>openHistory('registro',btn.dataset.id))}
+
+  function noveltyLabel(x){const type=x.novedad_tipo||'none';if(type==='sobrante')return `➕ Sobrante${x.novedad_cantidad?` (${x.novedad_cantidad})`:''}`;if(type==='faltante')return `➖ Faltante${x.novedad_cantidad?` (${x.novedad_cantidad})`:''}`;if(type==='danado')return `💥 Dañado${x.novedad_cantidad?` (${x.novedad_cantidad})`:''}`;return '✅ Sin novedad'}
+  function expiryLabel(x){if(x.caducidad_tipo==='no_caduca')return '♾️ No caduca';if(!x.caducidad_mes||!x.caducidad_anio)return '—';return `${x.caducidad_mes}/${x.caducidad_anio}`}
+
+  async function loadRecords(force=false){
+    try{
+      const all=await getSupervisorRecords(force);indexRecords(all);const etiquetado=all.filter(x=>(x.proceso||'etiquetado')==='etiquetado'),armado=all.filter(x=>x.proceso==='armado');
+      $("recordsEtiquetadoBody").innerHTML=etiquetado.length?etiquetado.map(x=>`<tr><td>${x.fecha_local||''}</td><td>${x.operario||''}</td><td>${x.codigo||''}</td><td>${fmtInt(x.unidades)}</td><td>${Math.round((x.tiempo_neto_ms||0)/60000)}</td><td><b>${fmtInt(x.productividad_u_h||0)}</b></td><td>${x.meta_u_h?fmtInt(x.meta_u_h):'—'}</td><td>${expiryLabel(x)}</td><td>${noveltyLabel(x)}</td><td>${x.comentario||'—'}</td><td><div class="rowActions"><button class="editRecordBtn" data-id="${x.id}">✏️ Editar</button><button class="miniBtn deleteRecordBtn" data-id="${x.id}" title="Eliminar registro" aria-label="Eliminar registro">🗑️</button><button class="miniBtn historyRecordBtn" data-id="${x.id}" title="Historial">🕘</button></div></td></tr>`).join(''):'<tr><td colspan="11">Sin registros de etiquetado</td></tr>';
+      $("recordsArmadoBody").innerHTML=armado.length?armado.map(x=>`<tr><td>${x.fecha_local||''}</td><td>${x.operario||''}</td><td>${x.codigo||''}</td><td>${fmtInt(x.unidades)}</td><td>${Math.round((x.tiempo_neto_ms||0)/60000)}</td><td><b>${fmtInt(x.productividad_u_h||0)}</b></td><td>${expiryLabel(x)}</td><td>${noveltyLabel(x)}</td><td>${x.comentario||'—'}</td><td><div class="rowActions"><button class="editRecordBtn" data-id="${x.id}">✏️ Editar</button><button class="miniBtn deleteRecordBtn" data-id="${x.id}" title="Eliminar registro" aria-label="Eliminar registro">🗑️</button><button class="miniBtn historyRecordBtn" data-id="${x.id}" title="Historial">🕘</button></div></td></tr>`).join(''):'<tr><td colspan="10">Sin registros de armado</td></tr>';bindRecordActionButtons();
+    }catch(e){$("recordsEtiquetadoBody").innerHTML=`<tr><td colspan="11">${e.message}</td></tr>`;$("recordsArmadoBody").innerHTML=`<tr><td colspan="10">${e.message}</td></tr>`}
+  }
+
+  // ---------- CADUCIDAD ----------
+  let expiryReportRows=[];
+  async function loadExpiryReport(){
+    const today=localISO().slice(0,10);
+    const from=$("expiryFrom").value||today,to=$("expiryTo").value||today;
+    $("expiryFrom").value=from;$("expiryTo").value=to;
+    if(from>to)return toast('⚠️ El rango de fechas no es válido');
+    const proc=$("expiryProcess").value,op=$("expiryOperator").value,type=$("expiryTypeFilter").value;
+    try{
+      const all=await getRecordsByRange(from,to);
+      const ops=[...new Set(all.map(x=>x.operario).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es'));
+      const opSel=$("expiryOperator"),current=opSel.value;
+      opSel.innerHTML='<option value="">Todos</option>'+ops.map(v=>`<option>${v}</option>`).join('');
+      if(ops.includes(current))opSel.value=current;
+      const rows=all.filter(x=>{
+        const p=x.proceso||'etiquetado',t=x.caducidad_tipo==='no_caduca'?'no_caduca':'fecha';
+        return (proc==='todos'||p===proc)&&(!op||x.operario===op)&&(type==='todos'||t===type);
+      }).sort((a,b)=>String(a.caducidad_anio||9999).localeCompare(String(b.caducidad_anio||9999))||String(a.caducidad_mes||'99').localeCompare(String(b.caducidad_mes||'99')));
+      expiryReportRows=rows;
+      $("expiryBody").innerHTML=rows.length?rows.map(x=>`<tr><td>${x.fecha_local||'—'}</td><td>${x.operario||'—'}</td><td>${processName(x.proceso)}</td><td>${x.codigo||'—'}</td><td title="${x.descripcion||''}">${shortDescription(x.descripcion)}</td><td>${recordCategory(x)}</td><td>${fmtInt(x.unidades)}</td><td><b>${expiryLabel(x)}</b></td></tr>`).join(''):'<tr><td colspan="8">Sin registros para los filtros seleccionados.</td></tr>';
+    }catch(e){$("expiryBody").innerHTML=`<tr><td colspan="8">${e.message}</td></tr>`}
+  }
+  $("expiryFrom").value=localISO().slice(0,10);$("expiryTo").value=localISO().slice(0,10);
+  $("loadExpiryReport").onclick=loadExpiryReport;
+  ["expiryFrom","expiryTo","expiryProcess","expiryOperator","expiryTypeFilter"].forEach(id=>$(id)?.addEventListener('change',loadExpiryReport));
+
+  $("copyExpiryReport").onclick=async()=>{
+    if(!expiryReportRows.length)return toast('⚠️ No hay datos para copiar');
+    const lines=[['Fecha','Operario','Proceso','Código','Descripción','Categoría','Unidades','Caducidad'],...expiryReportRows.map(x=>[x.fecha_local||'',x.operario||'',processName(x.proceso),x.codigo||'',shortDescription(x.descripcion),recordCategory(x),Number(x.unidades||0),expiryLabel(x)])];
+    try{await navigator.clipboard.writeText(lines.map(r=>r.join('\t')).join('\n'));toast('📋 Tabla de caducidad copiada')}catch{toast('❌ No se pudo copiar')}
+  };
+  $("downloadExpiryReport").onclick=()=>{
+    if(!expiryReportRows.length)return toast('⚠️ No hay datos para descargar');
+    const data=expiryReportRows.map(x=>({'Fecha':x.fecha_local||'','Operario':x.operario||'','Proceso':processName(x.proceso),'Código':x.codigo||'','Descripción':shortDescription(x.descripcion),'Categoría':recordCategory(x),'Unidades':Number(x.unidades||0),'Caducidad':expiryLabel(x)}));
+    const ws=XLSX.utils.json_to_sheet(data);ws['!cols']=[{wch:12},{wch:25},{wch:13},{wch:12},{wch:28},{wch:24},{wch:12},{wch:14}];const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Caducidad');XLSX.writeFile(wb,`Caducidad_${$("expiryFrom").value}_${$("expiryTo").value}.xlsx`);
+  };
+
+
+  // ---------- NOVEDADES ----------
+  let noveltyActiveType='todos';
+  async function setNoveltyManaged(id,managed){
+    const x=recordLookup.get(id);if(!x)return;
+    const old=x.gestion_estado||'pendiente',next=managed?'gestionado':'pendiente';
+    try{await updateDoc(doc(db,'registros_etiquetado',id),{gestion_estado:next,gestion_por:managed?currentSupervisorUser():'',gestion_fecha_local:managed?localISO():'',gestion_actualizado_por:currentSupervisorUser()});await logAudit({accion:managed?'Novedad gestionada':'Novedad reabierta',entidad:'registro',entidadId:id,detalle:`${x.operario||''} · ${x.codigo||''}`,cambios:[{campo:'Estado de gestión',anterior:old,nuevo:next}]});invalidateRecordCaches();toast(managed?'✅ Marcado como gestionado':'↩️ Marcado como pendiente');await loadNoveltyReport()}catch(e){toast('❌ '+e.message)}
+  }
+  async function loadNoveltyReport(){
+    const date=$("noveltyDate").value||localISO().slice(0,10);$("noveltyDate").value=date;const proc=$("noveltyProcess").value,opFilter=$("noveltyOperator").value,management=$("noveltyManagementFilter").value;
+    try{
+      const snap=await getDocs(query(collection(db,'registros_etiquetado'),where('fecha_local','==',date)));const all=snap.docs.map(d=>({id:d.id,...d.data()}));indexRecords(all);
+      const operatorsForDay=[...new Set(all.map(x=>x.operario).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es'));const opSel=$("noveltyOperator"),current=opSel.value;opSel.innerHTML='<option value="">Todos</option>'+operatorsForDay.map(v=>`<option>${v}</option>`).join('');if(operatorsForDay.includes(current))opSel.value=current;
+      let rows=all.filter(x=>{const p=x.proceso||'etiquetado',t=x.novedad_tipo||'none',g=x.gestion_estado||'pendiente';return t!=='none'&&(proc==='todos'||p===proc)&&(!opFilter||x.operario===opFilter)&&(noveltyActiveType==='todos'||t===noveltyActiveType)&&(management==='todos'||g===management)});
+      rows.sort((a,b)=>String(a.inicio_local||'').localeCompare(String(b.inicio_local||'')));
+      const over=rows.filter(x=>x.novedad_tipo==='sobrante').reduce((s,x)=>s+Number(x.novedad_cantidad||0),0),short=rows.filter(x=>x.novedad_tipo==='faltante').reduce((s,x)=>s+Number(x.novedad_cantidad||0),0),damaged=rows.filter(x=>x.novedad_tipo==='danado').reduce((s,x)=>s+Number(x.novedad_cantidad||0),0);
+      $("noveltyCount").textContent=fmtInt(rows.length);$("noveltyOverQty").textContent=fmtInt(over);$("noveltyShortQty").textContent=fmtInt(short);$("noveltyDamagedQty").textContent=fmtInt(damaged);$("noveltyTotalQty").textContent=fmtInt(over+short+damaged);
+      $("noveltyBody").innerHTML=rows.length?rows.map(x=>{const managed=(x.gestion_estado||'pendiente')==='gestionado';return `<tr><td>${x.fecha_local||''}</td><td>${x.operario||''}</td><td>${processName(x.proceso)}</td><td>${x.codigo||''}</td><td>${expiryLabel(x)}</td><td>${x.novedad_tipo==='sobrante'?'➕ Sobrante':x.novedad_tipo==='faltante'?'➖ Faltante':'💥 Dañado'}</td><td><b>${fmtInt(x.novedad_cantidad||0)}</b></td><td>${x.comentario||'—'}</td><td><span class="managementPill ${managed?'done':'pending'}">${managed?'✅ Gestionado':'🟡 Pendiente'}</span></td><td>${managed?`${x.gestion_por||'—'}${x.gestion_fecha_local?` · ${x.gestion_fecha_local.replace('T',' ').slice(0,16)}`:''}`:'—'}</td><td><div class="compactActions"><button class="editRecordBtn" data-id="${x.id}">✏️ Editar</button><button class="miniBtn ${managed?'warn':'ok'} noveltyManageBtn" data-id="${x.id}" data-managed="${managed?'0':'1'}">${managed?'↩️ Reabrir':'✅ Gestionado'}</button><button class="miniBtn historyNoveltyBtn" data-id="${x.id}">🕘</button></div></td></tr>`}).join(''):'<tr><td colspan="11">Sin novedades para los filtros seleccionados.</td></tr>';
+      document.querySelectorAll('#noveltyBody .editRecordBtn').forEach(btn=>btn.onclick=()=>openRecordEditor(btn.dataset.id));document.querySelectorAll('.noveltyManageBtn').forEach(btn=>btn.onclick=()=>setNoveltyManaged(btn.dataset.id,btn.dataset.managed==='1'));document.querySelectorAll('.historyNoveltyBtn').forEach(btn=>btn.onclick=()=>openHistory('registro',btn.dataset.id));
+    }catch(e){$("noveltyBody").innerHTML=`<tr><td colspan="11">${e.message}</td></tr>`}
+  }
+  $("noveltyDate").value=localISO().slice(0,10);$("loadNoveltyReport").onclick=loadNoveltyReport;$("noveltyProcess").addEventListener('change',loadNoveltyReport);$("noveltyOperator").addEventListener('change',loadNoveltyReport);$("noveltyManagementFilter").addEventListener('change',loadNoveltyReport);
+  document.querySelectorAll('.noveltyTab').forEach(btn=>btn.onclick=()=>{document.querySelectorAll('.noveltyTab').forEach(x=>x.classList.remove('active'));btn.classList.add('active');noveltyActiveType=btn.dataset.type;loadNoveltyReport()});
+
+  // ---------- REPORTE DIARIO ----------
+  let dailyReportRows=[];
+
+  function hhmm(value){
+    if(!value) return '';
+    const s=String(value);
+    const m=s.match(/T(\d{2}):(\d{2})/);
+    if(m) return `${m[1]}:${m[2]}`;
+    const d=new Date(value);
+    if(!Number.isNaN(d.getTime())){
+      return d.toLocaleTimeString('es-EC',{hour:'2-digit',minute:'2-digit',hour12:false});
+    }
+    return s;
+  }
+
+  async function loadDailyReport(){
+    const date=$("dailyReportDate").value || localISO().slice(0,10);
+    $("dailyReportDate").value=date;
+    const proc=$("dailyReportProcess").value;
+
+    try{
+      // Consulta solo el día seleccionado; evita leer meses completos.
+      const snap=await getDocs(
+        query(
+          collection(db,'registros_etiquetado'),
+          where('fecha_local','==',date)
+        )
+      );
+
+      let rows=snap.docs.map(d=>({id:d.id,...d.data()}));
+      rows=rows.filter(x=>proc==='todos'||(x.proceso||'etiquetado')===proc);
+
+      rows.sort((a,b)=>{
+        const na=String(a.operario||'').localeCompare(String(b.operario||''),'es');
+        if(na!==0) return na;
+        return String(a.inicio_local||'').localeCompare(String(b.inicio_local||''));
+      });
+
+      dailyReportRows=rows;
+
+      $("dailyReportCount").textContent=fmtInt(rows.length);
+      $("dailyReportUnits").textContent=fmtInt(rows.reduce((s,x)=>s+Number(x.unidades||0),0));
+      $("dailyReportWorkers").textContent=fmtInt(new Set(rows.map(x=>x.operario).filter(Boolean)).size);
+
+      $("dailyReportBody").innerHTML=rows.length
+        ? rows.map(x=>`<tr>
+            <td>${x.operario||''}</td>
+            <td>${x.codigo||''}</td>
+            <td>${fmtInt(x.unidades)}</td>
+            <td>${hhmm(x.inicio_local)}</td>
+            <td>${hhmm(x.fin_local)}</td>
+          </tr>`).join('')
+        : '<tr><td colspan="5">Sin registros para esa fecha y proceso.</td></tr>';
+    }catch(e){
+      dailyReportRows=[];
+      $("dailyReportBody").innerHTML=`<tr><td colspan="5">${e.message}</td></tr>`;
+    }
+  }
+
+  $("loadDailyReport").onclick=loadDailyReport;
+  $("dailyReportDate").value=localISO().slice(0,10);
+  $("dailyReportProcess").addEventListener('change',loadDailyReport);
+
+  $("copyDailyReport").onclick=async()=>{
+    if(!dailyReportRows.length) return toast('⚠️ No hay datos para copiar');
+
+    const lines=[
+      ['Nombre','Código','Total unidades','H. Inicio','H. Fin'],
+      ...dailyReportRows.map(x=>[
+        x.operario||'',
+        x.codigo||'',
+        Number(x.unidades||0),
+        hhmm(x.inicio_local),
+        hhmm(x.fin_local)
+      ])
+    ];
+
+    const text=lines.map(r=>r.join('\t')).join('\n');
+    try{
+      await navigator.clipboard.writeText(text);
+      toast('📋 Tabla copiada. Ya puedes pegarla en tu correo.');
+    }catch(e){
+      toast('❌ No se pudo copiar la tabla');
+    }
+  };
+
+  $("downloadDailyReport").onclick=()=>{
+    if(!dailyReportRows.length) return toast('⚠️ No hay datos para descargar');
+
+    const data=dailyReportRows.map(x=>({
+      'Nombre':x.operario||'',
+      'Código':x.codigo||'',
+      'Total unidades':Number(x.unidades||0),
+      'H. Inicio':hhmm(x.inicio_local),
+      'H. Fin':hhmm(x.fin_local)
+    }));
+
+    const ws=XLSX.utils.json_to_sheet(data,{header:['Nombre','Código','Total unidades','H. Inicio','H. Fin']});
+    ws['!cols']=[
+      {wch:28},
+      {wch:12},
+      {wch:16},
+      {wch:12},
+      {wch:12}
+    ];
+
+    const wb=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb,ws,'Reporte diario');
+
+    const date=$("dailyReportDate").value || localISO().slice(0,10);
+    const proc=$("dailyReportProcess").value;
+    XLSX.writeFile(wb,`Reporte_${proc}_${date}.xlsx`);
+  };
 
   async function saveProductRows(validRows, skipped=0, sourceLabel='datos pegados') {
-    if(!validRows.length) throw new Error('No encontré productos válidos para guardar.');
-    if(!auth.currentUser) await ensureFirebaseSession();
+    if(!validRows.length)throw new Error('No encontré productos válidos para guardar.');
+    if(!auth.currentUser)await ensureFirebaseSession();
 
     const msg=$("importMsg");
-
-    const withTimeout=(promise,ms,label)=>Promise.race([
-      promise,
-      new Promise((_,reject)=>setTimeout(
-        ()=>reject(new Error(`${label} tardó más de ${Math.round(ms/1000)} s.`)),
-        ms
-      ))
+    const timeout=(p,ms,label)=>Promise.race([
+      p,new Promise((_,rej)=>setTimeout(()=>rej(new Error(`${label} tardó más de ${Math.round(ms/1000)} s.`)),ms))
     ]);
 
-    const now=new Date();
-    const pad=n=>String(n).padStart(2,'0');
-    const version=
-      `v_${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}_`+
-      `${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+    const now=new Date(),pad=n=>String(n).padStart(2,'0');
+    const version=`v_${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
 
-    msg.innerHTML=`<div class="message warn">
-      🆕 Preparando maestro único <b>${version}</b>…<br>
-      <span class="small">Código + Descripción + Categoría. La versión actual sigue activa hasta terminar.</span>
-    </div>`;
-
-    // Última fila del mismo código gana.
-    const byCode=new Map();
-    validRows.forEach(row=>{
-      const code=normalizeCategoryCode(row.code);
-      const descripcion=norm(row.descripcion);
-      const categoria=norm(row.categoria);
-      if(code&&descripcion&&categoria)byCode.set(code,{code,descripcion,categoria});
+    const map=new Map();
+    validRows.forEach(r=>{
+      const code=norm(r.code),descripcion=norm(r.descripcion),categoria=norm(r.categoria);
+      if(code&&descripcion&&categoria)map.set(code,{code,descripcion,categoria});
     });
+    const rows=[...map.values()];
+    if(!rows.length)throw new Error('No encontré filas completas con Code, Description (eng) y Category.');
 
-    const cleanRows=[...byCode.values()];
-    if(!cleanRows.length)throw new Error('No encontré filas completas con Code, Description y Category.');
+    msg.innerHTML=`<div class="message warn">🆕 Preparando maestro único <b>${version}</b>…</div>`;
 
     const buckets=new Map();
-    for(const {code,descripcion,categoria} of cleanRows){
-      const bucketId=masterBucketId(code);
-      if(!buckets.has(bucketId))buckets.set(bucketId,{});
+    rows.forEach(({code,descripcion,categoria})=>{
+      const bid=masterBucketId(code);
+      if(!buckets.has(bid))buckets.set(bid,{});
+      buckets.get(bid)[code]={codigo:code,descripcion,categoria,activo:true};
+    });
 
-      buckets.get(bucketId)[code]={
-        codigo:code,
-        descripcion,
-        categoria,
-        activo:true
-      };
-    }
-
-    const bucketEntries=[...buckets.entries()];
-    const GROUP=16;
+    const entries=[...buckets.entries()];
     let written=0;
-
-    for(let i=0;i<bucketEntries.length;i+=GROUP){
-      const group=bucketEntries.slice(i,i+GROUP);
+    for(let i=0;i<entries.length;i+=16){
       const batch=writeBatch(db);
-
-      for(const [bucketId,items] of group){
-        batch.set(
-          doc(db,'maestros_productos',version,'buckets',bucketId),
-          {
-            items,
-            cantidad:Object.keys(items).length,
-            version,
-            actualizado_local:localISO()
-          }
-        );
-      }
-
-      await withTimeout(batch.commit(),30000,`La carga del bloque ${Math.floor(i/GROUP)+1}`);
-      written+=group.reduce((acc,[,items])=>acc+Object.keys(items).length,0);
-
-      msg.innerHTML=`<div class="message warn">
-        ⬆️ Maestro único: <b>${written.toLocaleString('es-EC')} / ${cleanRows.length.toLocaleString('es-EC')}</b> productos
-      </div>`;
+      const group=entries.slice(i,i+16);
+      group.forEach(([bid,items])=>{
+        batch.set(doc(db,'maestros_productos',version,'buckets',bid),
+          {items,cantidad:Object.keys(items).length,version,actualizado_local:localISO()});
+      });
+      await timeout(batch.commit(),30000,`La carga del bloque ${Math.floor(i/16)+1}`);
+      written+=group.reduce((a,[,items])=>a+Object.keys(items).length,0);
+      msg.innerHTML=`<div class="message warn">⬆️ ${written.toLocaleString('es-EC')} / ${rows.length.toLocaleString('es-EC')} productos</div>`;
     }
 
-    const categories=new Set(cleanRows.map(x=>x.categoria));
+    const cats=new Set(rows.map(x=>x.categoria));
+    await timeout(setDoc(doc(db,'maestros_productos',version),{
+      version,total_productos:rows.length,total_categorias:cats.size,buckets:entries.length,
+      estado:'lista',origen:sourceLabel,filas_omitidas:skipped,creado_local:localISO(),creado_en:serverTimestamp()
+    }),20000,'El guardado de metadatos');
 
-    await withTimeout(
-      setDoc(doc(db,'maestros_productos',version),{
-        version,
-        total_productos:cleanRows.length,
-        total_categorias:categories.size,
-        buckets:bucketEntries.length,
-        estado:'lista',
-        origen:sourceLabel,
-        filas_omitidas:skipped,
-        creado_local:localISO(),
-        creado_en:serverTimestamp()
-      }),
-      20000,
-      'El guardado de metadatos'
-    );
+    const sample=rows[0];
+    const ver=await timeout(getDoc(doc(db,'maestros_productos',version,'buckets',masterBucketId(sample.code))),20000,'La verificación');
+    const item=ver.exists()?ver.data()?.items?.[sample.code]:null;
+    if(!item||item.descripcion!==sample.descripcion||item.categoria!==sample.categoria)
+      throw new Error('La nueva versión no pasó la verificación de Descripción + Categoría.');
 
-    // Verificar descripción Y categoría antes de activar.
-    const sample=cleanRows[0];
-    const verifyBucket=await withTimeout(
-      getDoc(doc(db,'maestros_productos',version,'buckets',masterBucketId(sample.code))),
-      20000,
-      'La verificación de la nueva versión'
-    );
+    await timeout(setDoc(doc(db,'configuracion','maestro_productos'),{
+      version_activa:version,total_productos:rows.length,total_categorias:cats.size,
+      bucket_count:MASTER_BUCKETS,actualizado_local:localISO(),actualizado_en:serverTimestamp()
+    }),20000,'La activación');
 
-    const verified=verifyBucket.exists() &&
-      verifyBucket.data()?.items?.[sample.code] &&
-      verifyBucket.data().items[sample.code].descripcion===sample.descripcion &&
-      verifyBucket.data().items[sample.code].categoria===sample.categoria;
-
-    if(!verified)throw new Error('La nueva versión no pasó la verificación de Descripción + Categoría.');
-
-    await withTimeout(
-      setDoc(doc(db,'configuracion','maestro_productos'),{
-        version_activa:version,
-        total_productos:cleanRows.length,
-        total_categorias:categories.size,
-        bucket_count:MASTER_BUCKETS,
-        actualizado_local:localISO(),
-        actualizado_en:serverTimestamp()
-      }),
-      20000,
-      'La activación del nuevo maestro'
-    );
-
-    activeMasterConfig={
-      mode:'versioned',
-      version_activa:version,
-      total_productos:cleanRows.length,
-      total_categorias:categories.size,
-      bucket_count:MASTER_BUCKETS
-    };
-
+    activeMasterConfig={mode:'versioned',version_activa:version,total_productos:rows.length,total_categorias:cats.size,bucket_count:MASTER_BUCKETS};
     masterBucketCache.clear();
-    unifiedMasterCache=new Map();
-    unifiedMasterLoadedVersion='';
-    unifiedMasterFullyLoaded=false;
-    invalidateRecordCaches();
+    activeCategoryMasterConfig=null;
+    officialCategoryCache.clear();officialCategoryBucketCache.clear();officialCategoriesFullyLoaded=false;
+    await loadOfficialCategoriesAll(true);
 
-    // Leer nuevamente desde Firebase: esto es lo mismo que usarán todas las pestañas.
-    await loadUnifiedMasterAll(true);
+    dailyRecordsCache.clear();
+    supervisorRecordsCache=[];
+    supervisorRecordsLoadedAt=0;
+
+    if(activeOpId){
+      const active=openOps.get(activeOpId);
+      if(active?.code){active.product=await getProductByCode(active.code);renderWorkspace();}
+    }
 
     msg.innerHTML=`<div class="message ok">
       ✅ <b>Maestro único activado</b><br>
-      📦 ${cleanRows.length.toLocaleString('es-EC')} productos<br>
-      🧩 ${categories.size.toLocaleString('es-EC')} categorías<br>
-      🔎 Verificado: ${sample.code} → ${sample.descripcion} → <b>${sample.categoria}</b>
-      ${skipped?`<br>⚠️ ${skipped.toLocaleString('es-EC')} filas incompletas omitidas`:''}
+      📦 ${rows.length.toLocaleString('es-EC')} productos · 🧩 ${cats.size.toLocaleString('es-EC')} categorías<br>
+      🔎 ${sample.code} → ${sample.descripcion} → <b>${sample.categoria}</b>
     </div>`;
-
-    await loadDataSummary();
     toast('✅ Maestro único actualizado');
+    await loadDashboard();
   }
 
-  // ========================================================
-  // DATA DE PRODUCTOS - MAESTRO ÚNICO (Code + Description + Category)
-  // ========================================================
-  $("clearProductPaste").onclick=()=>{
-    $("productPaste").value='';
-    $("importMsg").innerHTML='';
-  };
-
-  function parseUnifiedMasterText(raw){
-    const lines=String(raw||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
-    if(!lines.length)throw new Error('No encontré filas.');
-
-    const splitLine=line=>{
-      const t=line.trim();
-      if(t.startsWith('|')&&t.endsWith('|'))return t.slice(1,-1).split('|').map(x=>x.trim());
-      if(line.includes('\t'))return line.split('\t').map(x=>x.trim());
-      if(line.includes(';'))return line.split(';').map(x=>x.trim());
-      return line.split(',').map(x=>x.trim());
-    };
-
-    const h=v=>String(v||'')
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g,'')
-      .replace(/\s+/g,' ')
-      .trim();
-
-    let rows=lines
-      .map(splitLine)
-      .filter(cols=>cols.length>=3)
-      .filter(cols=>!cols.every(c=>/^:?-{2,}:?$/.test(String(c||'').trim())));
-
-    if(!rows.length)throw new Error('No encontré filas válidas.');
-
-    const headers=rows[0].map(h);
-    const codeAliases=['code','codigo','codigo producto','product code','item code'];
-    const descAliases=['description (eng)','description','descripcion','descripcion (eng)','nombre producto','product description'];
-    const catAliases=['category','categoria','product category'];
-
-    let codeIdx=headers.findIndex(x=>codeAliases.includes(x));
-    let descIdx=headers.findIndex(x=>descAliases.includes(x));
-    let catIdx=headers.findIndex(x=>catAliases.includes(x));
-    let start=0;
-
-    if(codeIdx>=0||descIdx>=0||catIdx>=0){
-      if(codeIdx<0||descIdx<0||catIdx<0){
-        throw new Error('Necesito las tres columnas: Code, Description (eng) y Category.');
-      }
-      start=1;
-    }else{
-      codeIdx=0;descIdx=1;catIdx=2;
-    }
-
-    const map=new Map();
-    let skipped=0;
-
-    for(let i=start;i<rows.length;i++){
-      const code=normalizeCategoryCode(rows[i][codeIdx]);
-      const descripcion=norm(rows[i][descIdx]);
-      const categoria=norm(rows[i][catIdx]);
-
-      if(!code||!descripcion||!categoria){skipped++;continue;}
-      map.set(code,{code,descripcion,categoria});
-    }
-
-    return {validRows:[...map.values()],skipped};
-  }
+  $("clearProductPaste").onclick=()=>{ $("productPaste").value=''; $("importMsg").innerHTML=''; };
 
   $("importPastedProducts").onclick=async()=>{
     const raw=$("productPaste").value.trim();
     if(!raw)return toast('⚠️ Pega primero el maestro de productos');
-
-    const btn=$("importPastedProducts");
-    btn.disabled=true;
-    btn.textContent='⏳ Procesando…';
+    const btn=$("importPastedProducts");btn.disabled=true;btn.textContent='⏳ Procesando…';
 
     try{
-      const parsed=parseUnifiedMasterText(raw);
-      if(!parsed.validRows.length)throw new Error('No encontré productos válidos.');
-      await saveProductRows(parsed.validRows,parsed.skipped,'datos pegados');
+      const lines=raw.split(/\r?\n/).filter(x=>x.trim());
+      const split=line=>{
+        const t=line.trim();
+        if(t.startsWith('|')&&t.endsWith('|'))return t.slice(1,-1).split('|');
+        if(line.includes('\t'))return line.split('\t');
+        if(line.includes(';'))return line.split(';');
+        return line.split(',');
+      };
+      const h=v=>String(v||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim();
+
+      let rows=lines.map(split).map(a=>a.map(norm))
+        .filter(a=>a.length>=3)
+        .filter(a=>!a.every(c=>/^:?-{2,}:?$/.test(c)));
+      if(!rows.length)throw new Error('No encontré filas válidas.');
+
+      const headers=rows[0].map(h);
+      const ca=['code','codigo','codigo producto','product code','item code'];
+      const da=['description (eng)','description','descripcion','descripcion (eng)','nombre producto','product description'];
+      const ga=['category','categoria','product category'];
+
+      let ci=headers.findIndex(x=>ca.includes(x)),di=headers.findIndex(x=>da.includes(x)),gi=headers.findIndex(x=>ga.includes(x)),start=0;
+      if(ci>=0||di>=0||gi>=0){
+        if(ci<0||di<0||gi<0)throw new Error('Necesito Code, Description (eng) y Category.');
+        start=1;
+      }else{ci=0;di=1;gi=2}
+
+      const map=new Map();let skipped=0;
+      for(let i=start;i<rows.length;i++){
+        const code=norm(rows[i][ci]),descripcion=norm(rows[i][di]),categoria=norm(rows[i][gi]);
+        if(!code||!descripcion||!categoria){skipped++;continue}
+        map.set(code,{code,descripcion,categoria});
+      }
+      await saveProductRows([...map.values()],skipped,'datos pegados');
     }catch(e){
-      console.error('Maestro único pegado:',e);
-      $("importMsg").innerHTML=`<div class="message err">❌ <b>No se pudo completar la carga.</b><br>${e.message}</div>`;
+      console.error(e);
+      $("importMsg").innerHTML=`<div class="message err">❌ ${e.message}</div>`;
       toast('❌ Error cargando maestro');
     }finally{
-      btn.disabled=false;
-      btn.textContent='📥 Guardar datos pegados';
+      btn.disabled=false;btn.textContent='📥 Guardar datos pegados';
     }
   };
 
   $("importProducts").onclick=async()=>{
-    const f=$("productFile").files?.[0];
-    if(!f)return toast('⚠️ Selecciona un Excel');
-
-    const btn=$("importProducts");
-    btn.disabled=true;
-    btn.textContent='⏳ Procesando…';
+    const f=$("productFile").files?.[0];if(!f)return toast('⚠️ Selecciona un Excel');
+    const btn=$("importProducts");btn.disabled=true;btn.textContent='⏳ Procesando…';
 
     try{
       const wb=XLSX.read(await f.arrayBuffer(),{type:'array'});
@@ -4496,47 +4610,115 @@
       const rows=XLSX.utils.sheet_to_json(ws,{defval:'',raw:false});
       if(!rows.length)throw new Error('El archivo no contiene filas.');
 
-      const h=v=>String(v||'')
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g,'')
-        .replace(/\s+/g,' ')
-        .trim();
-
+      const h=v=>String(v||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim();
       const keys=Object.keys(rows[0]);
       const codeKey=keys.find(k=>['code','codigo','codigo producto','product code','item code'].includes(h(k)));
       const descKey=keys.find(k=>['description (eng)','description','descripcion','descripcion (eng)','nombre producto','product description'].includes(h(k)));
       const catKey=keys.find(k=>['category','categoria','product category'].includes(h(k)));
+      if(!codeKey||!descKey||!catKey)throw new Error('No encontré Code, Description (eng) y Category.');
 
-      if(!codeKey||!descKey||!catKey){
-        throw new Error('No encontré las columnas Code, Description (eng) y Category.');
-      }
-
-      const map=new Map();
-      let skipped=0;
-
+      const map=new Map();let skipped=0;
       rows.forEach(r=>{
-        const code=normalizeCategoryCode(r[codeKey]);
-        const descripcion=norm(r[descKey]);
-        const categoria=norm(r[catKey]);
-
-        if(!code||!descripcion||!categoria){skipped++;return;}
+        const code=norm(r[codeKey]),descripcion=norm(r[descKey]),categoria=norm(r[catKey]);
+        if(!code||!descripcion||!categoria){skipped++;return}
         map.set(code,{code,descripcion,categoria});
       });
-
-      const validRows=[...map.values()];
-      if(!validRows.length)throw new Error('No encontré productos completos para cargar.');
-
-      await saveProductRows(validRows,skipped,f.name);
-
+      await saveProductRows([...map.values()],skipped,f.name);
     }catch(e){
-      console.error('Maestro único Excel:',e);
+      console.error(e);
       $("importMsg").innerHTML=`<div class="message err">❌ ${e.message}</div>`;
       toast('❌ Error cargando maestro');
     }finally{
-      btn.disabled=false;
-      btn.textContent='⬆️ Cargar Excel';
+      btn.disabled=false;btn.textContent='⬆️ Cargar productos';
     }
+  };
+
+  function parseCategoryText(raw){
+    const lines=String(raw||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+    if(!lines.length)throw new Error('No encontré filas.');
+    const splitLine=(line)=>{
+      const t=line.trim();
+      if(t.startsWith('|')&&t.endsWith('|'))return t.slice(1,-1).split('|').map(norm);
+      if(line.includes('\t'))return line.split('\t').map(norm);
+      if(line.includes(';'))return line.split(';').map(norm);
+      return line.split(',').map(norm);
+    };
+    const nh=v=>String(v||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim();
+    const rows=lines.map(splitLine).filter(cols=>cols.length&&!cols.every(c=>/^:?-{2,}:?$/.test(norm(c))));
+    if(!rows.length)throw new Error('No encontré filas válidas.');
+    const headers=rows[0].map(nh);
+    const codeAliases=['code','codigo','codigo producto','product code','item code'];
+    const catAliases=['category','categoria','product category'];
+    let codeIdx=headers.findIndex(x=>codeAliases.includes(x)),catIdx=headers.findIndex(x=>catAliases.includes(x)),start=0;
+    if(codeIdx>=0||catIdx>=0){if(codeIdx<0||catIdx<0)throw new Error('Necesito dos columnas: Code y Category.');start=1}else{codeIdx=0;catIdx=1}
+    const map=new Map();let skipped=0;
+    for(let i=start;i<rows.length;i++){
+      const code=norm(rows[i][codeIdx]),sourceCategory=norm(rows[i][catIdx]);
+      if(!code||!sourceCategory){skipped++;continue}
+      const categoria=normalizeOfficialCategory(sourceCategory);if(!categoria){skipped++;continue}
+      map.set(code,{code,categoria,sourceCategory});
+    }
+    return {validRows:[...map.values()],skipped};
+  }
+
+  async function saveCategoryRows(validRows,skipped=0,sourceLabel='carga'){
+    const msg=$("categoryImportMsg");if(!validRows.length)throw new Error('No encontré categorías válidas.');
+    const now=new Date(),pad=n=>String(n).padStart(2,'0');
+    const version=`cat_${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+    msg.innerHTML=`<div class="message warn">🆕 Preparando nueva versión <b>${version}</b>…</div>`;
+    const buckets=new Map(),cats=new Set();
+    for(const row of validRows){const id=masterBucketId(row.code);if(!buckets.has(id))buckets.set(id,{});cats.add(row.categoria);buckets.get(id)[row.code]={codigo:row.code,categoria:row.categoria,categoria_origen:row.sourceCategory,activo:true}}
+    const entries=[...buckets.entries()],GROUP=16;let written=0;
+    for(let i=0;i<entries.length;i+=GROUP){
+      const group=entries.slice(i,i+GROUP),batch=writeBatch(db);
+      for(const [id,items] of group)batch.set(doc(db,'maestros_categorias',version,'buckets',id),{items,cantidad:Object.keys(items).length,version,actualizado_local:localISO()});
+      await batch.commit();written+=group.reduce((a,[,items])=>a+Object.keys(items).length,0);
+      msg.innerHTML=`<div class="message warn">⬆️ Cargando categorías: <b>${written.toLocaleString('es-EC')} / ${validRows.length.toLocaleString('es-EC')}</b></div>`;
+      await new Promise(r=>setTimeout(r,20));
+    }
+    await setDoc(doc(db,'maestros_categorias',version),{version,total_codigos:validRows.length,total_categorias:cats.size,bucket_count:MASTER_BUCKETS,estado:'lista',origen:sourceLabel,filas_omitidas:skipped,creado_local:localISO(),creado_en:serverTimestamp()});
+    const sample=validRows[0],sampleBucket=masterBucketId(sample.code),verify=await getDoc(doc(db,'maestros_categorias',version,'buckets',sampleBucket));
+    const verified=verify.exists()&&verify.data().items&&verify.data().items[sample.code];if(!verified)throw new Error('La nueva clasificación no pasó la verificación final.');
+    await setDoc(doc(db,'configuracion','maestro_categorias'),{version_activa:version,total_codigos:validRows.length,total_categorias:cats.size,bucket_count:MASTER_BUCKETS,actualizado_local:localISO(),actualizado_en:serverTimestamp()});
+    activeCategoryMasterConfig={mode:'versioned',version_activa:version,total_codigos:validRows.length,total_categorias:cats.size,bucket_count:MASTER_BUCKETS};
+
+    officialCategoryCache.clear();
+    officialCategoryBucketCache.clear();
+    officialCategoriesFullyLoaded=false;
+
+    // El nuevo maestro oficial queda por encima de cualquier clasificación manual.
+    // Las manuales se conservan únicamente como respaldo para códigos ausentes.
+    manualCategoryCache.clear();
+
+    await loadOfficialCategoriesAll(true);
+    await loadManualCategories();
+
+    dailyRecordsCache.clear();
+    supervisorRecordsLoadedAt=0;
+    await logAudit({accion:'Maestro de categorías actualizado',entidad:'maestro_categorias',entidadId:version,detalle:`${validRows.length} códigos · ${cats.size} categorías`,cambios:[{campo:'Versión activa',anterior:'',nuevo:version}]});
+    msg.innerHTML=`<div class="message ok">✅ <b>Categorías activadas correctamente</b><br>🏷️ ${validRows.length.toLocaleString('es-EC')} códigos clasificados<br>🧩 ${cats.size} categorías<br><span class="small">Ejemplo: ${sample.code} → ${verified.categoria}</span></div>`;
+    toast('✅ Categorías actualizadas y aplicadas');await loadCategoryDataSummary();
+  }
+
+  $("importPastedCategories").onclick=async()=>{
+    const raw=$("categoryPaste").value.trim();if(!raw)return toast('⚠️ Pega primero la data de categorías');
+    const btn=$("importPastedCategories");btn.disabled=true;btn.textContent='⏳ Procesando…';
+    try{const {validRows,skipped}=parseCategoryText(raw);await saveCategoryRows(validRows,skipped,'datos pegados')}catch(e){console.error(e);$("categoryImportMsg").innerHTML=`<div class="message err">❌ ${e.message}</div>`;toast('❌ Error cargando categorías')}finally{btn.disabled=false;btn.textContent='📥 Guardar categorías pegadas'}
+  };
+
+  $("importCategoriesFile").onclick=async()=>{
+    const file=$("categoryFile").files?.[0];if(!file)return toast('⚠️ Selecciona un archivo');
+    const btn=$("importCategoriesFile");btn.disabled=true;btn.textContent='⏳ Procesando…';
+    try{
+      let validRows=[],skipped=0;const ext=(file.name.split('.').pop()||'').toLowerCase();
+      if(['xlsx','xls'].includes(ext)){
+        const wb=XLSX.read(await file.arrayBuffer(),{type:'array'}),ws=wb.Sheets[wb.SheetNames[0]],rows=XLSX.utils.sheet_to_json(ws,{defval:'',raw:false});if(!rows.length)throw new Error('El Excel no contiene filas.');
+        const keys=Object.keys(rows[0]),nh=v=>String(v||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim();
+        const codeKey=keys.find(k=>['code','codigo','codigo producto','product code','item code'].includes(nh(k))),catKey=keys.find(k=>['category','categoria','product category'].includes(nh(k)));if(!codeKey||!catKey)throw new Error('No encontré las columnas Code y Category.');
+        const map=new Map();for(const r of rows){const code=norm(r[codeKey]),sourceCategory=norm(r[catKey]);if(!code||!sourceCategory){skipped++;continue}map.set(code,{code,categoria:normalizeOfficialCategory(sourceCategory),sourceCategory})}validRows=[...map.values()];
+      }else{const p=parseCategoryText(await file.text());validRows=p.validRows;skipped=p.skipped}
+      await saveCategoryRows(validRows,skipped,file.name);
+    }catch(e){console.error(e);$("categoryImportMsg").innerHTML=`<div class="message err">❌ ${e.message}</div>`;toast('❌ Error cargando categorías')}finally{btn.disabled=false;btn.textContent='⬆️ Cargar archivo'}
   };
 
   function classifyProduct(desc){
