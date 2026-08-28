@@ -1915,18 +1915,37 @@
 
 <div id="finishConfirmModal" class="modalBackdrop">
   <div class="modalCard" style="width:min(560px,96vw)">
-    <div class="modalHead"><h2>⏹️ Confirmar detención</h2><button id="closeFinishConfirmModal" class="btn ghost">✕ Cerrar</button></div>
-    <div class="recordEditMeta" style="margin-bottom:12px">Vas a detener el cronómetro del operario seleccionado. Si no corresponde a tu trabajo, cancela esta acción.</div>
-    <div class="productMeta" style="grid-template-columns:repeat(2,minmax(0,1fr));margin-bottom:14px">
-      <div class="metric"><span>Operario</span><strong id="finishConfirmOperator">—</strong></div>
-      <div class="metric"><span>Proceso</span><strong id="finishConfirmProcess">—</strong></div>
-      <div class="metric"><span>Código</span><strong id="finishConfirmCode">—</strong></div>
-      <div class="metric"><span>Tiempo actual</span><strong id="finishConfirmTime">00:00:00</strong></div>
+    <div class="modalHead">
+      <h2>⚠️ Confirmar finalización</h2>
+      <button id="closeFinishConfirmModal" type="button" class="btn ghost">✕ Cerrar</button>
     </div>
-    <div class="message warn" style="margin-top:0">⚠️ Revisa bien el nombre antes de continuar. Esto evita que un compañero detenga el tiempo de otra persona por error.</div>
+
+    <div class="message warn" style="margin-top:0">
+      Verifica que sea el perfil correcto antes de detener el cronómetro.
+    </div>
+
+    <div class="productMeta" style="grid-template-columns:repeat(2,minmax(0,1fr));margin:14px 0">
+      <div class="metric">
+        <span>OPERARIO</span>
+        <strong id="finishConfirmOperator">—</strong>
+      </div>
+      <div class="metric">
+        <span>PROCESO</span>
+        <strong id="finishConfirmProcess">—</strong>
+      </div>
+      <div class="metric">
+        <span>CÓDIGO</span>
+        <strong id="finishConfirmCode">—</strong>
+      </div>
+      <div class="metric">
+        <span>TIEMPO ACTUAL</span>
+        <strong id="finishConfirmTime">00:00:00</strong>
+      </div>
+    </div>
+
     <div class="recordEditActions" style="margin-top:14px">
-      <button id="cancelFinishConfirm" class="btn ghost">↩️ Cancelar</button>
-      <button id="confirmFinishProceed" class="btn danger">✅ Sí, detener tiempo</button>
+      <button id="cancelFinishConfirm" type="button" class="btn ghost">↩️ Cancelar</button>
+      <button id="confirmFinishProceed" type="button" class="btn primary">✅ Sí, finalizar</button>
     </div>
   </div>
 </div>
@@ -1963,28 +1982,6 @@
   const norm=s=>String(s??'').trim();
   const slug=s=>norm(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
   const safeNum=v=>{const n=Number(String(v).replace(',','.'));return Number.isFinite(n)?n:0};
-
-  function closeFinishConfirmModal(){
-    pendingFinishState=null;
-    $("finishConfirmModal")?.classList.remove('show');
-  }
-
-  function openFinishConfirmModal(s){
-    if(!s || !['running','paused'].includes(s.state)) return;
-    pendingFinishState=s;
-    $("finishConfirmOperator").textContent=s.operator?.nombre||'—';
-    $("finishConfirmProcess").textContent=((s.proceso||'etiquetado')==='armado'?'Armado':'Etiquetado');
-    $("finishConfirmCode").textContent=s.code||'—';
-    $("finishConfirmTime").textContent=fmtTimer(computeNetMs(s));
-    $("finishConfirmModal")?.classList.add('show');
-  }
-
-  async function confirmFinishFromModal(){
-    const s=pendingFinishState;
-    $("finishConfirmModal")?.classList.remove('show');
-    pendingFinishState=null;
-    if(s) await showFinish(s);
-  }
 
   const manualCategoryCache=new Map();
   let pendingFinishState=null;
@@ -2788,7 +2785,7 @@
     $("startBtn")?.addEventListener('click',()=>startWork(s));
     $("pauseBtn")?.addEventListener('click',()=>pauseWork(s));
     $("resumeBtn")?.addEventListener('click',()=>resumeWork(s));
-    $("finishBtn")?.addEventListener('click',()=>showFinish(s));
+    $("finishBtn")?.addEventListener('click',()=>openFinishConfirmModal(s));
     $("qtyModeTotal")?.addEventListener('click',()=>{
       preserveFinishInputs();
       s.qtyMode='total';
@@ -3029,6 +3026,41 @@
     try{await updateDoc(doc(db,'sesiones_activas',s.operator.id),{deviceId,estado:'running',pausas:s.pauses,pausa_total_ms:s.pauseTotal,ultima_actualizacion_local:localISO()});}catch(e){toast('⚠️ '+e.message)}
     renderOpTabs();renderWorkspace();
   }
+  function closeFinishConfirmModal(){
+    pendingFinishState=null;
+    $("finishConfirmModal")?.classList.remove('show');
+  }
+
+  function openFinishConfirmModal(s){
+    if(!s || !['running','paused'].includes(s.state))return;
+
+    pendingFinishState=s;
+
+    $("finishConfirmOperator").textContent=s.operator?.nombre||'—';
+    $("finishConfirmProcess").textContent=(s.proceso||'etiquetado')==='armado'?'Armado':'Etiquetado';
+    $("finishConfirmCode").textContent=s.code||'—';
+    $("finishConfirmTime").textContent=fmtTimer(currentElapsed(s));
+
+    $("finishConfirmModal").classList.add('show');
+  }
+
+  async function confirmFinishFromModal(){
+    const s=pendingFinishState;
+    if(!s)return closeFinishConfirmModal();
+
+    $("finishConfirmModal").classList.remove('show');
+    pendingFinishState=null;
+
+    await showFinish(s);
+  }
+
+  $("closeFinishConfirmModal").onclick=closeFinishConfirmModal;
+  $("cancelFinishConfirm").onclick=closeFinishConfirmModal;
+  $("confirmFinishProceed").onclick=confirmFinishFromModal;
+  $("finishConfirmModal").addEventListener('click',e=>{
+    if(e.target===$("finishConfirmModal"))closeFinishConfirmModal();
+  });
+
   async function showFinish(s){
     s.qtyTotal=s.qtyTotal||'';
     s.qtyBoxes=s.qtyBoxes||'';
@@ -4586,10 +4618,6 @@
   $("openCategoryModalBtn").onclick=openCategoryModal;
   $("closeCategoryModal").onclick=closeCategoryModal;
   $("categoryModal").addEventListener('click',e=>{if(e.target===$("categoryModal"))closeCategoryModal()});
-  $("closeFinishConfirmModal").onclick=closeFinishConfirmModal;
-  $("cancelFinishConfirm").onclick=closeFinishConfirmModal;
-  $("confirmFinishProceed").onclick=confirmFinishFromModal;
-  $("finishConfirmModal").addEventListener('click',e=>{if(e.target===$("finishConfirmModal"))closeFinishConfirmModal()});
   $("clearCategoryPaste").onclick=()=>{$("categoryPaste").value='';$("categoryImportMsg").innerHTML=''};
 
   $("addOperator").onclick=async()=>{
