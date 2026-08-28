@@ -1409,6 +1409,9 @@
 
           <div id="view-metas" class="supView card">
             <div class="sectionTitle"><h2>🎯 Metas y referencias</h2><button id="refreshMetasAnalysis" class="btn ghost">🔄 Analizar</button></div>
+            <div id="metaCategorySource" class="message ok" style="padding:8px 10px;margin-bottom:10px">
+              🏷️ Clasificación: verificando maestro oficial…
+            </div>
             <div class="twoCols">
               <div class="field"><label>Código</label><input id="metaCode" placeholder="Ej. 46966"></div>
               <div class="field"><label>Meta u/h</label><input id="metaValue" type="number" min="1" placeholder="Ej. 700"></div>
@@ -1682,8 +1685,8 @@
               <button id="openCategoryModalBtn" class="btn blue">📥 Actualizar categorías</button>
             </div>
             <div class="message ok">
-              Esta clasificación tiene prioridad sobre la clasificación automática por descripción.
-              Las correcciones manuales realizadas desde Metas mantienen la prioridad más alta.
+              Tu documento consolidado por código es la fuente principal de clasificación.
+              La clasificación manual solo se usa cuando un código no existe en ese documento.
             </div>
             <div class="dataSummary">
               <div class="kpi"><span>Versión activa</span><strong id="categoryDataVersion" style="font-size:16px">—</strong></div>
@@ -1692,7 +1695,7 @@
               <div class="kpi"><span>Bloques</span><strong id="categoryDataBuckets">—</strong></div>
             </div>
             <div class="small" style="margin-top:8px">
-              Prioridad aplicada en toda la web: <b>Corrección manual → Categoría oficial por código → Clasificación automática</b>.
+              Prioridad aplicada en toda la web: <b>Tu documento por código → Clasificación manual solo para códigos ausentes → Clasificación automática</b>.
               Los reportes históricos se corrigen al consultarlos; no es necesario reescribir miles de registros.
             </div>
           </div>
@@ -1967,13 +1970,33 @@
   const BASE_CATEGORIES=['PRODUCTOS CAPILARES','DESODORANTES','CUIDADO ORAL','PROTECCIÓN SOLAR','CUIDADO DE PIES','CUIDADO DE MANOS','CUIDADO CORPORAL','HIGIENE CORPORAL','CUIDADO FACIAL','CUIDADO DE LA PIEL','MAQUILLAJE','UÑAS','PERFUMERÍA','BIENESTAR','ACCESORIOS','ACCIONES DE VENTA','CUIDADO PERSONAL','OTROS'];
 
   async function loadManualCategories(){
-    try{const snap=await getDocs(collection(db,'clasificaciones_productos'));manualCategoryCache.clear();snap.docs.forEach(d=>{const x=d.data();if(x.categoria)manualCategoryCache.set(d.id,x.categoria)});}catch(e){console.warn('Clasificaciones manuales',e)}
+    try{
+      const snap=await getDocs(collection(db,'clasificaciones_productos'));
+      manualCategoryCache.clear();
+      snap.docs.forEach(d=>{
+        const x=d.data();
+        if(x.categoria)manualCategoryCache.set(d.id,x.categoria);
+      });
+    }catch(e){
+      console.warn('Clasificaciones manuales',e);
+    }
   }
+
   async function getManualCategory(code){
-    const c=String(code||'');if(manualCategoryCache.has(c))return manualCategoryCache.get(c);
-    try{const snap=await getDoc(doc(db,'clasificaciones_productos',c));if(snap.exists()&&snap.data().categoria){manualCategoryCache.set(c,snap.data().categoria);return snap.data().categoria}}catch{}
+    const c=String(code||'');
+    if(manualCategoryCache.has(c))return manualCategoryCache.get(c);
+
+    try{
+      const snap=await getDoc(doc(db,'clasificaciones_productos',c));
+      if(snap.exists()&&snap.data().categoria){
+        manualCategoryCache.set(c,snap.data().categoria);
+        return snap.data().categoria;
+      }
+    }catch{}
+
     return '';
   }
+
   async function logAudit({accion,entidad,entidadId,detalle='',cambios=[]}){
     try{await addDoc(collection(db,'historial_cambios'),{accion,entidad,entidad_id:String(entidadId||''),detalle,cambios,usuario:currentSupervisorUser(),fecha_local:localISO(),creado_en:serverTimestamp()})}catch(e){console.warn('Historial',e)}
   }
@@ -2912,7 +2935,7 @@
       s.code=code;s.product=product;
       if(!s.product.descripcion && s.product.description) s.product.descripcion=s.product.description;
       const hierarchy=classifyProduct(s.product.descripcion||s.product.descripcion_producto||s.product.nombre||'');
-      s.product.categoria=(await getManualCategory(code))||(await getOfficialCategory(code))||hierarchy.categoria;
+      s.product.categoria=(await getOfficialCategory(code))||(await getManualCategory(code))||hierarchy.categoria;
       if(s.proceso==='etiquetado'){
         const ms=await getDoc(doc(db,'metas',code));
         s.meta=ms.exists()?ms.data():null;
@@ -3235,7 +3258,7 @@
     }
 
     const description=product.descripcion||'';
-    const category=(await getManualCategory(code))||(await getOfficialCategory(code))||classifyProduct(description).categoria;
+    const category=(await getOfficialCategory(code))||(await getManualCategory(code))||classifyProduct(description).categoria;
 
     let meta=null;
     if(process==='etiquetado'){
@@ -3348,9 +3371,19 @@
   }
   function recordCategory(x){
     const code=String(x.codigo||'');
-    const manual=manualCategoryCache.get(code);if(manual)return manual;
-    const official=officialCategoryCache.get(code);if(official)return official;
-    const stored=norm(x.categoria||'');if(stored)return stored;
+
+    // 1. El documento consolidado por código tiene prioridad absoluta.
+    const official=officialCategoryCache.get(code);
+    if(official)return official;
+
+    // 2. Solo si el código NO existe en el documento, usar clasificación manual.
+    const manual=manualCategoryCache.get(code);
+    if(manual)return manual;
+
+    // 3. Respaldo histórico y, finalmente, clasificación automática.
+    const stored=norm(x.categoria||'');
+    if(stored)return stored;
+
     return classifyProduct(x.descripcion||'').categoria||'OTROS';
   }
   function shortDescription(desc){
@@ -3746,7 +3779,7 @@
       if(expandedMetaCategory===g.categoria){
         const codeGroups=new Map();g.arr.forEach(x=>{const c=x.codigo||'';if(!c)return;if(!codeGroups.has(c))codeGroups.set(c,[]);codeGroups.get(c).push(x)});
         const rows=[...codeGroups.entries()].map(([code,arr])=>({code,arr,desc:arr[0]?.descripcion||'—',ops:new Set(arr.map(x=>x.operario).filter(Boolean)).size,avg:weightedUph(arr),meta:metaByCode.get(code)||null})).sort((a,b)=>a.code.localeCompare(b.code));
-        html+=`<tr class="categoryDetailRow"><td colspan="5"><div class="categoryDetailBox"><table style="min-width:980px"><thead><tr><th>Código</th><th>Descripción</th><th>Registros</th><th>Operarios</th><th>Promedio u/h</th><th>Meta propia</th><th>Categoría</th><th>Acción</th></tr></thead><tbody>${rows.map(r=>`<tr><td><b>${r.code}</b></td><td>${shortDescription(r.desc)}</td><td>${r.arr.length}</td><td>${r.ops}</td><td><b>${fmtInt(r.avg)}</b></td><td>${r.meta?fmtInt(r.meta.meta_u_h):'—'}</td><td><select class="categorySelect" data-code="${r.code}">${categoryOptions(g.categoria)}</select></td><td><div class="compactActions"><button class="miniBtn ok saveCategoryBtn" data-code="${r.code}">💾 Cambiar</button><button class="miniBtn historyCategoryBtn" data-code="${r.code}">🕘</button></div></td></tr>`).join('')}</tbody></table></div></td></tr>`;
+        html+=`<tr class="categoryDetailRow"><td colspan="5"><div class="categoryDetailBox"><table style="min-width:980px"><thead><tr><th>Código</th><th>Descripción</th><th>Registros</th><th>Operarios</th><th>Promedio u/h</th><th>Meta propia</th><th>Categoría</th><th>Acción</th></tr></thead><tbody>${rows.map(r=>`<tr><td><b>${r.code}</b></td><td>${shortDescription(r.desc)}</td><td>${r.arr.length}</td><td>${r.ops}</td><td><b>${fmtInt(r.avg)}</b></td><td>${r.meta?fmtInt(r.meta.meta_u_h):'—'}</td><td><select class="categorySelect" data-code="${r.code}" ${officialCategoryCache.has(String(r.code))?'disabled title="Categoría definida por tu documento"':''}>${categoryOptions(recordCategory(r.arr[0]||{}))}</select></td><td><div class="compactActions">${officialCategoryCache.has(String(r.code))?'<span class="statusPill ok">📄 Oficial</span>':`<button class="miniBtn ok saveCategoryBtn" data-code="${r.code}">💾 Cambiar</button>`}<button class="miniBtn historyCategoryBtn" data-code="${r.code}">🕘</button></div></td></tr>`).join('')}</tbody></table></div></td></tr>`;
       }
     });
     $("familyTargetsBody").innerHTML=html||'<tr><td colspan="5">Aún no hay histórico suficiente.</td></tr>';
@@ -3756,13 +3789,66 @@
   }
 
   async function saveManualCategory(code){
-    const sel=document.querySelector(`.categorySelect[data-code="${code}"]`);if(!sel)return;const newCat=sel.value,oldCat=manualCategoryCache.get(code)||officialCategoryCache.get(code)||recordCategory(metaEvaluationRecords.find(x=>String(x.codigo)===String(code))||{});if(newCat===oldCat)return toast('ℹ️ La categoría ya es la seleccionada');
-    try{await setDoc(doc(db,'clasificaciones_productos',code),{codigo:code,categoria:newCat,manual:true,actualizado_por:currentSupervisorUser(),actualizado_local:localISO(),actualizado_en:serverTimestamp()},{merge:true});manualCategoryCache.set(code,newCat);await logAudit({accion:'Categoría modificada',entidad:'categoria_producto',entidadId:code,detalle:`Clasificación manual del código ${code}`,cambios:[{campo:'Categoría',anterior:oldCat,nuevo:newCat}]});toast('✅ Categoría actualizada');renderMetaCategoryTable();if($("view-productividad")?.classList.contains('active'))loadProductivity(true)}catch(e){toast('❌ '+e.message)}
+    const sel=document.querySelector(`.categorySelect[data-code="${code}"]`);
+    if(!sel)return;
+
+    const official=officialCategoryCache.get(String(code||''));
+    if(official){
+      sel.value=official;
+      return toast(`🏷️ ${code} ya está clasificado por tu documento: ${official}. La data oficial tiene prioridad.`);
+    }
+
+    const newCat=sel.value;
+    const oldCat=manualCategoryCache.get(code)||recordCategory(metaEvaluationRecords.find(x=>String(x.codigo)===String(code))||{});
+    if(newCat===oldCat)return toast('ℹ️ La categoría ya es la seleccionada');
+    try{
+      const cfg=await getActiveCategoryMasterConfig();
+      const activeVersion=cfg?.mode==='versioned'?(cfg.version_activa||''):'';
+
+      await setDoc(doc(db,'clasificaciones_productos',code),{
+        codigo:code,
+        categoria:newCat,
+        manual:true,
+        version_maestro:activeVersion,
+        uso:'fallback_solo_si_codigo_no_existe_en_maestro',
+        actualizado_por:currentSupervisorUser(),
+        actualizado_local:localISO(),
+        actualizado_en:serverTimestamp()
+      },{merge:true});
+
+      manualCategoryCache.set(code,newCat);
+
+      await logAudit({
+        accion:'Categoría modificada',
+        entidad:'categoria_producto',
+        entidadId:code,
+        detalle:`Clasificación manual del código ${code}`,
+        cambios:[{campo:'Categoría',anterior:oldCat,nuevo:newCat}]
+      });
+
+      toast('✅ Categoría actualizada');
+      renderMetaCategoryTable();
+      if($("view-productividad")?.classList.contains('active'))loadProductivity(true);
+    }catch(e){
+      toast('❌ '+e.message);
+    }
   }
 
   async function loadEvaluation(force=false){
     try{
+      await loadOfficialCategoriesAll();
       await loadManualCategories();
+
+      const categoryCfg=await getActiveCategoryMasterConfig();
+      if($("metaCategorySource")){
+        if(categoryCfg.mode==='versioned'){
+          $("metaCategorySource").innerHTML=`📄 Maestro por código activo: <b>${categoryCfg.version_activa}</b> · ${fmtInt(categoryCfg.total_codigos||0)} códigos`;
+        }else{
+          $("metaCategorySource").innerHTML='⚠️ No hay maestro oficial de categorías activo. Se está usando clasificación histórica/automática.';
+          $("metaCategorySource").className='message warn';
+        }
+      }
+
       const records=(await getSupervisorRecords(force)).filter(x=>(x.proceso||'etiquetado')==='etiquetado'&&Number(x.productividad_u_h||0)>0);metaEvaluationRecords=records;
       const metasSnap=await getDocs(collection(db,'metas'));metaByCode=new Map(metasSnap.docs.map(d=>[d.id,d.data()]));
       renderMetaCategoryTable();
@@ -4154,7 +4240,7 @@
         const product=await getProductByCode(newCode);
         if(!product)return toast('⚠️ El código corregido no existe en la data de productos');
         description=product.descripcion||'';
-        category=(await getManualCategory(newCode))||(await getOfficialCategory(newCode))||classifyProduct(description).categoria;
+        category=(await getOfficialCategory(newCode))||(await getManualCategory(newCode))||classifyProduct(description).categoria;
       }catch(e){return toast('⚠️ No se pudo validar el código corregido');}
     }
 
@@ -4657,8 +4743,20 @@
     const verified=verify.exists()&&verify.data().items&&verify.data().items[sample.code];if(!verified)throw new Error('La nueva clasificación no pasó la verificación final.');
     await setDoc(doc(db,'configuracion','maestro_categorias'),{version_activa:version,total_codigos:validRows.length,total_categorias:cats.size,bucket_count:MASTER_BUCKETS,actualizado_local:localISO(),actualizado_en:serverTimestamp()});
     activeCategoryMasterConfig={mode:'versioned',version_activa:version,total_codigos:validRows.length,total_categorias:cats.size,bucket_count:MASTER_BUCKETS};
-    officialCategoryCache.clear();officialCategoryBucketCache.clear();officialCategoriesFullyLoaded=false;await loadOfficialCategoriesAll(true);
-    dailyRecordsCache.clear();supervisorRecordsLoadedAt=0;
+
+    officialCategoryCache.clear();
+    officialCategoryBucketCache.clear();
+    officialCategoriesFullyLoaded=false;
+
+    // El nuevo maestro oficial queda por encima de cualquier clasificación manual.
+    // Las manuales se conservan únicamente como respaldo para códigos ausentes.
+    manualCategoryCache.clear();
+
+    await loadOfficialCategoriesAll(true);
+    await loadManualCategories();
+
+    dailyRecordsCache.clear();
+    supervisorRecordsLoadedAt=0;
     await logAudit({accion:'Maestro de categorías actualizado',entidad:'maestro_categorias',entidadId:version,detalle:`${validRows.length} códigos · ${cats.size} categorías`,cambios:[{campo:'Versión activa',anterior:'',nuevo:version}]});
     msg.innerHTML=`<div class="message ok">✅ <b>Categorías activadas correctamente</b><br>🏷️ ${validRows.length.toLocaleString('es-EC')} códigos clasificados<br>🧩 ${cats.size} categorías<br><span class="small">Ejemplo: ${sample.code} → ${verified.categoria}</span></div>`;
     toast('✅ Categorías actualizadas y aplicadas');await loadCategoryDataSummary();
