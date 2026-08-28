@@ -1912,6 +1912,25 @@
   </div>
 </div>
 
+
+<div id="finishConfirmModal" class="modalBackdrop">
+  <div class="modalCard" style="width:min(560px,96vw)">
+    <div class="modalHead"><h2>⏹️ Confirmar detención</h2><button id="closeFinishConfirmModal" class="btn ghost">✕ Cerrar</button></div>
+    <div class="recordEditMeta" style="margin-bottom:12px">Vas a detener el cronómetro del operario seleccionado. Si no corresponde a tu trabajo, cancela esta acción.</div>
+    <div class="productMeta" style="grid-template-columns:repeat(2,minmax(0,1fr));margin-bottom:14px">
+      <div class="metric"><span>Operario</span><strong id="finishConfirmOperator">—</strong></div>
+      <div class="metric"><span>Proceso</span><strong id="finishConfirmProcess">—</strong></div>
+      <div class="metric"><span>Código</span><strong id="finishConfirmCode">—</strong></div>
+      <div class="metric"><span>Tiempo actual</span><strong id="finishConfirmTime">00:00:00</strong></div>
+    </div>
+    <div class="message warn" style="margin-top:0">⚠️ Revisa bien el nombre antes de continuar. Esto evita que un compañero detenga el tiempo de otra persona por error.</div>
+    <div class="recordEditActions" style="margin-top:14px">
+      <button id="cancelFinishConfirm" class="btn ghost">↩️ Cancelar</button>
+      <button id="confirmFinishProceed" class="btn danger">✅ Sí, detener tiempo</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast" class="toast"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -1945,7 +1964,30 @@
   const slug=s=>norm(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
   const safeNum=v=>{const n=Number(String(v).replace(',','.'));return Number.isFinite(n)?n:0};
 
+  function closeFinishConfirmModal(){
+    pendingFinishState=null;
+    $("finishConfirmModal")?.classList.remove('show');
+  }
+
+  function openFinishConfirmModal(s){
+    if(!s || !['running','paused'].includes(s.state)) return;
+    pendingFinishState=s;
+    $("finishConfirmOperator").textContent=s.operator?.nombre||'—';
+    $("finishConfirmProcess").textContent=((s.proceso||'etiquetado')==='armado'?'Armado':'Etiquetado');
+    $("finishConfirmCode").textContent=s.code||'—';
+    $("finishConfirmTime").textContent=fmtTimer(computeNetMs(s));
+    $("finishConfirmModal")?.classList.add('show');
+  }
+
+  async function confirmFinishFromModal(){
+    const s=pendingFinishState;
+    $("finishConfirmModal")?.classList.remove('show');
+    pendingFinishState=null;
+    if(s) await showFinish(s);
+  }
+
   const manualCategoryCache=new Map();
+  let pendingFinishState=null;
 
   let activeCategoryMasterConfig=null;
   const officialCategoryBucketCache=new Map();
@@ -3456,6 +3498,7 @@
     }else{
       stopDashboardRealtime();
     }
+    syncRealtimeDailyRecords();
   });
 
 
@@ -3496,6 +3539,142 @@
   let dashboardLiveSessions=[];
   let dashboardOperatorsCache=[];
   let dashboardSessionsUnsub=null;
+  let liveDayRecordsUnsub=null;
+  let liveDayRecordsDate='';
+  let liveDayRecordsRows=[];
+
+  function currentSupervisorView(){
+    const active=document.querySelector('.supView.active');
+    return active ? String(active.id||'').replace('view-','') : '';
+  }
+
+  function todayLocalDate(){
+    return localISO().slice(0,10);
+  }
+
+  function stopDailyRecordsRealtime(){
+    if(liveDayRecordsUnsub){
+      try{liveDayRecordsUnsub()}catch{}
+      liveDayRecordsUnsub=null;
+    }
+    liveDayRecordsDate='';
+    liveDayRecordsRows=[];
+  }
+
+  function renderDashboardSummary(records=[]){
+    const et=records.filter(x=>(x.proceso||'etiquetado')==='etiquetado');
+    const ar=records.filter(x=>x.proceso==='armado');
+    const totalUnits=records.reduce((a,x)=>a+Number(x.unidades||0),0);
+
+    $('kpiUnitsHoy').textContent=fmtInt(totalUnits);
+    $('kpiEtiquetadoHoy').textContent=fmtInt(et.length);
+    $('kpiArmadoHoy').textContent=fmtInt(ar.length);
+
+    const summary=(arr,label)=>{
+      if(!arr.length) return `<div class="emptyState">Sin ${label.toLowerCase()} registrados hoy.</div>`;
+      const units=arr.reduce((a,x)=>a+Number(x.unidades||0),0);
+      return `<div class="miniKpis" style="grid-template-columns:repeat(3,1fr);margin:0">
+        <div class="miniKpi"><span>Registros</span><strong>${fmtInt(arr.length)}</strong></div>
+        <div class="miniKpi"><span>Unidades</span><strong>${fmtInt(units)}</strong></div>
+        <div class="miniKpi"><span>Promedio u/h</span><strong>${fmtInt(weightedUph(arr))}</strong></div>
+      </div>`;
+    };
+
+    $('dashEtiquetadoResumen').innerHTML=summary(et,'Etiquetados');
+    $('dashArmadoResumen').innerHTML=summary(ar,'Armados');
+  }
+
+  function renderChartsFromRows(allRows=[],proc='todos',showEmptyToast=false){
+    const rows=(allRows||[]).filter(x=>proc==='todos'||(x.proceso||'etiquetado')===proc);
+    const totalUnits=rows.reduce((a,x)=>a+Number(x.unidades||0),0);
+    const workers=[...new Set(rows.map(x=>x.operario).filter(Boolean))];
+
+    $('chartsTotalUnits').textContent=fmtInt(totalUnits);
+    $('chartsWorkers').textContent=fmtInt(workers.length);
+    $('chartsAvg').textContent=rows.length?fmtInt(weightedUph(rows))+' u/h':'—';
+
+    const byWorker=new Map();
+    rows.forEach(x=>{const k=x.operario||'Sin operario';if(!byWorker.has(k))byWorker.set(k,[]);byWorker.get(k).push(x)});
+    const workerRows=[...byWorker.entries()].map(([name,arr])=>{
+      const t=targetForRecords(arr);
+      return {name,arr,units:arr.reduce((a,x)=>a+Number(x.unidades||0),0),uph:weightedUph(arr),target:t.target};
+    }).sort((a,b)=>b.units-a.units);
+
+    destroySupervisorChart('unitsWorker');
+    supervisorCharts.unitsWorker=professionalBar('chartUnitsWorker',workerRows.map(x=>x.name),workerRows.map(x=>x.units),'Unidades',null,'');
+
+    const prodRows=[...workerRows].sort((a,b)=>b.uph-a.uph);
+    destroySupervisorChart('productivityWorker');
+    supervisorCharts.productivityWorker=professionalBar('chartProductivityWorker',prodRows.map(x=>x.name),prodRows.map(x=>Math.round(x.uph)),'u/h',null,' u/h');
+
+    const hourly=new Map();
+    rows.forEach(x=>{const h=extractHour(x.inicio_local);if(h===null)return;hourly.set(h,(hourly.get(h)||0)+Number(x.unidades||0))});
+    const hours=[...hourly.keys()].sort((a,b)=>a-b);
+    destroySupervisorChart('unitsHour');
+    const hourCanvas=$('chartUnitsHour');
+    if(hourCanvas&&window.Chart){
+      hourCanvas.parentElement.style.height='300px';
+      supervisorCharts.unitsHour=new Chart(hourCanvas,{type:'line',data:{labels:hours.map(h=>String(h).padStart(2,'0')+':00'),datasets:[{label:'Unidades',data:hours.map(h=>hourly.get(h)),borderColor:'#159a80',backgroundColor:'rgba(47,195,163,.12)',borderWidth:3,pointRadius:5,pointHoverRadius:7,pointBackgroundColor:'#fff',pointBorderColor:'#159a80',pointBorderWidth:3,tension:.32,fill:true}]},plugins:[dataLabelsPlugin],options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:24,right:18}},plugins:{legend:{display:false},tooltip:{enabled:true},professionalDataLabels:{suffix:''}},scales:{y:{beginAtZero:true,grid:{color:'rgba(20,55,40,.06)'},ticks:{color:'#64766f'}},x:{grid:{display:false},ticks:{color:'#64766f'}}}}})
+    }
+
+    const byFamily=new Map();
+    rows.forEach(x=>{const fam=recordCategory(x);if(!byFamily.has(fam))byFamily.set(fam,[]);byFamily.get(fam).push(x)});
+    const famRows=[...byFamily.entries()].map(([fam,arr])=>({fam,uph:weightedUph(arr),target:Number(categoryTargetByName.get(fam)?.target_u_h||0)||null})).filter(x=>x.uph>0).sort((a,b)=>b.uph-a.uph);
+    destroySupervisorChart('categoryProductivity');
+    supervisorCharts.categoryProductivity=professionalBar('chartCategoryProductivity',famRows.map(x=>x.fam),famRows.map(x=>Math.round(x.uph)),'u/h',proc==='etiquetado'?famRows.map(x=>x.target):null,' u/h');
+
+    if(showEmptyToast && !rows.length)toast('ℹ️ No hay registros para la fecha y proceso seleccionados');
+  }
+
+  function handleLiveDayRecords(rows=[]){
+    const today=todayLocalDate();
+    const view=currentSupervisorView();
+
+    if(view==='dashboard') renderDashboardSummary(rows);
+
+    if(view==='graficos' && (($('chartsDate').value||today)===today)){
+      loadCategoryTargets(false).then(()=>renderChartsFromRows(rows,$('chartsProcess').value,false)).catch(err=>console.warn('Charts realtime:',err));
+    }
+
+    if(view==='productividad' && (($('prodDate').value||today)===today)){
+      loadCategoryTargets(false).then(()=>{
+        currentProductivityRecords=rows;
+        indexRecords(rows);
+        fillProductivityFilters(rows);
+        renderProductivity(rows);
+      }).catch(err=>console.warn('Productividad realtime:',err));
+    }
+  }
+
+  function syncRealtimeDailyRecords(){
+    const today=todayLocalDate();
+    const view=currentSupervisorView();
+    const needsRealtime =
+      view==='dashboard' ||
+      (view==='graficos' && (($('chartsDate').value||today)===today)) ||
+      (view==='productividad' && (($('prodDate').value||today)===today));
+
+    if(!supervisorUnlocked || !needsRealtime){
+      stopDailyRecordsRealtime();
+      return;
+    }
+
+    if(liveDayRecordsUnsub && liveDayRecordsDate===today){
+      handleLiveDayRecords(liveDayRecordsRows);
+      return;
+    }
+
+    stopDailyRecordsRealtime();
+    liveDayRecordsDate=today;
+    liveDayRecordsUnsub=onSnapshot(
+      query(collection(db,'registros_etiquetado'),where('fecha_local','==',today)),
+      snap=>{
+        liveDayRecordsRows=snap.docs.map(d=>({id:d.id,...d.data()}));
+        handleLiveDayRecords(liveDayRecordsRows);
+      },
+      err=>console.warn('Registros en vivo:',err)
+    );
+  }
 
   function dashboardIsVisible(){
     return supervisorUnlocked && $("view-dashboard")?.classList.contains('active');
@@ -3644,31 +3823,14 @@
         getDocs(collection(db,'operarios'))
       ]);
 
-      const et=todayRecords.filter(x=>(x.proceso||'etiquetado')==='etiquetado');
-      const ar=todayRecords.filter(x=>x.proceso==='armado');
-      const totalUnits=todayRecords.reduce((a,x)=>a+Number(x.unidades||0),0);
       const activeOperators=opsSnap.docs.map(d=>({id:d.id,...d.data()})).filter(x=>x.activo!==false).sort((a,b)=>norm(a.nombre).localeCompare(norm(b.nombre)));
       dashboardOperatorsCache=activeOperators;
       const sessions=sessionsSnap.docs.map(d=>({operarioId:d.id,...d.data()}));
 
-      $("kpiUnitsHoy").textContent=fmtInt(totalUnits);
-      $("kpiEtiquetadoHoy").textContent=fmtInt(et.length);
-      $("kpiArmadoHoy").textContent=fmtInt(ar.length);
-
-      const summary=(arr,label)=>{
-        if(!arr.length) return `<div class="emptyState">Sin ${label.toLowerCase()} registrados hoy.</div>`;
-        const units=arr.reduce((a,x)=>a+Number(x.unidades||0),0);
-        return `<div class="miniKpis" style="grid-template-columns:repeat(3,1fr);margin:0">
-          <div class="miniKpi"><span>Registros</span><strong>${fmtInt(arr.length)}</strong></div>
-          <div class="miniKpi"><span>Unidades</span><strong>${fmtInt(units)}</strong></div>
-          <div class="miniKpi"><span>Promedio u/h</span><strong>${fmtInt(weightedUph(arr))}</strong></div>
-        </div>`;
-      };
-      $("dashEtiquetadoResumen").innerHTML=summary(et,'Etiquetados');
-      $("dashArmadoResumen").innerHTML=summary(ar,'Armados');
-
+      renderDashboardSummary(todayRecords);
       renderDashboardActivity(activeOperators,sessions);
       startDashboardRealtime();
+      syncRealtimeDailyRecords();
     }catch(e){toast('⚠️ Dashboard: '+e.message)}
   }
   $("refreshDashboard").onclick=()=>loadDashboard(true);
@@ -3700,6 +3862,7 @@
       currentProductivityRecords=records;indexRecords(records);
       fillProductivityFilters(records);
       renderProductivity(records);
+      syncRealtimeDailyRecords();
     }catch(e){$("productivityBody").innerHTML=`<tr><td colspan="6">${e.message}</td></tr>`}
   }
 
@@ -4390,31 +4553,13 @@
     const date=$("chartsDate").value||localISO().slice(0,10);$("chartsDate").value=date;const proc=$("chartsProcess").value;
     try{
       await loadCategoryTargets(false);
-      let rows=await getRecordsByDate(date,false);rows=rows.filter(x=>proc==='todos'||(x.proceso||'etiquetado')===proc);
-      const totalUnits=rows.reduce((a,x)=>a+Number(x.unidades||0),0),workers=[...new Set(rows.map(x=>x.operario).filter(Boolean))];
-      $("chartsTotalUnits").textContent=fmtInt(totalUnits);$("chartsWorkers").textContent=fmtInt(workers.length);$("chartsAvg").textContent=rows.length?fmtInt(weightedUph(rows))+' u/h':'—';
-
-      const byWorker=new Map();rows.forEach(x=>{const k=x.operario||'Sin operario';if(!byWorker.has(k))byWorker.set(k,[]);byWorker.get(k).push(x)});
-      const workerRows=[...byWorker.entries()].map(([name,arr])=>{
-        const t=targetForRecords(arr);
-        return {name,arr,units:arr.reduce((a,x)=>a+Number(x.unidades||0),0),uph:weightedUph(arr),target:t.target};
-      }).sort((a,b)=>b.units-a.units);
-      destroySupervisorChart('unitsWorker');supervisorCharts.unitsWorker=professionalBar('chartUnitsWorker',workerRows.map(x=>x.name),workerRows.map(x=>x.units),'Unidades',null,'');
-      const prodRows=[...workerRows].sort((a,b)=>b.uph-a.uph);
-      destroySupervisorChart('productivityWorker');
-      supervisorCharts.productivityWorker=professionalBar('chartProductivityWorker',prodRows.map(x=>x.name),prodRows.map(x=>Math.round(x.uph)),'u/h',null,' u/h');
-
-      const hourly=new Map();rows.forEach(x=>{const h=extractHour(x.inicio_local);if(h===null)return;hourly.set(h,(hourly.get(h)||0)+Number(x.unidades||0))});const hours=[...hourly.keys()].sort((a,b)=>a-b);
-      destroySupervisorChart('unitsHour');const hourCanvas=$("chartUnitsHour");if(hourCanvas&&window.Chart){hourCanvas.parentElement.style.height='300px';supervisorCharts.unitsHour=new Chart(hourCanvas,{type:'line',data:{labels:hours.map(h=>String(h).padStart(2,'0')+':00'),datasets:[{label:'Unidades',data:hours.map(h=>hourly.get(h)),borderColor:'#159a80',backgroundColor:'rgba(47,195,163,.12)',borderWidth:3,pointRadius:5,pointHoverRadius:7,pointBackgroundColor:'#fff',pointBorderColor:'#159a80',pointBorderWidth:3,tension:.32,fill:true}]},plugins:[dataLabelsPlugin],options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:24,right:18}},plugins:{legend:{display:false},tooltip:{enabled:true},professionalDataLabels:{suffix:''}},scales:{y:{beginAtZero:true,grid:{color:'rgba(20,55,40,.06)'},ticks:{color:'#64766f'}},x:{grid:{display:false},ticks:{color:'#64766f'}}}}})}
-
-      const byFamily=new Map();rows.forEach(x=>{const fam=recordCategory(x);if(!byFamily.has(fam))byFamily.set(fam,[]);byFamily.get(fam).push(x)});
-      const famRows=[...byFamily.entries()].map(([fam,arr])=>({fam,uph:weightedUph(arr),target:Number(categoryTargetByName.get(fam)?.target_u_h||0)||null})).filter(x=>x.uph>0).sort((a,b)=>b.uph-a.uph);
-      destroySupervisorChart('categoryProductivity');
-      supervisorCharts.categoryProductivity=professionalBar('chartCategoryProductivity',famRows.map(x=>x.fam),famRows.map(x=>Math.round(x.uph)),'u/h',proc==='etiquetado'?famRows.map(x=>x.target):null,' u/h');
-      if(!rows.length)toast('ℹ️ No hay registros para la fecha y proceso seleccionados');
+      const rows=await getRecordsByDate(date,false);
+      renderChartsFromRows(rows,proc,true);
+      syncRealtimeDailyRecords();
     }catch(e){toast('⚠️ Gráficos: '+e.message)}
   }
-  $("chartsDate").value=localISO().slice(0,10);$("loadCharts").onclick=loadCharts;$("chartsProcess").addEventListener('change',loadCharts);
+  $("chartsDate").value=localISO().slice(0,10);$("loadCharts").onclick=loadCharts;$("chartsProcess").addEventListener('change',()=>{loadCharts();syncRealtimeDailyRecords()});
+  $("chartsDate").addEventListener('change',()=>syncRealtimeDailyRecords());
 
   async function loadDataSummary(){
     try{
@@ -4441,6 +4586,10 @@
   $("openCategoryModalBtn").onclick=openCategoryModal;
   $("closeCategoryModal").onclick=closeCategoryModal;
   $("categoryModal").addEventListener('click',e=>{if(e.target===$("categoryModal"))closeCategoryModal()});
+  $("closeFinishConfirmModal").onclick=closeFinishConfirmModal;
+  $("cancelFinishConfirm").onclick=closeFinishConfirmModal;
+  $("confirmFinishProceed").onclick=confirmFinishFromModal;
+  $("finishConfirmModal").addEventListener('click',e=>{if(e.target===$("finishConfirmModal"))closeFinishConfirmModal()});
   $("clearCategoryPaste").onclick=()=>{$("categoryPaste").value='';$("categoryImportMsg").innerHTML=''};
 
   $("addOperator").onclick=async()=>{
