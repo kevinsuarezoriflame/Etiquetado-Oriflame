@@ -3928,7 +3928,21 @@
     const op=operators.find(o=>norm(o.nombre).toLocaleLowerCase('es')===norm(name).toLocaleLowerCase('es'));
     return op?.tipo||'Ransa';
   }
-  function isMaquilaName(name){
+
+  function recordOperatorType(record){
+    const saved=String(record?.tipo_personal||'').trim();
+    if(saved){
+      return norm(saved).toLocaleLowerCase('es').includes('maquila')?'Maquila':'Ransa';
+    }
+    return operatorTypeByName(record?.operario||'');
+  }
+
+  function isMaquilaName(name,records=[]){
+    const historical=(records||[]).find(x=>
+      norm(x?.operario||'').toLocaleLowerCase('es')===norm(name).toLocaleLowerCase('es')
+      && String(x?.tipo_personal||'').trim()
+    );
+    if(historical)return recordOperatorType(historical)==='Maquila';
     return norm(operatorTypeByName(name)).toLocaleLowerCase('es').includes('maquila');
   }
 
@@ -3997,7 +4011,7 @@
     data.forEach((g,rankIndex)=>{
       const clickable=groupBy==='operario';
       const medal=clickable&&rankIndex<3?['🥇','🥈','🥉'][rankIndex]:'';
-      const displayName=clickable&&isMaquilaName(g.key)?`${g.key} (Maquila)`:g.key;
+      const displayName=clickable&&isMaquilaName(g.key,g.arr)?`${g.key} (Maquila)`:g.key;
       html+=`<tr><td>${clickable?`<span class="rankMedal">${medal}</span><button class="operatorDrillBtn" data-operator="${g.key}">${productivityExpandedOperator===g.key?'▾':'▸'} ${displayName}</button>`:`<b>${g.key}</b>`}</td><td>${fmtInt(g.records)}</td><td>${fmtInt(g.units)}</td><td><b>${fmtInt(g.average)}</b></td><td>${fmtInt(g.best)}</td><td>${g.ref}</td></tr>`;
       if(clickable&&productivityExpandedOperator===g.key){
         const details=[...g.arr].sort((a,b)=>String(a.inicio_local||'').localeCompare(String(b.inicio_local||'')));
@@ -4349,7 +4363,7 @@
   function groupFilteredRows(records,type,process,category){
     return records.filter(x=>{
       const p=x.proceso||'etiquetado';
-      const t=operatorTypeByName(x.operario);
+      const t=recordOperatorType(x);
       return norm(t).toLocaleLowerCase('es')===norm(type).toLocaleLowerCase('es')
         && (process==='todos'||p===process)
         && (!category||recordCategory(x)===category)
@@ -4417,6 +4431,10 @@
     const typeA=$("cmpTypeA").value,typeB=$("cmpTypeB").value;
     const processA=$("cmpProcessA").value,processB=$("cmpProcessB").value;
     try{
+      if(!operators.length){
+        try{ await loadOperators(); }catch(e){ console.warn('No se pudo refrescar operarios para comparativo:',e); }
+      }
+
       const [allA,allB]=await Promise.all([getRecordsByDate(dateA,force),getRecordsByDate(dateB,force)]);
       fillComparisonCategories(allA,allB);
       const catA=$("cmpCategoryA").value,catB=$("cmpCategoryB").value;
