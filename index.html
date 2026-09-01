@@ -1419,12 +1419,12 @@
               <div class="miniKpi"><span>Total del período</span><strong id="trendTotal">—</strong></div>
               <div class="miniKpi"><span>Promedio diario</span><strong id="trendDailyAvg">—</strong></div>
               <div class="miniKpi"><span>Mejor día</span><strong id="trendBestDay">—</strong></div>
-              <div class="miniKpi"><span>Promedio colaboradores/día</span><strong id="trendWorkersAvg">—</strong></div>
+              <div class="miniKpi"><span>Tiempo total de etiquetado</span><strong id="trendTotalTime">—</strong></div>
             </div>
             <div class="trendChartCard">
-              <h3>🏷️ Unidades procesadas por día</h3>
+              <h3>⏱️ Horas de etiquetado por día</h3>
               <div class="trendCanvasWrap"><canvas id="trendChart"></canvas></div>
-              <div class="trendNote">Solo se muestran días con actividad. Cada etiqueta indica las unidades procesadas y los colaboradores únicos utilizados.</div>
+              <div class="trendNote">Se toma la hora de inicio del primer registro y la hora de fin del último registro de cada día. Así se muestra la duración real de la jornada de etiquetado, no horas-hombre.</div>
             </div>
           </div>
 
@@ -4655,51 +4655,223 @@
   const trendLabelPlugin={
     id:'trendLabels',
     afterDatasetsDraw(chart){
-      const meta=chart.getDatasetMeta(0),workers=chart.options.plugins.trendLabels.workers||[];
+      const meta=chart.getDatasetMeta(0);
+      const workers=chart.options.plugins.trendLabels.workers||[];
+      const timesMs=chart.options.plugins.trendLabels.timesMs||[];
+      const units=chart.options.plugins.trendLabels.units||[];
       const {ctx,chartArea}=chart;ctx.save();
+
       meta.data.forEach((el,i)=>{
-        const units=Number(chart.data.datasets[0].data[i]||0),people=Number(workers[i]||0);
-        const lines=[fmtInt(units),`👥 ${people}`];
+        const people=Number(workers[i]||0);
+        const timeLabel=fmtTrendHours(timesMs[i]||0);
+        const unitLabel=`${fmtInt(units[i]||0)} u`;
+        const lines=[timeLabel,unitLabel,`👥 ${people}`];
+
         ctx.font='800 10px system-ui, -apple-system, Segoe UI, sans-serif';
-        const width=Math.max(...lines.map(v=>ctx.measureText(v).width))+16,height=34;
+        const width=Math.max(...lines.map(v=>ctx.measureText(v).width))+16,height=48;
         const x=Math.min(chartArea.right-width/2,Math.max(chartArea.left+width/2,el.x));
         const preferred=el.y-height-8;
         const y=Math.max(chartArea.top+2,preferred);
-        ctx.fillStyle='rgba(255,255,255,.96)';ctx.strokeStyle='#b8ddd2';ctx.lineWidth=1;
-        ctx.beginPath();if(ctx.roundRect)ctx.roundRect(x-width/2,y,width,height,7);else ctx.rect(x-width/2,y,width,height);ctx.fill();ctx.stroke();
-        ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#174b3d';ctx.fillText(lines[0],x,y+10);
-        ctx.fillStyle='#5b3a79';ctx.fillText(lines[1],x,y+24);
-      });ctx.restore();
+
+        ctx.fillStyle='rgba(255,255,255,.96)';
+        ctx.strokeStyle='#b8ddd2';
+        ctx.lineWidth=1;
+        ctx.beginPath();
+        if(ctx.roundRect)ctx.roundRect(x-width/2,y,width,height,7);
+        else ctx.rect(x-width/2,y,width,height);
+        ctx.fill();ctx.stroke();
+
+        ctx.textAlign='center';
+        ctx.textBaseline='middle';
+        ctx.fillStyle='#174b3d';
+        ctx.fillText(lines[0],x,y+10);
+        ctx.fillStyle='#126b58';
+        ctx.fillText(lines[1],x,y+24);
+        ctx.fillStyle='#5b3a79';
+        ctx.fillText(lines[2],x,y+38);
+      });
+      ctx.restore();
     }
   };
+
+  function fmtTrendHours(ms){
+    const totalMinutes=Math.max(0,Math.round((Number(ms)||0)/60000));
+    const hours=Math.floor(totalMinutes/60);
+    const minutes=totalMinutes%60;
+    if(hours && minutes)return `${hours} h ${minutes} min`;
+    if(hours)return `${hours} h`;
+    return `${minutes} min`;
+  }
+
+  function trendDateMs(localValue){
+    if(!localValue)return null;
+    const d=new Date(localValue);
+    const ms=d.getTime();
+    return Number.isFinite(ms)?ms:null;
+  }
 
   function defaultTrendFrom(to){
     const d=new Date(`${to}T12:00:00`);d.setDate(d.getDate()-30);return d.toLocaleDateString('sv-SE');
   }
+
   async function loadTrend(){
     const today=localISO().slice(0,10),to=$("trendTo").value||today,from=$("trendFrom").value||defaultTrendFrom(to);
     $("trendFrom").value=from;$("trendTo").value=to;
     if(from>to)return toast('⚠️ El rango de fechas no es válido');
-    const proc=$("trendProcess").value,type=$("trendChartType").value==='line'?'line':'bar';
+
+    const proc=$("trendProcess").value;
+    const type=$("trendChartType").value==='line'?'line':'bar';
+
     try{
       const all=await getRecordsByRange(from,to);
       const rows=all.filter(x=>proc==='todos'||(x.proceso||'etiquetado')===proc);
+
       const byDay=new Map();
-      rows.forEach(x=>{const day=x.fecha_local;if(!day)return;if(!byDay.has(day))byDay.set(day,{units:0,workers:new Set()});const g=byDay.get(day);g.units+=Number(x.unidades||0);if(x.operario)g.workers.add(x.operario)});
-      const days=[...byDay.entries()].filter(([,g])=>g.units>0).sort((a,b)=>a[0].localeCompare(b[0]));
-      const total=days.reduce((s,[,g])=>s+g.units,0),workerAvg=days.length?days.reduce((s,[,g])=>s+g.workers.size,0)/days.length:0;
+
+      rows.forEach(x=>{
+        const day=x.fecha_local;
+        if(!day)return;
+
+        if(!byDay.has(day)){
+          byDay.set(day,{
+            units:0,
+            workers:new Set(),
+            firstStartMs:null,
+            lastEndMs:null
+          });
+        }
+
+        const g=byDay.get(day);
+        g.units+=Number(x.unidades||0);
+        if(x.operario)g.workers.add(x.operario);
+
+        const startMs=trendDateMs(x.inicio_local);
+        const endMs=trendDateMs(x.fin_local);
+
+        if(startMs!==null && (g.firstStartMs===null || startMs<g.firstStartMs)){
+          g.firstStartMs=startMs;
+        }
+        if(endMs!==null && (g.lastEndMs===null || endMs>g.lastEndMs)){
+          g.lastEndMs=endMs;
+        }
+      });
+
+      const days=[...byDay.entries()]
+        .map(([day,g])=>{
+          const spanMs=(g.firstStartMs!==null && g.lastEndMs!==null && g.lastEndMs>=g.firstStartMs)
+            ? g.lastEndMs-g.firstStartMs
+            : 0;
+          return [day,{...g,spanMs}];
+        })
+        .filter(([,g])=>g.units>0 || g.spanMs>0)
+        .sort((a,b)=>a[0].localeCompare(b[0]));
+
+      const totalUnits=days.reduce((s,[,g])=>s+g.units,0);
+      const totalSpanMs=days.reduce((s,[,g])=>s+g.spanMs,0);
       const best=days.reduce((winner,current)=>!winner||current[1].units>winner[1].units?current:winner,null);
-      $("trendTotal").textContent=fmtInt(total);$("trendDailyAvg").textContent=days.length?fmtInt(total/days.length)+' u':'—';
+
+      // Se mantiene el total de unidades del período.
+      $("trendTotal").textContent=fmtInt(totalUnits);
+      $("trendDailyAvg").textContent=days.length?fmtInt(totalUnits/days.length)+' u':'—';
       $("trendBestDay").textContent=best?`${best[0].slice(8,10)}/${best[0].slice(5,7)} · ${fmtInt(best[1].units)} u`:'—';
-      $("trendWorkersAvg").textContent=days.length?workerAvg.toLocaleString('es-EC',{maximumFractionDigits:1}):'—';
-      if(trendChartInstance){trendChartInstance.destroy();trendChartInstance=null}
-      const canvas=$("trendChart"),wrap=canvas.parentElement;wrap.style.overflowX='auto';
-      canvas.width=Math.max(wrap.clientWidth-4,days.length*98,760);canvas.height=360;
-      if(!days.length){toast('ℹ️ No hay registros con actividad en el rango seleccionado');return}
-      const units=days.map(([,g])=>g.units),workers=days.map(([,g])=>g.workers.size),labels=days.map(([d])=>`${d.slice(8,10)}/${d.slice(5,7)}`);
-      trendChartInstance=new Chart(canvas,{type,data:{labels,datasets:[{label:'Unidades',data:units,borderColor:'#159a80',backgroundColor:type==='line'?'rgba(47,195,163,.14)':'rgba(47,195,163,.58)',borderWidth:2,pointRadius:type==='line'?5:0,pointBackgroundColor:'#fff',pointBorderWidth:3,borderRadius:7,tension:.28,fill:type==='line'}]},plugins:[trendLabelPlugin],options:{responsive:false,maintainAspectRatio:false,layout:{padding:{top:52,right:16,left:8}},plugins:{legend:{display:false},trendLabels:{workers},tooltip:{callbacks:{title:items=>days[items[0].dataIndex][0],afterLabel:ctx=>[`Colaboradores: ${workers[ctx.dataIndex]}`,`Unidades por colaborador: ${fmtInt(units[ctx.dataIndex]/workers[ctx.dataIndex])}`]}}},scales:{y:{beginAtZero:true,grace:'28%',grid:{color:'rgba(20,55,40,.07)'},ticks:{color:'#64766f'}},x:{grid:{display:false},ticks:{color:'#64766f',autoSkip:false,maxRotation:0}}}}});
-    }catch(e){toast('⚠️ Tendencia general: '+e.message)}
+      $("trendTotalTime").textContent=days.length?fmtTrendHours(totalSpanMs):'—';
+
+      if(trendChartInstance){
+        trendChartInstance.destroy();
+        trendChartInstance=null;
+      }
+
+      const canvas=$("trendChart"),wrap=canvas.parentElement;
+      wrap.style.overflowX='auto';
+      canvas.width=Math.max(wrap.clientWidth-4,days.length*98,760);
+      canvas.height=360;
+
+      if(!days.length){
+        toast('ℹ️ No hay registros con actividad en el rango seleccionado');
+        return;
+      }
+
+      const units=days.map(([,g])=>g.units);
+      const timesMs=days.map(([,g])=>g.spanMs);
+      const hours=timesMs.map(ms=>Math.round((ms/3600000)*100)/100);
+      const workers=days.map(([,g])=>g.workers.size);
+      const labels=days.map(([d])=>`${d.slice(8,10)}/${d.slice(5,7)}`);
+
+      trendChartInstance=new Chart(canvas,{
+        type,
+        data:{
+          labels,
+          datasets:[{
+            label:'Horas de etiquetado',
+            data:hours,
+            borderColor:'#159a80',
+            backgroundColor:type==='line'?'rgba(47,195,163,.14)':'rgba(47,195,163,.58)',
+            borderWidth:2,
+            pointRadius:type==='line'?5:0,
+            pointBackgroundColor:'#fff',
+            pointBorderWidth:3,
+            borderRadius:7,
+            tension:.28,
+            fill:type==='line'
+          }]
+        },
+        plugins:[trendLabelPlugin],
+        options:{
+          responsive:false,
+          maintainAspectRatio:false,
+          layout:{padding:{top:66,right:16,left:8}},
+          plugins:{
+            legend:{display:false},
+            trendLabels:{workers,timesMs,units},
+            tooltip:{
+              callbacks:{
+                title:items=>days[items[0].dataIndex][0],
+                label:ctx=>`Jornada: ${fmtTrendHours(timesMs[ctx.dataIndex])}`,
+                afterLabel:ctx=>{
+                  const i=ctx.dataIndex;
+                  const g=days[i][1];
+                  const startLabel=g.firstStartMs!==null
+                    ? new Date(g.firstStartMs).toLocaleTimeString('es-EC',{hour:'2-digit',minute:'2-digit'})
+                    : '—';
+                  const endLabel=g.lastEndMs!==null
+                    ? new Date(g.lastEndMs).toLocaleTimeString('es-EC',{hour:'2-digit',minute:'2-digit'})
+                    : '—';
+                  return [
+                    `Primer registro: ${startLabel}`,
+                    `Último registro: ${endLabel}`,
+                    `Unidades: ${fmtInt(units[i])}`,
+                    `Colaboradores: ${workers[i]}`
+                  ];
+                }
+              }
+            }
+          },
+          scales:{
+            y:{
+              beginAtZero:true,
+              grace:'32%',
+              grid:{color:'rgba(20,55,40,.07)'},
+              ticks:{
+                color:'#64766f',
+                callback:value=>`${value} h`
+              },
+              title:{
+                display:true,
+                text:'Horas de etiquetado'
+              }
+            },
+            x:{
+              grid:{display:false},
+              ticks:{color:'#64766f',autoSkip:false,maxRotation:0}
+            }
+          }
+        }
+      });
+    }catch(e){
+      toast('⚠️ Tendencia general: '+e.message);
+    }
   }
+
   const trendToday=localISO().slice(0,10);$("trendTo").value=trendToday;$("trendFrom").value=defaultTrendFrom(trendToday);$("loadTrend").onclick=loadTrend;$("trendProcess").addEventListener('change',loadTrend);$("trendChartType").addEventListener('change',loadTrend);
 
   async function loadDataSummary(){
