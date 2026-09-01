@@ -154,6 +154,23 @@
       color:#fff;
       border-color:var(--green);
     }
+    .recordAlertLegend{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 12px;color:var(--muted);font-size:11px}
+    .recordAlertBadge{display:inline-flex;align-items:center;gap:5px;padding:5px 8px;border-radius:999px;font-size:11px;font-weight:900;white-space:nowrap}
+    .recordAlertBadge.critical{background:#ffe4e6;color:#b42318;border:1px solid #fda4af}
+    .recordAlertBadge.review{background:#fff4d6;color:#946200;border:1px solid #f5c768}
+    .recordAlertBadge.ok{background:#edf7f2;color:var(--muted);border:1px solid var(--border)}
+    tr.recordCritical td{background:#fff7f7}
+    tr.recordReview td{background:#fffcf2}
+    .recordTime{font-variant-numeric:tabular-nums;font-weight:900;white-space:nowrap}
+    .recordTime.critical{color:#b42318}
+    .recordTime.review{color:#946200}
+
+    .trendFilterBar{display:grid;grid-template-columns:repeat(4,minmax(150px,1fr)) auto;gap:10px;align-items:end;margin-bottom:12px}
+    .trendChartCard{border:1px solid var(--border);border-radius:16px;background:#fff;padding:14px;margin-top:12px}
+    .trendCanvasWrap{height:390px;position:relative;margin-top:8px}
+    .trendNote{margin-top:8px;color:var(--muted);font-size:11px}
+    @media(max-width:900px){.trendFilterBar{grid-template-columns:repeat(2,minmax(0,1fr))}.trendFilterBar .btn{grid-column:1/-1}}
+    @media(max-width:560px){.trendFilterBar{grid-template-columns:1fr}.trendFilterBar .btn{grid-column:auto}}
 
   
     /* ===== Supervisor v2 ===== */
@@ -1235,46 +1252,6 @@
       .comparisonFilterGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
     }
 
-
-    /* ===== Filtros de registros + tendencia general ===== */
-    .recordsFilterBar{
-      display:grid;
-      grid-template-columns:minmax(170px,220px) minmax(220px,320px) auto 1fr;
-      gap:10px;
-      align-items:end;
-      margin-bottom:10px;
-    }
-    .recordsFilterBar .field{margin-bottom:0}
-    .recordsFilterActions{display:flex;gap:7px;align-items:end;flex-wrap:wrap}
-    .trendFilters{
-      display:grid;
-      grid-template-columns:repeat(4,minmax(0,1fr)) auto;
-      gap:10px;
-      align-items:end;
-      margin-bottom:12px;
-    }
-    .trendFilters .field{margin-bottom:0}
-    .trendKpis{grid-template-columns:repeat(4,minmax(0,1fr))!important}
-    .trendChartCard{min-height:470px}
-    .trendChartCard .chartCanvasWrap{height:390px}
-    .trendNote{margin-top:8px;color:var(--muted);font-size:11px}
-    @media(max-width:1100px){
-      .recordsFilterBar{grid-template-columns:1fr 1fr auto}
-      .recordsFilterBar>div:last-child{display:none}
-      .trendFilters{grid-template-columns:1fr 1fr 1fr}
-      .trendFilters .trendLoadWrap{grid-column:1/-1}
-    }
-    @media(max-width:700px){
-      .recordsFilterBar,.trendFilters{grid-template-columns:1fr 1fr}
-      .recordsFilterActions,.trendFilters .trendLoadWrap{grid-column:1/-1}
-      .trendKpis{grid-template-columns:1fr 1fr!important}
-      .trendChartCard{min-height:400px}
-      .trendChartCard .chartCanvasWrap{height:330px}
-    }
-    @media(max-width:480px){
-      .recordsFilterBar,.trendFilters,.trendKpis{grid-template-columns:1fr!important}
-    }
-
   </style>
 </head>
 <body>
@@ -1430,42 +1407,24 @@
           </div>
 
           <div id="view-tendencia" class="supView card">
-            <div class="sectionTitle">
-              <h2>📈 Tendencia general</h2>
-            </div>
-
-            <div class="trendFilters">
+            <div class="sectionTitle"><h2>📈 Tendencia general</h2></div>
+            <div class="trendFilterBar">
               <div class="field"><label>Desde</label><input id="trendFrom" type="date"></div>
               <div class="field"><label>Hasta</label><input id="trendTo" type="date"></div>
-              <div class="field">
-                <label>Proceso</label>
-                <select id="trendProcess">
-                  <option value="etiquetado">🏷️ Etiquetado</option>
-                  <option value="armado">📦 Armado</option>
-                  <option value="todos">Todos</option>
-                </select>
-              </div>
-              <div class="field">
-                <label>Tipo de gráfico</label>
-                <select id="trendChartType">
-                  <option value="bar">📊 Barras</option>
-                  <option value="line">📈 Línea</option>
-                </select>
-              </div>
-              <div class="trendLoadWrap"><button id="loadTrend" class="btn primary">🔄 Actualizar</button></div>
+              <div class="field"><label>Proceso</label><select id="trendProcess"><option value="etiquetado">🏷️ Etiquetado</option><option value="armado">📦 Armado</option><option value="todos">Todos</option></select></div>
+              <div class="field"><label>Tipo de gráfico</label><select id="trendChartType"><option value="bar">📊 Barras</option><option value="line">📈 Línea</option></select></div>
+              <button id="loadTrend" class="btn primary">🔄 Actualizar</button>
             </div>
-
-            <div class="miniKpis trendKpis">
-              <div class="miniKpi"><span>Total del período</span><strong id="trendTotalUnits">—</strong></div>
-              <div class="miniKpi"><span>Promedio diario</span><strong id="trendAvgDaily">—</strong></div>
+            <div class="miniKpis">
+              <div class="miniKpi"><span>Total del período</span><strong id="trendTotal">—</strong></div>
+              <div class="miniKpi"><span>Promedio diario</span><strong id="trendDailyAvg">—</strong></div>
               <div class="miniKpi"><span>Mejor día</span><strong id="trendBestDay">—</strong></div>
-              <div class="miniKpi"><span>Promedio colaboradores/día</span><strong id="trendAvgWorkers">—</strong></div>
+              <div class="miniKpi"><span>Promedio colaboradores/día</span><strong id="trendWorkersAvg">—</strong></div>
             </div>
-
-            <div class="chartCard trendChartCard">
+            <div class="trendChartCard">
               <h3>🏷️ Unidades procesadas por día</h3>
-              <div class="chartCanvasWrap"><canvas id="chartGeneralTrend"></canvas></div>
-              <div class="trendNote">Solo se muestran días con actividad. Cada punto/barra muestra las unidades del día y la cantidad de colaboradores únicos utilizados.</div>
+              <div class="trendCanvasWrap"><canvas id="trendChart"></canvas></div>
+              <div class="trendNote">Solo se muestran días con actividad. Cada etiqueta indica las unidades procesadas y los colaboradores únicos utilizados.</div>
             </div>
           </div>
 
@@ -1581,11 +1540,16 @@
           <div id="view-registros" class="supView card">
             <div class="sectionTitle"><h2>🧾 Últimos registros</h2><button id="loadRecords" class="btn ghost">🔄 Cargar</button></div>
 
-            <div class="recordsFilterBar">
+            <div class="filterGrid" style="grid-template-columns:minmax(180px,260px) minmax(220px,320px) auto 1fr">
               <div class="field"><label>Fecha</label><input id="recordsDateFilter" type="date"></div>
               <div class="field"><label>Operario</label><select id="recordsOperatorFilter"><option value="">Todos</option></select></div>
-              <div class="recordsFilterActions"><button id="clearRecordsFilters" class="miniBtn">✕ Limpiar filtros</button></div>
-              <div></div>
+              <button id="clearRecordsFilters" class="btn secondary" style="align-self:end">Limpiar filtros</button>
+            </div>
+
+            <div class="recordAlertLegend">
+              <span class="recordAlertBadge critical">🚨 Menos de 30 s · Mal registro</span>
+              <span class="recordAlertBadge review">⚠️ De 30 a 44 s · Revisar</span>
+              <span>La validación usa el tiempo neto exacto.</span>
             </div>
 
             <div class="recordProcessTabs">
@@ -1595,15 +1559,15 @@
 
             <div id="recordsEtiquetadoWrap" class="tableWrap">
               <table>
-                <thead><tr><th>Fecha</th><th>Operario</th><th>Código</th><th>Unidades</th><th>Min netos</th><th>U/H</th><th>Meta</th><th>Caducidad</th><th>Novedad</th><th>Comentario</th><th>Acción</th></tr></thead>
-                <tbody id="recordsEtiquetadoBody"><tr><td colspan="11">Sin cargar</td></tr></tbody>
+                <thead><tr><th>Fecha</th><th>Operario</th><th>Código</th><th>Unidades</th><th>Tiempo neto</th><th>Alerta</th><th>U/H</th><th>Meta</th><th>Caducidad</th><th>Novedad</th><th>Comentario</th><th>Acción</th></tr></thead>
+                <tbody id="recordsEtiquetadoBody"><tr><td colspan="12">Sin cargar</td></tr></tbody>
               </table>
             </div>
 
             <div id="recordsArmadoWrap" class="tableWrap hidden">
               <table>
-                <thead><tr><th>Fecha</th><th>Operario</th><th>Código</th><th>Unidades</th><th>Min netos</th><th>U/H</th><th>Caducidad</th><th>Novedad</th><th>Comentario</th><th>Acción</th></tr></thead>
-                <tbody id="recordsArmadoBody"><tr><td colspan="10">Sin cargar</td></tr></tbody>
+                <thead><tr><th>Fecha</th><th>Operario</th><th>Código</th><th>Unidades</th><th>Tiempo neto</th><th>Alerta</th><th>U/H</th><th>Caducidad</th><th>Novedad</th><th>Comentario</th><th>Acción</th></tr></thead>
+                <tbody id="recordsArmadoBody"><tr><td colspan="11">Sin cargar</td></tr></tbody>
               </table>
             </div>
           </div>
@@ -3610,7 +3574,7 @@
     if(b.dataset.view==='reporte') await loadDailyReport();
     if(b.dataset.view==='productividad') await loadProductivity();
     if(b.dataset.view==='graficos') await loadCharts();
-    if(b.dataset.view==='tendencia') await loadGeneralTrend();
+    if(b.dataset.view==='tendencia') await loadTrend();
     if(b.dataset.view==='comparativo') await loadComparison(false);
     if(b.dataset.view==='metas') await loadEvaluation();
     if(b.dataset.view==='supervision') await loadSupervision();
@@ -4687,157 +4651,56 @@
   $("chartsDate").addEventListener('change',()=>syncRealtimeDailyRecords());
 
   // ---------- TENDENCIA GENERAL ----------
-  let generalTrendChart=null;
-
-  function eachDateISO(from,to){
-    const out=[];
-    const [fy,fm,fd]=String(from).split('-').map(Number);
-    const [ty,tm,td]=String(to).split('-').map(Number);
-    let cur=Date.UTC(fy,fm-1,fd),end=Date.UTC(ty,tm-1,td);
-    while(cur<=end){
-      const d=new Date(cur);
-      out.push(`${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}`);
-      cur+=86400000;
-    }
-    return out;
-  }
-
-  function shortDateLabel(iso){
-    const [y,m,d]=String(iso).split('-');
-    return `${d}/${m}`;
-  }
-
-  const trendPointLabelsPlugin={
-    id:'trendPointLabels',
-    afterDatasetsDraw(chart,args,opts){
-      const meta=chart.getDatasetMeta(0);
-      const units=chart.data.datasets[0]?.data||[];
-      const workers=opts?.workers||[];
-      const ctx=chart.ctx;
-      ctx.save();
-
+  let trendChartInstance=null;
+  const trendLabelPlugin={
+    id:'trendLabels',
+    afterDatasetsDraw(chart){
+      const meta=chart.getDatasetMeta(0),workers=chart.options.plugins.trendLabels.workers||[];
+      const {ctx,chartArea}=chart;ctx.save();
       meta.data.forEach((el,i)=>{
-        const value=Number(units[i]||0),people=Number(workers[i]||0);
-        if(!Number.isFinite(value))return;
-
-        const unitText=fmtInt(value);
-        const peopleText=`👥 ${fmtInt(people)}`;
-        ctx.font='800 11px Inter, system-ui, sans-serif';
-        const w1=ctx.measureText(unitText).width;
-        ctx.font='800 10px Inter, system-ui, sans-serif';
-        const w2=ctx.measureText(peopleText).width;
-
-        const boxW=Math.max(w1,w2)+18;
-        const boxH=34;
-        const boxX=el.x-boxW/2;
-        const preferredY=el.y-boxH-10;
-        const boxY=Math.max(chart.chartArea.top+4,preferredY);
-        const r=8;
-
-        ctx.beginPath();
-        ctx.moveTo(boxX+r,boxY);
-        ctx.lineTo(boxX+boxW-r,boxY);
-        ctx.quadraticCurveTo(boxX+boxW,boxY,boxX+boxW,boxY+r);
-        ctx.lineTo(boxX+boxW,boxY+boxH-r);
-        ctx.quadraticCurveTo(boxX+boxW,boxY+boxH,boxX+boxW-r,boxY+boxH);
-        ctx.lineTo(boxX+r,boxY+boxH);
-        ctx.quadraticCurveTo(boxX,boxY+boxH,boxX,boxY+boxH-r);
-        ctx.lineTo(boxX,boxY+r);
-        ctx.quadraticCurveTo(boxX,boxY,boxX+r,boxY);
-        ctx.closePath();
-        ctx.fillStyle='rgba(255,255,255,.94)';
-        ctx.fill();
-        ctx.strokeStyle='rgba(21,154,128,.18)';
-        ctx.lineWidth=1;
-        ctx.stroke();
-
-        ctx.textAlign='center';ctx.textBaseline='middle';
-        ctx.font='800 11px Inter, system-ui, sans-serif';ctx.fillStyle='#174b3d';
-        ctx.fillText(unitText,el.x,boxY+11);
-        ctx.font='800 10px Inter, system-ui, sans-serif';ctx.fillStyle='#5f756c';
-        ctx.fillText(peopleText,el.x,boxY+24);
-      });
-      ctx.restore();
+        const units=Number(chart.data.datasets[0].data[i]||0),people=Number(workers[i]||0);
+        const lines=[fmtInt(units),`👥 ${people}`];
+        ctx.font='800 10px system-ui, -apple-system, Segoe UI, sans-serif';
+        const width=Math.max(...lines.map(v=>ctx.measureText(v).width))+16,height=34;
+        const x=Math.min(chartArea.right-width/2,Math.max(chartArea.left+width/2,el.x));
+        const preferred=el.y-height-8;
+        const y=Math.max(chartArea.top+2,preferred);
+        ctx.fillStyle='rgba(255,255,255,.96)';ctx.strokeStyle='#b8ddd2';ctx.lineWidth=1;
+        ctx.beginPath();if(ctx.roundRect)ctx.roundRect(x-width/2,y,width,height,7);else ctx.rect(x-width/2,y,width,height);ctx.fill();ctx.stroke();
+        ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#174b3d';ctx.fillText(lines[0],x,y+10);
+        ctx.fillStyle='#5b3a79';ctx.fillText(lines[1],x,y+24);
+      });ctx.restore();
     }
   };
 
-  async function loadGeneralTrend(){
-    const today=localISO().slice(0,10);
-    const from=$("trendFrom").value||`${today.slice(0,8)}01`;
-    const to=$("trendTo").value||today;
+  function defaultTrendFrom(to){
+    const d=new Date(`${to}T12:00:00`);d.setDate(d.getDate()-30);return d.toLocaleDateString('sv-SE');
+  }
+  async function loadTrend(){
+    const today=localISO().slice(0,10),to=$("trendTo").value||today,from=$("trendFrom").value||defaultTrendFrom(to);
     $("trendFrom").value=from;$("trendTo").value=to;
     if(from>to)return toast('⚠️ El rango de fechas no es válido');
-    const proc=$("trendProcess").value||'etiquetado';
-    const type=$("trendChartType").value||'bar';
+    const proc=$("trendProcess").value,type=$("trendChartType").value==='line'?'line':'bar';
     try{
       const all=await getRecordsByRange(from,to);
       const rows=all.filter(x=>proc==='todos'||(x.proceso||'etiquetado')===proc);
-      const days=eachDateISO(from,to);
-      const grouped=new Map(days.map(d=>[d,{units:0,workers:new Set()}]));
-      rows.forEach(x=>{
-        const d=String(x.fecha_local||'');
-        if(!grouped.has(d))grouped.set(d,{units:0,workers:new Set()});
-        const g=grouped.get(d);
-        g.units+=Number(x.unidades||0);
-        if(x.operario)g.workers.add(x.operario);
-      });
-      const daily=days
-        .map(date=>({date,units:grouped.get(date)?.units||0,workers:grouped.get(date)?.workers?.size||0}))
-        .filter(x=>x.units>0||x.workers>0);
-      const active=daily;
-      const total=daily.reduce((s,x)=>s+x.units,0);
-      const avg=active.length?Math.round(total/active.length):0;
-      const avgWorkers=active.length?active.reduce((s,x)=>s+x.workers,0)/active.length:0;
-      const best=active.length?[...active].sort((a,b)=>b.units-a.units)[0]:null;
-
-      $("trendTotalUnits").textContent=fmtInt(total);
-      $("trendAvgDaily").textContent=active.length?fmtInt(avg)+' u':'—';
-      $("trendBestDay").textContent=best?`${shortDateLabel(best.date)} · ${fmtInt(best.units)} u`:'—';
-      $("trendAvgWorkers").textContent=active.length?avgWorkers.toLocaleString('es-EC',{minimumFractionDigits:1,maximumFractionDigits:1}):'—';
-
-      if(generalTrendChart){generalTrendChart.destroy();generalTrendChart=null}
-      const canvas=$("chartGeneralTrend");
-      if(!canvas||!window.Chart)return;
-      const labels=daily.map(x=>shortDateLabel(x.date));
-      const units=daily.map(x=>x.units);
-      const workers=daily.map(x=>x.workers);
-      generalTrendChart=new Chart(canvas,{
-        type,
-        data:{
-          labels,
-          datasets:[type==='line'
-            ? {label:'Unidades',data:units,borderColor:'#159a80',backgroundColor:'rgba(47,195,163,.12)',borderWidth:3,pointRadius:5,pointHoverRadius:7,pointBackgroundColor:'#fff',pointBorderColor:'#159a80',pointBorderWidth:3,tension:.28,fill:true}
-            : {label:'Unidades',data:units,backgroundColor:'rgba(47,195,163,.62)',borderColor:'#159a80',borderWidth:1.5,borderRadius:7,maxBarThickness:55}
-          ]
-        },
-        plugins:[trendPointLabelsPlugin],
-        options:{
-          responsive:true,maintainAspectRatio:false,
-          layout:{padding:{top:64,right:16,left:4,bottom:2}},
-          plugins:{
-            legend:{display:false},
-            trendPointLabels:{workers},
-            tooltip:{callbacks:{
-              title(items){const i=items?.[0]?.dataIndex??0;return daily[i]?.date||''},
-              label(ctx){return `Unidades: ${fmtInt(ctx.raw||0)}`},
-              afterLabel(ctx){const i=ctx.dataIndex,w=workers[i]||0,u=units[i]||0;return [`Colaboradores: ${fmtInt(w)}`,`Unidades por colaborador: ${w?fmtInt(Math.round(u/w)):'—'}`]}
-            }}
-          },
-          scales:{
-            y:{beginAtZero:true,grace:'18%',grid:{color:'rgba(20,55,40,.06)'},ticks:{color:'#64766f'}},
-            x:{grid:{display:false},ticks:{color:'#64766f',autoSkip:daily.length>18,maxRotation:0,minRotation:0}}
-          }
-        }
-      });
-      if(!rows.length)toast('ℹ️ No hay registros para el rango seleccionado');
+      const byDay=new Map();
+      rows.forEach(x=>{const day=x.fecha_local;if(!day)return;if(!byDay.has(day))byDay.set(day,{units:0,workers:new Set()});const g=byDay.get(day);g.units+=Number(x.unidades||0);if(x.operario)g.workers.add(x.operario)});
+      const days=[...byDay.entries()].filter(([,g])=>g.units>0).sort((a,b)=>a[0].localeCompare(b[0]));
+      const total=days.reduce((s,[,g])=>s+g.units,0),workerAvg=days.length?days.reduce((s,[,g])=>s+g.workers.size,0)/days.length:0;
+      const best=days.reduce((winner,current)=>!winner||current[1].units>winner[1].units?current:winner,null);
+      $("trendTotal").textContent=fmtInt(total);$("trendDailyAvg").textContent=days.length?fmtInt(total/days.length)+' u':'—';
+      $("trendBestDay").textContent=best?`${best[0].slice(8,10)}/${best[0].slice(5,7)} · ${fmtInt(best[1].units)} u`:'—';
+      $("trendWorkersAvg").textContent=days.length?workerAvg.toLocaleString('es-EC',{maximumFractionDigits:1}):'—';
+      if(trendChartInstance){trendChartInstance.destroy();trendChartInstance=null}
+      const canvas=$("trendChart"),wrap=canvas.parentElement;wrap.style.overflowX='auto';
+      canvas.width=Math.max(wrap.clientWidth-4,days.length*98,760);canvas.height=360;
+      if(!days.length){toast('ℹ️ No hay registros con actividad en el rango seleccionado');return}
+      const units=days.map(([,g])=>g.units),workers=days.map(([,g])=>g.workers.size),labels=days.map(([d])=>`${d.slice(8,10)}/${d.slice(5,7)}`);
+      trendChartInstance=new Chart(canvas,{type,data:{labels,datasets:[{label:'Unidades',data:units,borderColor:'#159a80',backgroundColor:type==='line'?'rgba(47,195,163,.14)':'rgba(47,195,163,.58)',borderWidth:2,pointRadius:type==='line'?5:0,pointBackgroundColor:'#fff',pointBorderWidth:3,borderRadius:7,tension:.28,fill:type==='line'}]},plugins:[trendLabelPlugin],options:{responsive:false,maintainAspectRatio:false,layout:{padding:{top:52,right:16,left:8}},plugins:{legend:{display:false},trendLabels:{workers},tooltip:{callbacks:{title:items=>days[items[0].dataIndex][0],afterLabel:ctx=>[`Colaboradores: ${workers[ctx.dataIndex]}`,`Unidades por colaborador: ${fmtInt(units[ctx.dataIndex]/workers[ctx.dataIndex])}`]}}},scales:{y:{beginAtZero:true,grace:'28%',grid:{color:'rgba(20,55,40,.07)'},ticks:{color:'#64766f'}},x:{grid:{display:false},ticks:{color:'#64766f',autoSkip:false,maxRotation:0}}}}});
     }catch(e){toast('⚠️ Tendencia general: '+e.message)}
   }
-
-  const trendToday=localISO().slice(0,10);
-  $("trendFrom").value=`${trendToday.slice(0,8)}01`;
-  $("trendTo").value=trendToday;
-  $("loadTrend").onclick=loadGeneralTrend;
-  ["trendFrom","trendTo","trendProcess","trendChartType"].forEach(id=>$(id)?.addEventListener('change',loadGeneralTrend));
+  const trendToday=localISO().slice(0,10);$("trendTo").value=trendToday;$("trendFrom").value=defaultTrendFrom(trendToday);$("loadTrend").onclick=loadTrend;$("trendProcess").addEventListener('change',loadTrend);$("trendChartType").addEventListener('change',loadTrend);
 
   async function loadDataSummary(){
     try{
@@ -4975,39 +4838,35 @@
   function noveltyLabel(x){const type=x.novedad_tipo||'none';if(type==='sobrante')return `➕ Sobrante${x.novedad_cantidad?` (${x.novedad_cantidad})`:''}`;if(type==='faltante')return `➖ Faltante${x.novedad_cantidad?` (${x.novedad_cantidad})`:''}`;if(type==='danado')return `💥 Dañado${x.novedad_cantidad?` (${x.novedad_cantidad})`:''}`;return '✅ Sin novedad'}
   function expiryLabel(x){if(x.caducidad_tipo==='no_caduca')return '♾️ No caduca';if(!x.caducidad_mes||!x.caducidad_anio)return '—';return `${x.caducidad_mes}/${x.caducidad_anio}`}
 
+  function recordTimeAlert(x){
+    if(x.tiempo_neto_ms===undefined||x.tiempo_neto_ms===null)return {row:'',time:'',badge:'<span class="recordAlertBadge ok">—</span>'};
+    const ms=Math.max(0,Number(x.tiempo_neto_ms)||0);
+    if(ms<30000)return {row:'recordCritical',time:'critical',badge:'<span class="recordAlertBadge critical">🚨 Mal registro</span>'};
+    if(ms<45000)return {row:'recordReview',time:'review',badge:'<span class="recordAlertBadge review">⚠️ Revisar</span>'};
+    return {row:'',time:'',badge:'—'};
+  }
+  function renderRecordRow(x,isArmado=false){
+    const alert=recordTimeAlert(x),time=fmtTimer(Number(x.tiempo_neto_ms||0));
+    const cells=`<td>${x.fecha_local||''}</td><td>${x.operario||''}</td><td>${x.codigo||''}</td><td>${fmtInt(x.unidades)}</td><td><span class="recordTime ${alert.time}">${time}</span></td><td>${alert.badge}</td><td><b>${fmtInt(x.productividad_u_h||0)}</b></td>${isArmado?'':`<td>${x.meta_u_h?fmtInt(x.meta_u_h):'—'}</td>`}<td>${expiryLabel(x)}</td><td>${noveltyLabel(x)}</td><td>${x.comentario||'—'}</td><td><div class="rowActions"><button class="editRecordBtn" data-id="${x.id}">✏️ Editar</button><button class="miniBtn deleteRecordBtn" data-id="${x.id}" title="Eliminar registro" aria-label="Eliminar registro">🗑️</button><button class="miniBtn historyRecordBtn" data-id="${x.id}" title="Historial">🕘</button></div></td>`;
+    return `<tr class="${alert.row}">${cells}</tr>`;
+  }
+
   async function loadRecords(force=false){
     try{
-      const date=$("recordsDateFilter")?.value||'';
-      const selectedOp=$("recordsOperatorFilter")?.value||'';
-      const base=date?await getRecordsByDate(date,force):await getSupervisorRecords(force);
-      indexRecords(base);
-
-      const operators=[...new Set(base.map(x=>x.operario).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es'));
-      const opSel=$("recordsOperatorFilter");
-      if(opSel){
-        opSel.innerHTML='<option value="">Todos</option>'+operators.map(v=>`<option>${v}</option>`).join('');
-        if(operators.includes(selectedOp))opSel.value=selectedOp;
-      }
-      const opFilter=opSel?.value||'';
-      const all=base.filter(x=>!opFilter||x.operario===opFilter);
-      const etiquetado=all.filter(x=>(x.proceso||'etiquetado')==='etiquetado');
-      const armado=all.filter(x=>x.proceso==='armado');
-
-      $("recordsEtiquetadoBody").innerHTML=etiquetado.length?etiquetado.map(x=>`<tr><td>${x.fecha_local||''}</td><td>${x.operario||''}</td><td>${x.codigo||''}</td><td>${fmtInt(x.unidades)}</td><td>${Math.round((x.tiempo_neto_ms||0)/60000)}</td><td><b>${fmtInt(x.productividad_u_h||0)}</b></td><td>${x.meta_u_h?fmtInt(x.meta_u_h):'—'}</td><td>${expiryLabel(x)}</td><td>${noveltyLabel(x)}</td><td>${x.comentario||'—'}</td><td><div class="rowActions"><button class="editRecordBtn" data-id="${x.id}">✏️ Editar</button><button class="miniBtn deleteRecordBtn" data-id="${x.id}" title="Eliminar registro" aria-label="Eliminar registro">🗑️</button><button class="miniBtn historyRecordBtn" data-id="${x.id}" title="Historial">🕘</button></div></td></tr>`).join(''):'<tr><td colspan="11">Sin registros de etiquetado para los filtros seleccionados</td></tr>';
-      $("recordsArmadoBody").innerHTML=armado.length?armado.map(x=>`<tr><td>${x.fecha_local||''}</td><td>${x.operario||''}</td><td>${x.codigo||''}</td><td>${fmtInt(x.unidades)}</td><td>${Math.round((x.tiempo_neto_ms||0)/60000)}</td><td><b>${fmtInt(x.productividad_u_h||0)}</b></td><td>${expiryLabel(x)}</td><td>${noveltyLabel(x)}</td><td>${x.comentario||'—'}</td><td><div class="rowActions"><button class="editRecordBtn" data-id="${x.id}">✏️ Editar</button><button class="miniBtn deleteRecordBtn" data-id="${x.id}" title="Eliminar registro" aria-label="Eliminar registro">🗑️</button><button class="miniBtn historyRecordBtn" data-id="${x.id}" title="Historial">🕘</button></div></td></tr>`).join(''):'<tr><td colspan="10">Sin registros de armado para los filtros seleccionados</td></tr>';
-      bindRecordActionButtons();
-    }catch(e){
-      $("recordsEtiquetadoBody").innerHTML=`<tr><td colspan="11">${e.message}</td></tr>`;
-      $("recordsArmadoBody").innerHTML=`<tr><td colspan="10">${e.message}</td></tr>`;
-    }
+      const date=$("recordsDateFilter").value,selectedOperator=$("recordsOperatorFilter").value;
+      const source=date?await getRecordsByDate(date,force):await getSupervisorRecords(force);indexRecords(source);
+      const operators=[...new Set(source.map(x=>x.operario).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es'));
+      $("recordsOperatorFilter").innerHTML='<option value="">Todos</option>'+operators.map(v=>`<option>${v}</option>`).join('');
+      if(operators.includes(selectedOperator))$("recordsOperatorFilter").value=selectedOperator;
+      const effectiveOperator=operators.includes(selectedOperator)?selectedOperator:'';
+      const all=source.filter(x=>!effectiveOperator||x.operario===effectiveOperator);
+      const etiquetado=all.filter(x=>(x.proceso||'etiquetado')==='etiquetado'),armado=all.filter(x=>x.proceso==='armado');
+      $("recordsEtiquetadoBody").innerHTML=etiquetado.length?etiquetado.map(x=>renderRecordRow(x,false)).join(''):'<tr><td colspan="12">Sin registros de etiquetado</td></tr>';
+      $("recordsArmadoBody").innerHTML=armado.length?armado.map(x=>renderRecordRow(x,true)).join(''):'<tr><td colspan="11">Sin registros de armado</td></tr>';bindRecordActionButtons();
+    }catch(e){$("recordsEtiquetadoBody").innerHTML=`<tr><td colspan="12">${e.message}</td></tr>`;$("recordsArmadoBody").innerHTML=`<tr><td colspan="11">${e.message}</td></tr>`}
   }
-  $("recordsDateFilter")?.addEventListener('change',()=>loadRecords(true));
-  $("recordsOperatorFilter")?.addEventListener('change',()=>loadRecords(false));
-  $("clearRecordsFilters")?.addEventListener('click',()=>{
-    $("recordsDateFilter").value='';
-    $("recordsOperatorFilter").value='';
-    loadRecords(true);
-  });
+  $("recordsDateFilter").addEventListener('change',()=>loadRecords(true));$("recordsOperatorFilter").addEventListener('change',()=>loadRecords(false));
+  $("clearRecordsFilters").onclick=()=>{$("recordsDateFilter").value='';$("recordsOperatorFilter").value='';loadRecords(true)};
 
   // ---------- CADUCIDAD ----------
   let expiryReportRows=[];
@@ -5055,31 +4914,21 @@
     try{await updateDoc(doc(db,'registros_etiquetado',id),{gestion_estado:next,gestion_por:managed?currentSupervisorUser():'',gestion_fecha_local:managed?localISO():'',gestion_actualizado_por:currentSupervisorUser()});await logAudit({accion:managed?'Novedad gestionada':'Novedad reabierta',entidad:'registro',entidadId:id,detalle:`${x.operario||''} · ${x.codigo||''}`,cambios:[{campo:'Estado de gestión',anterior:old,nuevo:next}]});invalidateRecordCaches();toast(managed?'✅ Marcado como gestionado':'↩️ Marcado como pendiente');await loadNoveltyReport()}catch(e){toast('❌ '+e.message)}
   }
   async function loadNoveltyReport(){
-    const today=localISO().slice(0,10);
-    const from=$("noveltyFrom").value||today,to=$("noveltyTo").value||today;
-    $("noveltyFrom").value=from;$("noveltyTo").value=to;
+    const today=localISO().slice(0,10),from=$("noveltyFrom").value||today,to=$("noveltyTo").value||today;$("noveltyFrom").value=from;$("noveltyTo").value=to;
     if(from>to)return toast('⚠️ El rango de fechas no es válido');
     const proc=$("noveltyProcess").value,opFilter=$("noveltyOperator").value,management=$("noveltyManagementFilter").value;
     try{
       const all=await getRecordsByRange(from,to);indexRecords(all);
-      const operatorsForRange=[...new Set(all.map(x=>x.operario).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es'));
-      const opSel=$("noveltyOperator"),current=opSel.value;
-      opSel.innerHTML='<option value="">Todos</option>'+operatorsForRange.map(v=>`<option>${v}</option>`).join('');
-      if(operatorsForRange.includes(current))opSel.value=current;
-      const selectedOp=opSel.value;
-      let rows=all.filter(x=>{const p=x.proceso||'etiquetado',t=x.novedad_tipo||'none',g=x.gestion_estado||'pendiente';return t!=='none'&&(proc==='todos'||p===proc)&&(!selectedOp||x.operario===selectedOp)&&(noveltyActiveType==='todos'||t===noveltyActiveType)&&(management==='todos'||g===management)});
-      rows.sort((a,b)=>String(a.fecha_local||'').localeCompare(String(b.fecha_local||''))||String(a.inicio_local||'').localeCompare(String(b.inicio_local||'')));
+      const operatorsForDay=[...new Set(all.map(x=>x.operario).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es'));const opSel=$("noveltyOperator"),current=opSel.value;opSel.innerHTML='<option value="">Todos</option>'+operatorsForDay.map(v=>`<option>${v}</option>`).join('');if(operatorsForDay.includes(current))opSel.value=current;
+      let rows=all.filter(x=>{const p=x.proceso||'etiquetado',t=x.novedad_tipo||'none',g=x.gestion_estado||'pendiente';return t!=='none'&&(proc==='todos'||p===proc)&&(!opFilter||x.operario===opFilter)&&(noveltyActiveType==='todos'||t===noveltyActiveType)&&(management==='todos'||g===management)});
+      rows.sort((a,b)=>String(a.inicio_local||'').localeCompare(String(b.inicio_local||'')));
       const over=rows.filter(x=>x.novedad_tipo==='sobrante').reduce((s,x)=>s+Number(x.novedad_cantidad||0),0),short=rows.filter(x=>x.novedad_tipo==='faltante').reduce((s,x)=>s+Number(x.novedad_cantidad||0),0),damaged=rows.filter(x=>x.novedad_tipo==='danado').reduce((s,x)=>s+Number(x.novedad_cantidad||0),0);
       $("noveltyCount").textContent=fmtInt(rows.length);$("noveltyOverQty").textContent=fmtInt(over);$("noveltyShortQty").textContent=fmtInt(short);$("noveltyDamagedQty").textContent=fmtInt(damaged);$("noveltyTotalQty").textContent=fmtInt(over+short+damaged);
       $("noveltyBody").innerHTML=rows.length?rows.map(x=>{const managed=(x.gestion_estado||'pendiente')==='gestionado';return `<tr><td>${x.fecha_local||''}</td><td>${x.operario||''}</td><td>${processName(x.proceso)}</td><td>${x.codigo||''}</td><td>${expiryLabel(x)}</td><td>${x.novedad_tipo==='sobrante'?'➕ Sobrante':x.novedad_tipo==='faltante'?'➖ Faltante':'💥 Dañado'}</td><td><b>${fmtInt(x.novedad_cantidad||0)}</b></td><td>${x.comentario||'—'}</td><td><span class="managementPill ${managed?'done':'pending'}">${managed?'✅ Gestionado':'🟡 Pendiente'}</span></td><td>${managed?`${x.gestion_por||'—'}${x.gestion_fecha_local?` · ${x.gestion_fecha_local.replace('T',' ').slice(0,16)}`:''}`:'—'}</td><td><div class="compactActions"><button class="editRecordBtn" data-id="${x.id}">✏️ Editar</button><button class="miniBtn ${managed?'warn':'ok'} noveltyManageBtn" data-id="${x.id}" data-managed="${managed?'0':'1'}">${managed?'↩️ Reabrir':'✅ Gestionado'}</button><button class="miniBtn historyNoveltyBtn" data-id="${x.id}">🕘</button></div></td></tr>`}).join(''):'<tr><td colspan="11">Sin novedades para los filtros seleccionados.</td></tr>';
-      document.querySelectorAll('#noveltyBody .editRecordBtn').forEach(btn=>btn.onclick=()=>openRecordEditor(btn.dataset.id));
-      document.querySelectorAll('.noveltyManageBtn').forEach(btn=>btn.onclick=()=>setNoveltyManaged(btn.dataset.id,btn.dataset.managed==='1'));
-      document.querySelectorAll('.historyNoveltyBtn').forEach(btn=>btn.onclick=()=>openHistory('registro',btn.dataset.id));
+      document.querySelectorAll('#noveltyBody .editRecordBtn').forEach(btn=>btn.onclick=()=>openRecordEditor(btn.dataset.id));document.querySelectorAll('.noveltyManageBtn').forEach(btn=>btn.onclick=()=>setNoveltyManaged(btn.dataset.id,btn.dataset.managed==='1'));document.querySelectorAll('.historyNoveltyBtn').forEach(btn=>btn.onclick=()=>openHistory('registro',btn.dataset.id));
     }catch(e){$("noveltyBody").innerHTML=`<tr><td colspan="11">${e.message}</td></tr>`}
   }
-  $("noveltyFrom").value=localISO().slice(0,10);$("noveltyTo").value=localISO().slice(0,10);
-  $("loadNoveltyReport").onclick=loadNoveltyReport;
-  ["noveltyFrom","noveltyTo","noveltyProcess","noveltyOperator","noveltyManagementFilter"].forEach(id=>$(id)?.addEventListener('change',loadNoveltyReport));
+  $("noveltyFrom").value=localISO().slice(0,10);$("noveltyTo").value=localISO().slice(0,10);$("loadNoveltyReport").onclick=loadNoveltyReport;$("noveltyProcess").addEventListener('change',loadNoveltyReport);$("noveltyOperator").addEventListener('change',loadNoveltyReport);$("noveltyManagementFilter").addEventListener('change',loadNoveltyReport);
   document.querySelectorAll('.noveltyTab').forEach(btn=>btn.onclick=()=>{document.querySelectorAll('.noveltyTab').forEach(x=>x.classList.remove('active'));btn.classList.add('active');noveltyActiveType=btn.dataset.type;loadNoveltyReport()});
 
   // ---------- REPORTE DIARIO ----------
