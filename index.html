@@ -1422,9 +1422,9 @@
               <div class="miniKpi"><span>Tiempo total de etiquetado</span><strong id="trendTotalTime">—</strong></div>
             </div>
             <div class="trendChartCard">
-              <h3>⏱️ Horas de etiquetado por día</h3>
+              <h3>🏷️ Unidades procesadas por día</h3>
               <div class="trendCanvasWrap"><canvas id="trendChart"></canvas></div>
-              <div class="trendNote">Se toma la hora de inicio del primer registro y la hora de fin del último registro de cada día. Así se muestra la duración real de la jornada de etiquetado, no horas-hombre.</div>
+              <div class="trendNote">Las barras se ordenan de mayor a menor según las unidades procesadas: el día con más unidades aparece primero y con la barra más alta. Cada etiqueta también muestra la duración de la jornada y los colaboradores. <b>Carga histórica:</b> presiona <b>Ctrl + Shift + O</b>.</div>
             </div>
           </div>
 
@@ -3222,7 +3222,9 @@
         return;
       }
 
-      if($("view-registros")?.classList.contains('active')){
+      if($("view-tendencia")?.classList.contains('active')){
+        openHistoricalDayModal($("trendTo")?.value||'');
+      }else if($("view-registros")?.classList.contains('active')){
         openManualRecordModal();
       }else{
         openProductModal();
@@ -3313,7 +3315,7 @@
     }
   }
 
-  async function openManualRecordModal(){
+  async function openManualRecordModal(suggestedDate=''){
     if(!supervisorUnlocked)return toast('🔒 Ingresa primero como Supervisor');
 
     fillManualYears();
@@ -3322,8 +3324,11 @@
     const now=new Date();
     const z=n=>String(n).padStart(2,'0');
     const today=`${now.getFullYear()}-${z(now.getMonth()+1)}-${z(now.getDate())}`;
+    const validSuggested=/^\d{4}-\d{2}-\d{2}$/.test(String(suggestedDate||'')) ? suggestedDate : '';
 
-    $("manualDate").value=today;
+    // Desde Tendencia general se propone la fecha "Hasta", pero puedes elegir
+    // cualquier fecha anterior sin límite mínimo.
+    $("manualDate").value=validSuggested||today;
     $("manualProcess").value='etiquetado';
     $("manualCode").value='';
     $("manualUnits").value='';
@@ -3472,10 +3477,184 @@
       await loadRecords(true);
 
       if($("view-dashboard")?.classList.contains('active'))await loadDashboard(true);
+      if($("view-tendencia")?.classList.contains('active'))await loadTrend();
+      if($("view-comparativo")?.classList.contains('active'))await loadComparison(true);
+      if($("view-productividad")?.classList.contains('active'))await loadProductivity(true);
     }catch(e){
       toast('❌ No se pudo guardar el registro manual: '+e.message);
     }
   };
+
+
+  // ---------- CARGA HISTÓRICA POR DÍA COMPLETO ----------
+  function historicalDayDateMs(date,time){
+    if(!date||!time)return null;
+    const d=new Date(`${date}T${time}:00`);
+    return Number.isNaN(d.getTime())?null:d.getTime();
+  }
+
+  function updateHistoricalDayPreview(){
+    const date=$("histDayDate")?.value;
+    const start=$("histDayStart")?.value;
+    const end=$("histDayEnd")?.value;
+    const units=Math.max(0,Math.floor(safeNum($("histDayUnits")?.value)));
+    const workers=Math.max(0,Math.floor(safeNum($("histDayWorkers")?.value)));
+
+    if(!date||!start||!end){
+      if($("histDayPreview"))$("histDayPreview").textContent='Completa fecha, hora de inicio y hora de fin.';
+      return;
+    }
+
+    const startMs=historicalDayDateMs(date,start);
+    const endMs=historicalDayDateMs(date,end);
+    if(startMs===null||endMs===null||endMs<=startMs){
+      if($("histDayPreview"))$("histDayPreview").textContent='⚠️ La hora final debe ser posterior a la hora inicial.';
+      return;
+    }
+
+    const span=endMs-startMs;
+    if($("histDayPreview")){
+      $("histDayPreview").textContent=
+        `Jornada: ${fmtTimer(span)} · ${units.toLocaleString('es-EC')} unidades · ${workers||'—'} colaboradores`;
+    }
+  }
+
+  function openHistoricalDayModal(suggestedDate=''){
+    if(!supervisorUnlocked)return toast('🔒 Ingresa primero como Supervisor');
+
+    const today=localISO().slice(0,10);
+    const valid=/^\d{4}-\d{2}-\d{2}$/.test(String(suggestedDate||''))?suggestedDate:today;
+
+    $("histDayDate").value=valid;
+    $("histDayProcess").value=$("trendProcess")?.value==='armado'?'armado':'etiquetado';
+    $("histDayUnits").value='';
+    $("histDayWorkers").value='';
+    $("histDayStart").value='';
+    $("histDayEnd").value='';
+    $("histDayComment").value='';
+    updateHistoricalDayPreview();
+    $("historicalDayModal").classList.add('show');
+    setTimeout(()=>$("histDayUnits")?.focus(),60);
+  }
+
+  function closeHistoricalDayModal(){
+    $("historicalDayModal")?.classList.remove('show');
+  }
+
+  ["histDayDate","histDayUnits","histDayWorkers","histDayStart","histDayEnd"].forEach(id=>{
+    $(id)?.addEventListener('input',updateHistoricalDayPreview);
+    $(id)?.addEventListener('change',updateHistoricalDayPreview);
+  });
+
+  $("closeHistoricalDayModal")?.addEventListener('click',closeHistoricalDayModal);
+  $("cancelHistoricalDay")?.addEventListener('click',closeHistoricalDayModal);
+  $("historicalDayModal")?.addEventListener('click',e=>{
+    if(e.target===$("historicalDayModal"))closeHistoricalDayModal();
+  });
+
+  $("deleteHistoricalDay")?.addEventListener('click',async()=>{
+    const date=$("histDayDate")?.value;
+    const process=$("histDayProcess")?.value||'etiquetado';
+
+    if(!date)return toast('⚠️ Selecciona la fecha que quieres borrar');
+
+    try{
+      const snap=await getDocs(
+        query(
+          collection(db,'registros_etiquetado'),
+          where('fecha_local','==',date)
+        )
+      );
+
+      const historical=snap.docs.filter(d=>{
+        const x=d.data()||{};
+        return x.registro_historico_dia===true &&
+          (x.proceso||'etiquetado')===process;
+      });
+
+      if(!historical.length){
+        return toast('ℹ️ No hay un resumen histórico guardado para esa fecha y proceso');
+      }
+
+      const totalUnits=historical.reduce((s,d)=>s+Number(d.data()?.unidades||0),0);
+      if(!confirm(
+        `¿Borrar el resumen histórico de ${date}?\n\n`+
+        `${historical.length} registro(s) · ${fmtInt(totalUnits)} unidades\n\n`+
+        `Solo se borrarán cargas históricas del día, no registros individuales reales.`
+      )) return;
+
+      for(const d of historical){
+        await deleteDoc(doc(db,'registros_etiquetado',d.id));
+      }
+
+      invalidateRecordCaches();
+      closeHistoricalDayModal();
+      toast('🗑️ Día histórico eliminado');
+
+      if($("view-tendencia")?.classList.contains('active'))await loadTrend();
+      if($("view-comparativo")?.classList.contains('active'))await loadComparison(true);
+      if($("view-productividad")?.classList.contains('active'))await loadProductivity(true);
+    }catch(e){
+      toast('❌ No se pudo borrar el día histórico: '+e.message);
+    }
+  });
+
+  $("saveHistoricalDay")?.addEventListener('click',async()=>{
+    const date=$("histDayDate").value;
+    const process=$("histDayProcess").value||'etiquetado';
+    const units=Math.floor(safeNum($("histDayUnits").value));
+    const workers=Math.floor(safeNum($("histDayWorkers").value));
+    const start=$("histDayStart").value;
+    const end=$("histDayEnd").value;
+    const comment=norm($("histDayComment").value);
+
+    if(!date)return toast('⚠️ Selecciona la fecha');
+    if(units<=0)return toast('⚠️ Ingresa el total de unidades del día');
+    if(workers<=0)return toast('⚠️ Ingresa la cantidad de colaboradores');
+    if(!start||!end)return toast('⚠️ Ingresa hora de inicio y hora de fin');
+
+    const startMs=historicalDayDateMs(date,start);
+    const endMs=historicalDayDateMs(date,end);
+    if(startMs===null||endMs===null||endMs<=startMs)return toast('⚠️ Revisa las horas de la jornada');
+
+    const spanMs=endMs-startMs;
+    const uph=spanMs>0?Math.round(units/(spanMs/3600000)):0;
+
+    const data={
+      fecha_local:date,
+      inicio_local:`${date}T${start}:00`,
+      fin_local:`${date}T${end}:00`,
+      operarioId:'HISTORICO_DIA',
+      operario:'Resumen histórico',
+      tipo_personal:'Historico',
+      proceso:process,
+      codigo:'HIST-DIA',
+      descripcion:'Resumen histórico por día completo',
+      categoria:'Histórico',
+      unidades:units,
+      tiempo_neto_ms:spanMs,
+      tiempo_pausa_ms:0,
+      productividad_u_h:uph,
+      colaboradores_historicos:workers,
+      registro_historico_dia:true,
+      comentario:comment,
+      creado_por_supervisor:currentSupervisorUser(),
+      creado_local:localISO(),
+      creado_en:serverTimestamp()
+    };
+
+    try{
+      await addDoc(collection(db,'registros_etiquetado'),data);
+      invalidateRecordCaches();
+      closeHistoricalDayModal();
+      toast(`✅ Día histórico guardado · ${fmtInt(units)} u · ${fmtTimer(spanMs)}`);
+
+      if($("view-tendencia")?.classList.contains('active'))await loadTrend();
+    }catch(e){
+      toast('❌ No se pudo guardar el día histórico: '+e.message);
+    }
+  });
+
 
   // ---------- SUPERVISOR ----------
   let supervisorRecordsCache=[];
@@ -4683,7 +4862,7 @@
         const people=Number(workers[i]||0);
         const timeLabel=fmtTrendHours(timesMs[i]||0);
         const unitLabel=`${fmtInt(units[i]||0)} u`;
-        const lines=[timeLabel,unitLabel,`👥 ${people}`];
+        const lines=[unitLabel,timeLabel,`👥 ${people}`];
 
         ctx.font='800 10px system-ui, -apple-system, Segoe UI, sans-serif';
         const width=Math.max(...lines.map(v=>ctx.measureText(v).width))+16,height=48;
@@ -4754,6 +4933,7 @@
           byDay.set(day,{
             units:0,
             workers:new Set(),
+            historicalWorkers:0,
             firstStartMs:null,
             lastEndMs:null
           });
@@ -4761,7 +4941,11 @@
 
         const g=byDay.get(day);
         g.units+=Number(x.unidades||0);
-        if(x.operario)g.workers.add(x.operario);
+        if(x.registro_historico_dia){
+          g.historicalWorkers=Math.max(Number(g.historicalWorkers||0),Number(x.colaboradores_historicos||0));
+        }else if(x.operario){
+          g.workers.add(x.operario);
+        }
 
         const startMs=trendDateMs(x.inicio_local);
         const endMs=trendDateMs(x.fin_local);
@@ -4782,7 +4966,7 @@
           return [day,{...g,spanMs}];
         })
         .filter(([,g])=>g.units>0 || g.spanMs>0)
-        .sort((a,b)=>a[0].localeCompare(b[0]));
+        .sort((a,b)=>b[1].units-a[1].units || a[0].localeCompare(b[0]));
 
       const totalUnits=days.reduce((s,[,g])=>s+g.units,0);
       const totalSpanMs=days.reduce((s,[,g])=>s+g.spanMs,0);
@@ -4811,8 +4995,7 @@
 
       const units=days.map(([,g])=>g.units);
       const timesMs=days.map(([,g])=>g.spanMs);
-      const hours=timesMs.map(ms=>Math.round((ms/3600000)*100)/100);
-      const workers=days.map(([,g])=>g.workers.size);
+      const workers=days.map(([,g])=>Math.max(g.workers.size,Number(g.historicalWorkers||0)));
       const labels=days.map(([d])=>`${d.slice(8,10)}/${d.slice(5,7)}`);
 
       trendChartInstance=new Chart(canvas,{
@@ -4820,8 +5003,8 @@
         data:{
           labels,
           datasets:[{
-            label:'Horas de etiquetado',
-            data:hours,
+            label:'Unidades procesadas',
+            data:units,
             borderColor:'#159a80',
             backgroundColor:type==='line'?'rgba(47,195,163,.14)':'rgba(47,195,163,.58)',
             borderWidth:2,
@@ -4844,7 +5027,7 @@
             tooltip:{
               callbacks:{
                 title:items=>days[items[0].dataIndex][0],
-                label:ctx=>`Jornada: ${fmtTrendHours(timesMs[ctx.dataIndex])}`,
+                label:ctx=>`Unidades: ${fmtInt(units[ctx.dataIndex])}`,
                 afterLabel:ctx=>{
                   const i=ctx.dataIndex;
                   const g=days[i][1];
@@ -4855,9 +5038,9 @@
                     ? new Date(g.lastEndMs).toLocaleTimeString('es-EC',{hour:'2-digit',minute:'2-digit'})
                     : '—';
                   return [
+                    `Jornada: ${fmtTrendHours(timesMs[i])}`,
                     `Primer registro: ${startLabel}`,
                     `Último registro: ${endLabel}`,
-                    `Unidades: ${fmtInt(units[i])}`,
                     `Colaboradores: ${workers[i]}`
                   ];
                 }
@@ -4867,15 +5050,15 @@
           scales:{
             y:{
               beginAtZero:true,
-              grace:'32%',
+              grace:'28%',
               grid:{color:'rgba(20,55,40,.07)'},
               ticks:{
                 color:'#64766f',
-                callback:value=>`${value} h`
+                callback:value=>fmtInt(value)
               },
               title:{
                 display:true,
-                text:'Horas de etiquetado'
+                text:'Unidades procesadas'
               }
             },
             x:{
@@ -5514,5 +5697,70 @@
   }
   function categorize(desc){return classifyProduct(desc).categoria}
 </script>
+
+  <!-- ===== CARGA HISTÓRICA POR DÍA COMPLETO ===== -->
+  <div id="historicalDayModal" class="modalBackdrop">
+    <div class="modalCard" style="width:min(680px,96vw)">
+      <div class="modalHead">
+        <h2>🗓️ Carga histórica por día</h2>
+        <button id="closeHistoricalDayModal" class="btn ghost">✕</button>
+      </div>
+
+      <div class="message ok" style="margin:0 0 14px">
+        Registra el resumen de una jornada antigua sin cargar operario por operario.
+      </div>
+
+      <div class="recordEditGrid">
+        <div class="field">
+          <label>Fecha</label>
+          <input id="histDayDate" type="date">
+        </div>
+
+        <div class="field">
+          <label>Proceso</label>
+          <select id="histDayProcess">
+            <option value="etiquetado">🏷️ Etiquetado</option>
+            <option value="armado">📦 Armado</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Total unidades del día</label>
+          <input id="histDayUnits" type="number" min="1" inputmode="numeric" placeholder="Ej. 34654">
+        </div>
+
+        <div class="field">
+          <label>Colaboradores del día</label>
+          <input id="histDayWorkers" type="number" min="1" inputmode="numeric" placeholder="Ej. 11">
+        </div>
+
+        <div class="field">
+          <label>Hora primer registro / inicio</label>
+          <input id="histDayStart" type="time">
+        </div>
+
+        <div class="field">
+          <label>Hora último registro / fin</label>
+          <input id="histDayEnd" type="time">
+        </div>
+
+        <div class="field full">
+          <label>Comentario (opcional)</label>
+          <textarea id="histDayComment" style="width:100%;min-height:72px;padding:10px 12px;border:1px solid #ccd7d0;border-radius:12px" placeholder="Ej. Datos históricos antes de usar la plataforma"></textarea>
+        </div>
+      </div>
+
+      <div id="histDayPreview" class="message warn">Completa fecha, horas y unidades.</div>
+
+      <div class="recordEditActions" style="justify-content:space-between;flex-wrap:wrap">
+        <button id="deleteHistoricalDay" class="btn danger">🗑️ Borrar día histórico</button>
+        <div style="display:flex;gap:8px">
+          <button id="cancelHistoricalDay" class="btn ghost">Cancelar</button>
+          <button id="saveHistoricalDay" class="btn primary">💾 Guardar día completo</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>
