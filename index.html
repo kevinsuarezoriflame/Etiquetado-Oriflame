@@ -3529,6 +3529,20 @@
     const words=norm(desc).split(/\s+/).filter(Boolean);
     return words.slice(0,3).join(' ') || '—';
   }
+
+  // Registros manuales/históricos: se usan exclusivamente en Tendencia general.
+  // No deben alimentar targets, metas, productividad, dashboard, comparativos ni otros gráficos.
+  function isTrendOnlyRecord(x){
+    const mode=norm(x?.modo_registro_unidades||'').toLocaleLowerCase('es');
+    const category=norm(x?.categoria||'').toLocaleLowerCase('es');
+    return x?.registro_manual===true
+      || mode==='manual'
+      || category==='histórico'
+      || category==='historico';
+  }
+  function analyticsRecords(rows=[]){
+    return (rows||[]).filter(x=>!isTrendOnlyRecord(x));
+  }
   function indexRecords(rows){rows.forEach(x=>{if(x?.id)recordLookup.set(x.id,x)})}
   async function getRecordsByDate(date,force=false){
     if(!force&&dailyRecordsCache.has(date))return dailyRecordsCache.get(date);
@@ -3654,6 +3668,7 @@
   }
 
   function renderDashboardSummary(records=[]){
+    records=analyticsRecords(records);
     const et=records.filter(x=>(x.proceso||'etiquetado')==='etiquetado');
     const ar=records.filter(x=>x.proceso==='armado');
     const totalUnits=records.reduce((a,x)=>a+Number(x.unidades||0),0);
@@ -3677,7 +3692,7 @@
   }
 
   function renderChartsFromRows(allRows=[],proc='todos',showEmptyToast=false){
-    const rows=(allRows||[]).filter(x=>proc==='todos'||(x.proceso||'etiquetado')===proc);
+    const rows=analyticsRecords(allRows).filter(x=>proc==='todos'||(x.proceso||'etiquetado')===proc);
     const totalUnits=rows.reduce((a,x)=>a+Number(x.unidades||0),0);
     const workers=[...new Set(rows.map(x=>x.operario).filter(Boolean))];
 
@@ -3959,6 +3974,7 @@
   }
 
   function renderProductivity(records=currentProductivityRecords){
+    records=analyticsRecords(records);
     const proc=$("prodFilterProcess").value,op=$("prodFilterOperator").value,fam=$("prodFilterCategory").value,groupBy=$("prodGroupBy").value;
     const rows=records.filter(x=>{
       const p=x.proceso||'etiquetado',cat=recordCategory(x);
@@ -4018,7 +4034,7 @@
 
   async function loadCategories(force=false){
     try{
-      const records=(await getSupervisorRecords(force)).filter(x=>(x.proceso||'etiquetado')==='etiquetado'&&Number(x.productividad_u_h||0)>0);
+      const records=analyticsRecords(await getSupervisorRecords(force)).filter(x=>(x.proceso||'etiquetado')==='etiquetado'&&Number(x.productividad_u_h||0)>0);
       const groups=new Map();records.forEach(x=>{const k=recordCategory(x);if(!groups.has(k))groups.set(k,[]);groups.get(k).push(x)});
       const data=[...groups.entries()].map(([cat,arr])=>{
         const skus=new Set(arr.map(x=>x.codigo).filter(Boolean)),ops=new Set(arr.map(x=>x.operario).filter(Boolean));
@@ -4265,7 +4281,7 @@
         }
       }
 
-      const records=(await getSupervisorRecords(force)).filter(x=>(x.proceso||'etiquetado')==='etiquetado'&&Number(x.productividad_u_h||0)>0);metaEvaluationRecords=records;
+      const records=analyticsRecords(await getSupervisorRecords(force)).filter(x=>(x.proceso||'etiquetado')==='etiquetado'&&Number(x.productividad_u_h||0)>0);metaEvaluationRecords=records;
       const metasSnap=await getDocs(collection(db,'metas'));metaByCode=new Map(metasSnap.docs.map(d=>[d.id,d.data()]));
       renderMetaCategoryTable();
       const groups=new Map();records.forEach(x=>{const code=x.codigo||'';if(!code)return;if(!groups.has(code))groups.set(code,[]);groups.get(code).push(x)});
@@ -4350,7 +4366,7 @@
   }
 
   function groupFilteredRows(records,type,process,category){
-    return records.filter(x=>{
+    return analyticsRecords(records).filter(x=>{
       const p=x.proceso||'etiquetado';
       const t=operatorTypeByName(x.operario);
       return norm(t).toLocaleLowerCase('es')===norm(type).toLocaleLowerCase('es')
