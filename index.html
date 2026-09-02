@@ -3571,6 +3571,16 @@
     return supervisorRecordsCache;
   }
 
+
+  // Meta/Categoría necesita revisar TODO el histórico de registros para no perder
+  // códigos antiguos por el límite operativo de 250 registros del Supervisor.
+  async function getAllRecordsForMetaCategory(){
+    const snap=await getDocs(collection(db,'registros_etiquetado'));
+    const rows=snap.docs.map(d=>({id:d.id,...d.data()}));
+    indexRecords(rows);
+    return rows;
+  }
+
   document.querySelectorAll('.supNavBtn').forEach(b=>b.onclick=async()=>{
     document.querySelectorAll('.supView').forEach(v=>v.classList.remove('active'));
     document.querySelectorAll('.supNavBtn').forEach(x=>x.classList.remove('active'));
@@ -4281,7 +4291,14 @@
         }
       }
 
-      const records=analyticsRecords(await getSupervisorRecords(force)).filter(x=>(x.proceso||'etiquetado')==='etiquetado'&&Number(x.productividad_u_h||0)>0);metaEvaluationRecords=records;
+      const records=(await getAllRecordsForMetaCategory()).filter(x=>{
+        if((x.proceso||'etiquetado')!=='etiquetado' || Number(x.productividad_u_h||0)<=0) return false;
+        const cat=norm(recordCategory(x)).toLocaleLowerCase('es');
+        // Si el código pertenece a una categoría real del maestro, se incluye allí,
+        // aunque el registro haya sido ingresado manualmente. Solo se omite la
+        // categoría genérica Histórico/Historico cuando no existe una categoría real.
+        return cat!=='histórico' && cat!=='historico';
+      });metaEvaluationRecords=records;
       const metasSnap=await getDocs(collection(db,'metas'));metaByCode=new Map(metasSnap.docs.map(d=>[d.id,d.data()]));
       renderMetaCategoryTable();
       const groups=new Map();records.forEach(x=>{const code=x.codigo||'';if(!code)return;if(!groups.has(code))groups.set(code,[]);groups.get(code).push(x)});
