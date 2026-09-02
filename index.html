@@ -1424,7 +1424,7 @@
             <div class="trendChartCard">
               <h3>🏷️ Unidades procesadas por día</h3>
               <div class="trendCanvasWrap"><canvas id="trendChart"></canvas></div>
-              <div class="trendNote">Las barras se ordenan de mayor a menor según las unidades procesadas: el día con más unidades aparece primero y con la barra más alta. Cada etiqueta también muestra la duración de la jornada y los colaboradores. <b>Carga histórica:</b> presiona <b>Ctrl + Shift + O</b>.</div>
+              <div class="trendNote">Las fechas se mantienen en orden cronológico. La altura de cada barra o punto depende únicamente de las unidades procesadas: más unidades = mayor altura. Cada etiqueta también muestra la duración de la jornada y los colaboradores. <b>Carga histórica:</b> presiona <b>Ctrl + Shift + O</b>.</div>
             </div>
           </div>
 
@@ -4966,7 +4966,7 @@
           return [day,{...g,spanMs}];
         })
         .filter(([,g])=>g.units>0 || g.spanMs>0)
-        .sort((a,b)=>b[1].units-a[1].units || a[0].localeCompare(b[0]));
+        .sort((a,b)=>a[0].localeCompare(b[0]));
 
       const totalUnits=days.reduce((s,[,g])=>s+g.units,0);
       const totalSpanMs=days.reduce((s,[,g])=>s+g.spanMs,0);
