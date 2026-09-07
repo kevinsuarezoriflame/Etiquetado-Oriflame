@@ -1757,8 +1757,8 @@
             <div class="singleProductPanel">
               <div class="singleProductHead">
                 <div>
-                  <h3>➕ Agregar / actualizar código individual</h3>
-                  <div class="small">Guarda un SKU directamente en el maestro activo, sin volver a subir toda la base.</div>
+                  <h3>➕ Agregar código individual</h3>
+                  <div class="small">Agrega un SKU nuevo sin volver a subir toda la base. Si el código ya existe, el sistema no lo duplicará ni lo modificará.</div>
                 </div>
               </div>
               <div class="singleProductGrid">
@@ -4803,11 +4803,20 @@
   }
   $("openDataModalBtn").onclick=openProductModal;
 
+  let singleProductCodeExists=false;
+
+  function setSingleProductExists(exists){
+    singleProductCodeExists=!!exists;
+    const btn=$("saveSingleProduct");
+    if(btn)btn.disabled=!!exists;
+  }
+
   function clearSingleProductForm(){
     $("singleProductCode").value='';
     $("singleProductDescription").value='';
     $("singleProductCategory").value='';
     $("singleProductMsg").innerHTML='';
+    setSingleProductExists(false);
     $("singleProductCode").focus();
   }
 
@@ -4817,22 +4826,107 @@
     const msg=$("singleProductMsg");
     msg.innerHTML='<div class="message warn">🔎 Buscando código…</div>';
     try{
+      // Fuerza lectura de la configuración activa para no consultar una versión anterior en caché.
+      await getActiveMasterConfig(true);
+      masterBucketCache.clear();
       const product=await getProductByCode(code);
-      if(!product){
-        $("singleProductDescription").value='';
-        $("singleProductCategory").value='';
-        msg.innerHTML='<div class="message warn">🆕 Código no encontrado. Completa descripción y categoría para crearlo.</div>';
-        $("singleProductDescription").focus();
-        return null;
+      if(product){
+        $("singleProductDescription").value=product.descripcion||product.description||product.descripcion_producto||product.nombre||'';
+        $("singleProductCategory").value=product.categoria||'';
+        setSingleProductExists(true);
+        msg.innerHTML='<div class="message warn">⚠️ <b>Este código ya existe.</b><br>No se realizará ningún cambio ni se creará un duplicado.</div>';
+        return product;
       }
-      $("singleProductDescription").value=product.descripcion||product.description||product.descripcion_producto||product.nombre||'';
-      $("singleProductCategory").value=product.categoria||'';
-      msg.innerHTML=`<div class="message ok">✅ Código existente cargado. Al guardar se actualizará únicamente este SKU.</div>`;
-      return product;
+      $("singleProductDescription").value='';
+      $("singleProductCategory").value='';
+      setSingleProductExists(false);
+      msg.innerHTML='<div class="message ok">✅ <b>Código disponible.</b> Completa Description y Category y presiona Guardar código.</div>';
+      $("singleProductDescription").focus();
+      return null;
     }catch(e){
+      setSingleProductExists(false);
       msg.innerHTML=`<div class="message err">❌ ${e.message}</div>`;
       return null;
     }
+  }
+
+  async function createVersionWithSingleProduct(cfg,{code,descripcion,categoria},msg){
+    const now=new Date(),pad=n=>String(n).padStart(2,'0');
+    const version=`v_${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}_sku_${Math.random().toString(36).slice(2,6)}`;
+    const ids=Array.from({length:MASTER_BUCKETS},(_,i)=>String(i).padStart(2,'0'));
+    const bucketData=new Map();
+
+    msg.innerHTML='<div class="message warn">📦 Preparando alta del código en el maestro…</div>';
+
+    // Se copia la versión activa a una versión nueva. Esto conserva el maestro anterior intacto
+    // y usa el mismo patrón de escritura que la carga masiva.
+    for(let i=0;i<ids.length;i+=12){
+      const group=ids.slice(i,i+12);
+      const snaps=await Promise.all(group.map(id=>getDoc(doc(db,'maestros_productos',cfg.version_activa,'buckets',id))));
+      snaps.forEach((snap,idx)=>{
+        const bid=group[idx];
+        bucketData.set(bid,snap.exists()?{...(snap.data().items||{})}:{});
+      });
+    }
+
+    const targetBid=masterBucketId(code);
+    const targetItems=bucketData.get(targetBid)||{};
+    if(targetItems[code])throw new Error('Este código ya existe.');
+    targetItems[code]={codigo:code,descripcion,categoria,activo:true};
+    bucketData.set(targetBid,targetItems);
+
+    let totalProducts=0;
+    const categories=new Set();
+    bucketData.forEach(items=>{
+      totalProducts+=Object.keys(items).length;
+      Object.values(items).forEach(item=>{
+        const cat=norm(item?.categoria);
+        if(cat)categories.add(cat);
+      });
+    });
+
+    const entries=[...bucketData.entries()];
+    let written=0;
+    for(let i=0;i<entries.length;i+=16){
+      const batch=writeBatch(db);
+      const group=entries.slice(i,i+16);
+      group.forEach(([bid,items])=>{
+        // No hace falta crear buckets vacíos; getProductByCode ya los interpreta como vacíos.
+        if(Object.keys(items).length){
+          batch.set(doc(db,'maestros_productos',version,'buckets',bid),{
+            items,cantidad:Object.keys(items).length,version,actualizado_local:localISO()
+          });
+        }
+      });
+      await batch.commit();
+      written+=group.reduce((a,[,items])=>a+Object.keys(items).length,0);
+      msg.innerHTML=`<div class="message warn">⬆️ Incorporando código… ${Math.min(written,totalProducts).toLocaleString('es-EC')} productos preparados</div>`;
+    }
+
+    await setDoc(doc(db,'maestros_productos',version),{
+      version,total_productos:totalProducts,total_categorias:categories.size,buckets:entries.filter(([,items])=>Object.keys(items).length).length,
+      estado:'lista',origen:'alta individual',codigo_agregado:code,
+      creado_local:localISO(),creado_en:serverTimestamp()
+    });
+
+    // Verifica el SKU antes de activar la nueva versión.
+    const verifySnap=await getDoc(doc(db,'maestros_productos',version,'buckets',targetBid));
+    const verifyItem=verifySnap.exists()?verifySnap.data()?.items?.[code]:null;
+    if(!verifyItem||norm(verifyItem.descripcion)!==descripcion||norm(verifyItem.categoria)!==categoria)
+      throw new Error('El código no pasó la verificación antes de activar el maestro.');
+
+    await setDoc(doc(db,'configuracion','maestro_productos'),{
+      version_activa:version,total_productos:totalProducts,total_categorias:categories.size,
+      bucket_count:MASTER_BUCKETS,actualizado_local:localISO(),actualizado_en:serverTimestamp()
+    },{merge:true});
+
+    activeMasterConfig={mode:'versioned',version_activa:version,total_productos:totalProducts,total_categorias:categories.size,bucket_count:MASTER_BUCKETS};
+    masterBucketCache.clear();
+    officialCategoryCache.clear();
+    officialCategoryBucketCache.clear();
+    officialCategoriesFullyLoaded=false;
+    officialCategoryCache.set(code,categoria);
+    return {version,totalProducts,totalCategories:categories.size};
   }
 
   async function saveSingleProduct(){
@@ -4841,83 +4935,58 @@
     const descripcion=norm($("singleProductDescription").value);
     const categoria=norm($("singleProductCategory").value);
     if(!code)return toast('⚠️ Ingresa el código');
-    if(!descripcion)return toast('⚠️ Ingresa la descripción');
-    if(!categoria)return toast('⚠️ Ingresa la categoría');
 
     const btn=$("saveSingleProduct"),msg=$("singleProductMsg");
-    btn.disabled=true;btn.textContent='⏳ Guardando…';
+    btn.disabled=true;btn.textContent='⏳ Validando…';
     try{
       if(!auth.currentUser)await ensureFirebaseSession();
-      const cfg=await getActiveMasterConfig(true);
-      const before=await getProductByCode(code);
-      const oldDescription=before?.descripcion||before?.description||'';
-      const oldCategory=before?.categoria||'';
 
+      // La validación se repite al guardar para evitar duplicados aunque no se haya usado "Buscar código".
+      const cfg=await getActiveMasterConfig(true);
+      masterBucketCache.clear();
+      const existing=await getProductByCode(code);
+      if(existing){
+        $("singleProductDescription").value=existing.descripcion||existing.description||existing.descripcion_producto||existing.nombre||'';
+        $("singleProductCategory").value=existing.categoria||'';
+        setSingleProductExists(true);
+        msg.innerHTML='<div class="message warn">⚠️ <b>Este código ya existe.</b><br>No se guardó ningún cambio.</div>';
+        toast('⚠️ Este código ya existe');
+        return;
+      }
+
+      if(!descripcion)throw new Error('Ingresa la descripción del producto.');
+      if(!categoria)throw new Error('Ingresa la categoría del producto.');
+
+      btn.textContent='⏳ Guardando…';
       if(cfg.mode==='legacy'){
         await setDoc(doc(db,'productos',code),{
           codigo:code,descripcion,categoria,activo:true,
           actualizado_local:localISO(),actualizado_en:serverTimestamp()
-        },{merge:true});
+        });
         activeMasterConfig=null;
       }else{
-        // Cargamos el índice completo una vez para mantener los contadores exactos.
-        await loadOfficialCategoriesAll();
-        const version=cfg.version_activa;
-        const bid=masterBucketId(code);
-        const bucketRef=doc(db,'maestros_productos',version,'buckets',bid);
-        const bucketSnap=await getDoc(bucketRef);
-        const items=bucketSnap.exists()?{...(bucketSnap.data().items||{})}:{};
-        const existed=Boolean(items[code]);
-        items[code]={codigo:code,descripcion,categoria,activo:true};
-
-        await setDoc(bucketRef,{
-          items,cantidad:Object.keys(items).length,version,actualizado_local:localISO(),actualizado_en:serverTimestamp()
-        },{merge:true});
-
-        const cacheKey=`${version}:${bid}`;
-        masterBucketCache.delete(cacheKey);
-        officialCategoryBucketCache.delete(cacheKey);
-        officialCategoryCache.set(code,categoria);
-        officialCategoriesFullyLoaded=true;
-
-        const currentCount=Math.max(Number(cfg.total_productos||0),officialCategoryCache.size-(existed?0:1));
-        const totalProducts=existed?currentCount:currentCount+1;
-        const totalCategories=new Set([...officialCategoryCache.values()].map(norm).filter(Boolean)).size;
-        const metaUpdate={
-          total_productos:totalProducts,total_categorias:totalCategories,bucket_count:MASTER_BUCKETS,
-          actualizado_local:localISO(),actualizado_en:serverTimestamp()
-        };
-        await setDoc(doc(db,'maestros_productos',version),metaUpdate,{merge:true});
-        await setDoc(doc(db,'configuracion','maestro_productos'),metaUpdate,{merge:true});
-        activeMasterConfig={...cfg,...metaUpdate};
+        await createVersionWithSingleProduct(cfg,{code,descripcion,categoria},msg);
       }
 
-      // Limpia cachés operativas para que la validación vea el cambio de inmediato.
-      if(cfg.mode==='versioned'){
-        const key=`${cfg.version_activa}:${masterBucketId(code)}`;
-        masterBucketCache.delete(key);
-      }
+      // Verificación final desde la versión ya activa.
+      masterBucketCache.clear();
+      const verify=await getProductByCode(code);
+      if(!verify||norm(verify.descripcion)!==descripcion||norm(verify.categoria)!==categoria)
+        throw new Error('No se pudo confirmar el código en el maestro activo.');
+
       dailyRecordsCache.clear();
       supervisorRecordsCache=[];
       supervisorRecordsLoadedAt=0;
 
-      const changes=[
-        diffChange('Descripción',oldDescription,descripcion),
-        diffChange('Categoría',oldCategory,categoria)
-      ].filter(Boolean);
-      if(!before)changes.unshift({campo:'Código',anterior:'',nuevo:code});
       await logAudit({
-        accion:before?'Producto individual actualizado':'Producto individual creado',
-        entidad:'producto',entidadId:code,
-        detalle:`${code} · ${descripcion}`,cambios
+        accion:'Producto individual creado',entidad:'producto',entidadId:code,
+        detalle:`${code} · ${descripcion}`,
+        cambios:[{campo:'Código',anterior:'',nuevo:code},{campo:'Descripción',anterior:'',nuevo:descripcion},{campo:'Categoría',anterior:'',nuevo:categoria}]
       });
 
-      const verify=await getProductByCode(code);
-      if(!verify||norm(verify.descripcion)!==descripcion||norm(verify.categoria)!==categoria)
-        throw new Error('El código se guardó, pero no pasó la verificación final del maestro.');
-
-      msg.innerHTML=`<div class="message ok">✅ <b>${before?'Código actualizado':'Código creado'}</b><br>${code} → ${descripcion} → <b>${categoria}</b><br><span class="small">Ya está disponible para los operarios.</span></div>`;
-      toast(before?'✅ Código actualizado':'✅ Código agregado');
+      setSingleProductExists(true);
+      msg.innerHTML=`<div class="message ok">✅ <b>Código guardado correctamente.</b><br>${code} → ${descripcion} → <b>${categoria}</b><br><span class="small">Ya está disponible para los operarios.</span></div>`;
+      toast('✅ Código agregado');
       await loadDataSummary();
 
       if(activeOpId){
@@ -4926,16 +4995,29 @@
       }
     }catch(e){
       console.error(e);
-      msg.innerHTML=`<div class="message err">❌ ${e.message}</div>`;
-      toast('❌ No se pudo guardar el código');
+      if(String(e?.message||'').toLowerCase().includes('ya existe')){
+        setSingleProductExists(true);
+        msg.innerHTML='<div class="message warn">⚠️ <b>Este código ya existe.</b><br>No se guardó ningún cambio.</div>';
+      }else{
+        setSingleProductExists(false);
+        msg.innerHTML=`<div class="message err">❌ ${e.message}</div>`;
+      }
+      toast(String(e?.message||'').toLowerCase().includes('ya existe')?'⚠️ Este código ya existe':'❌ No se pudo guardar el código');
     }finally{
-      btn.disabled=false;btn.textContent='💾 Guardar código';
+      btn.textContent='💾 Guardar código';
+      btn.disabled=singleProductCodeExists;
     }
   }
 
   $("findSingleProduct").onclick=findSingleProduct;
   $("saveSingleProduct").onclick=saveSingleProduct;
   $("clearSingleProduct").onclick=clearSingleProductForm;
+  $("singleProductCode").addEventListener('input',()=>{
+    setSingleProductExists(false);
+    $("singleProductMsg").innerHTML='';
+    $("singleProductDescription").value='';
+    $("singleProductCategory").value='';
+  });
   $("singleProductCode").addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();findSingleProduct();}});
 
   async function loadCategoryDataSummary(){
