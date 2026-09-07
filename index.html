@@ -212,6 +212,19 @@
     .subCard h3{margin:0 0 10px;font-size:15px}
     .emptyState{padding:24px;text-align:center;color:var(--muted)}
     .dataSummary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0}
+
+    /* ===== Alta rápida de productos individuales ===== */
+    .singleProductPanel{
+      margin:14px 0 10px;padding:14px;border:1px solid #cfe7df;border-radius:16px;
+      background:linear-gradient(180deg,#fbfffe 0%,#f4fbf8 100%);
+    }
+    .singleProductHead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+    .singleProductHead h3{margin:0;font-size:16px}
+    .singleProductGrid{display:grid;grid-template-columns:150px minmax(260px,1fr) minmax(190px,.65fr);gap:10px;align-items:end}
+    .singleProductActions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    .singleProductStatus{margin-top:10px}
+    @media(max-width:900px){.singleProductGrid{grid-template-columns:1fr 1fr}.singleProductGrid .singleProductDescription{grid-column:1/-1}}
+    @media(max-width:560px){.singleProductGrid{grid-template-columns:1fr}.singleProductGrid .singleProductDescription{grid-column:auto}.singleProductActions .btn{flex:1}}
     @media(max-width:900px){
       .supGrid{grid-template-columns:1fr}
       .supNav{grid-template-columns:repeat(2,minmax(0,1fr));position:sticky;top:0;z-index:50}
@@ -1732,15 +1745,56 @@
           </div>
 
           <div id="view-data" class="supView card">
-            <div class="sectionTitle"><h2>📦 Data de productos</h2><button id="openDataModalBtn" class="btn blue">📥 Actualizar data</button></div>
-            <div class="message ok"><b>Maestro único de toda la web.</b> Carga Code + Description (eng) + Category. Esta data define la descripción y categoría usadas en todas las pestañas.</div>
+            <div class="sectionTitle"><h2>📦 Data de productos</h2><button id="openDataModalBtn" class="btn blue">📥 Actualizar data completa</button></div>
+            <div class="message ok"><b>Maestro único de toda la web.</b> Puedes mantenerlo con altas individuales o reemplazar la data completa cuando realmente sea necesario.</div>
             <div class="dataSummary">
               <div class="kpi"><span>Versión activa</span><strong id="dataVersion" style="font-size:16px">—</strong></div>
               <div class="kpi"><span>Productos activos</span><strong id="dataProducts">—</strong></div>
               <div class="kpi"><span>Categorías</span><strong id="dataCategories">—</strong></div>
               <div class="kpi"><span>Bloques</span><strong id="dataBuckets">—</strong></div>
             </div>
-            <div class="small">También puedes abrir la carga con <b>Ctrl + Shift + O</b>.</div>
+
+            <div class="singleProductPanel">
+              <div class="singleProductHead">
+                <div>
+                  <h3>➕ Agregar / actualizar código individual</h3>
+                  <div class="small">Guarda un SKU directamente en el maestro activo, sin volver a subir toda la base.</div>
+                </div>
+              </div>
+              <div class="singleProductGrid">
+                <div class="field">
+                  <label>Código</label>
+                  <input id="singleProductCode" inputmode="numeric" autocomplete="off" placeholder="Ej. 12760">
+                </div>
+                <div class="field singleProductDescription">
+                  <label>Description (eng)</label>
+                  <input id="singleProductDescription" autocomplete="off" placeholder="Descripción del producto">
+                </div>
+                <div class="field">
+                  <label>Category</label>
+                  <input id="singleProductCategory" list="singleProductCategoryList" autocomplete="off" placeholder="Ej. Skin Care">
+                  <datalist id="singleProductCategoryList">
+                    <option value="Colour Cosmetics"></option>
+                    <option value="Fragrances"></option>
+                    <option value="Hair Care"></option>
+                    <option value="Personal Care"></option>
+                    <option value="Skin Care"></option>
+                    <option value="Wellness"></option>
+                    <option value="Accessories"></option>
+                    <option value="Sales Actions"></option>
+                    <option value="Other Category"></option>
+                  </datalist>
+                </div>
+              </div>
+              <div class="singleProductActions">
+                <button id="findSingleProduct" class="btn ghost">🔎 Buscar código</button>
+                <button id="saveSingleProduct" class="btn primary">💾 Guardar código</button>
+                <button id="clearSingleProduct" class="btn secondary">🧹 Limpiar</button>
+              </div>
+              <div id="singleProductMsg" class="singleProductStatus"></div>
+            </div>
+
+            <div class="small">La carga completa sigue disponible para cambios masivos. Atajo: <b>Ctrl + Shift + O</b>.</div>
           </div>
 
           <div id="view-categorydata" class="supView card">
@@ -4748,6 +4802,141 @@
     }catch(e){toast('⚠️ Data: '+e.message)}
   }
   $("openDataModalBtn").onclick=openProductModal;
+
+  function clearSingleProductForm(){
+    $("singleProductCode").value='';
+    $("singleProductDescription").value='';
+    $("singleProductCategory").value='';
+    $("singleProductMsg").innerHTML='';
+    $("singleProductCode").focus();
+  }
+
+  async function findSingleProduct(){
+    const code=norm($("singleProductCode").value);
+    if(!code)return toast('⚠️ Ingresa un código');
+    const msg=$("singleProductMsg");
+    msg.innerHTML='<div class="message warn">🔎 Buscando código…</div>';
+    try{
+      const product=await getProductByCode(code);
+      if(!product){
+        $("singleProductDescription").value='';
+        $("singleProductCategory").value='';
+        msg.innerHTML='<div class="message warn">🆕 Código no encontrado. Completa descripción y categoría para crearlo.</div>';
+        $("singleProductDescription").focus();
+        return null;
+      }
+      $("singleProductDescription").value=product.descripcion||product.description||product.descripcion_producto||product.nombre||'';
+      $("singleProductCategory").value=product.categoria||'';
+      msg.innerHTML=`<div class="message ok">✅ Código existente cargado. Al guardar se actualizará únicamente este SKU.</div>`;
+      return product;
+    }catch(e){
+      msg.innerHTML=`<div class="message err">❌ ${e.message}</div>`;
+      return null;
+    }
+  }
+
+  async function saveSingleProduct(){
+    if(!supervisorUnlocked)return toast('🔒 Ingresa primero como Supervisor');
+    const code=norm($("singleProductCode").value);
+    const descripcion=norm($("singleProductDescription").value);
+    const categoria=norm($("singleProductCategory").value);
+    if(!code)return toast('⚠️ Ingresa el código');
+    if(!descripcion)return toast('⚠️ Ingresa la descripción');
+    if(!categoria)return toast('⚠️ Ingresa la categoría');
+
+    const btn=$("saveSingleProduct"),msg=$("singleProductMsg");
+    btn.disabled=true;btn.textContent='⏳ Guardando…';
+    try{
+      if(!auth.currentUser)await ensureFirebaseSession();
+      const cfg=await getActiveMasterConfig(true);
+      const before=await getProductByCode(code);
+      const oldDescription=before?.descripcion||before?.description||'';
+      const oldCategory=before?.categoria||'';
+
+      if(cfg.mode==='legacy'){
+        await setDoc(doc(db,'productos',code),{
+          codigo:code,descripcion,categoria,activo:true,
+          actualizado_local:localISO(),actualizado_en:serverTimestamp()
+        },{merge:true});
+        activeMasterConfig=null;
+      }else{
+        // Cargamos el índice completo una vez para mantener los contadores exactos.
+        await loadOfficialCategoriesAll();
+        const version=cfg.version_activa;
+        const bid=masterBucketId(code);
+        const bucketRef=doc(db,'maestros_productos',version,'buckets',bid);
+        const bucketSnap=await getDoc(bucketRef);
+        const items=bucketSnap.exists()?{...(bucketSnap.data().items||{})}:{};
+        const existed=Boolean(items[code]);
+        items[code]={codigo:code,descripcion,categoria,activo:true};
+
+        await setDoc(bucketRef,{
+          items,cantidad:Object.keys(items).length,version,actualizado_local:localISO(),actualizado_en:serverTimestamp()
+        },{merge:true});
+
+        const cacheKey=`${version}:${bid}`;
+        masterBucketCache.delete(cacheKey);
+        officialCategoryBucketCache.delete(cacheKey);
+        officialCategoryCache.set(code,categoria);
+        officialCategoriesFullyLoaded=true;
+
+        const currentCount=Math.max(Number(cfg.total_productos||0),officialCategoryCache.size-(existed?0:1));
+        const totalProducts=existed?currentCount:currentCount+1;
+        const totalCategories=new Set([...officialCategoryCache.values()].map(norm).filter(Boolean)).size;
+        const metaUpdate={
+          total_productos:totalProducts,total_categorias:totalCategories,bucket_count:MASTER_BUCKETS,
+          actualizado_local:localISO(),actualizado_en:serverTimestamp()
+        };
+        await setDoc(doc(db,'maestros_productos',version),metaUpdate,{merge:true});
+        await setDoc(doc(db,'configuracion','maestro_productos'),metaUpdate,{merge:true});
+        activeMasterConfig={...cfg,...metaUpdate};
+      }
+
+      // Limpia cachés operativas para que la validación vea el cambio de inmediato.
+      if(cfg.mode==='versioned'){
+        const key=`${cfg.version_activa}:${masterBucketId(code)}`;
+        masterBucketCache.delete(key);
+      }
+      dailyRecordsCache.clear();
+      supervisorRecordsCache=[];
+      supervisorRecordsLoadedAt=0;
+
+      const changes=[
+        diffChange('Descripción',oldDescription,descripcion),
+        diffChange('Categoría',oldCategory,categoria)
+      ].filter(Boolean);
+      if(!before)changes.unshift({campo:'Código',anterior:'',nuevo:code});
+      await logAudit({
+        accion:before?'Producto individual actualizado':'Producto individual creado',
+        entidad:'producto',entidadId:code,
+        detalle:`${code} · ${descripcion}`,cambios
+      });
+
+      const verify=await getProductByCode(code);
+      if(!verify||norm(verify.descripcion)!==descripcion||norm(verify.categoria)!==categoria)
+        throw new Error('El código se guardó, pero no pasó la verificación final del maestro.');
+
+      msg.innerHTML=`<div class="message ok">✅ <b>${before?'Código actualizado':'Código creado'}</b><br>${code} → ${descripcion} → <b>${categoria}</b><br><span class="small">Ya está disponible para los operarios.</span></div>`;
+      toast(before?'✅ Código actualizado':'✅ Código agregado');
+      await loadDataSummary();
+
+      if(activeOpId){
+        const active=openOps.get(activeOpId);
+        if(active?.code===code){active.product=verify;renderWorkspace();}
+      }
+    }catch(e){
+      console.error(e);
+      msg.innerHTML=`<div class="message err">❌ ${e.message}</div>`;
+      toast('❌ No se pudo guardar el código');
+    }finally{
+      btn.disabled=false;btn.textContent='💾 Guardar código';
+    }
+  }
+
+  $("findSingleProduct").onclick=findSingleProduct;
+  $("saveSingleProduct").onclick=saveSingleProduct;
+  $("clearSingleProduct").onclick=clearSingleProductForm;
+  $("singleProductCode").addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();findSingleProduct();}});
 
   async function loadCategoryDataSummary(){
     try{
