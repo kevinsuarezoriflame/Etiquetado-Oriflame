@@ -420,7 +420,7 @@
     /* ===== Reporte diario + depuración de pruebas ===== */
     .dailyReportToolbar{
       display:grid;
-      grid-template-columns:190px 190px 1fr;
+      grid-template-columns:190px 1fr;
       gap:10px;
       align-items:end;
       margin-bottom:12px;
@@ -1335,7 +1335,7 @@
               <button class="btn secondary supNavBtn" data-view="registros">Últimos registros</button>
               <button class="btn secondary supNavBtn" data-view="novedades">Novedades</button>
               <button class="btn secondary supNavBtn" data-view="caducidad">Caducidad</button>
-              <button class="btn secondary supNavBtn" data-view="reporte">✉️ Reporte diario</button>
+              <button class="btn secondary supNavBtn" data-view="reporte">Reporte diario 📧</button>
             </div>
           </div>
 
@@ -1601,7 +1601,7 @@
 
           <div id="view-reporte" class="supView card">
             <div class="sectionTitle">
-              <h2>✉️ Reporte diario</h2>
+              <h2>Reporte diario 📧</h2>
               <span class="small">Formato listo para copiar al correo</span>
             </div>
 
@@ -1609,14 +1609,6 @@
               <div class="field">
                 <label>Fecha</label>
                 <input id="dailyReportDate" type="date">
-              </div>
-              <div class="field">
-                <label>Proceso</label>
-                <select id="dailyReportProcess">
-                  <option value="etiquetado">🏷️ Etiquetado</option>
-                  <option value="armado">📦 Armado</option>
-                  <option value="todos">Todos</option>
-                </select>
               </div>
               <div class="dailyReportActions">
                 <button id="loadDailyReport" class="btn ghost">🔄 Cargar</button>
@@ -1637,6 +1629,7 @@
                 <thead>
                   <tr>
                     <th>Nombre</th>
+                    <th>Proceso</th>
                     <th>Código</th>
                     <th>Categoría</th>
                     <th>Meta categoría u/h</th>
@@ -1646,7 +1639,7 @@
                   </tr>
                 </thead>
                 <tbody id="dailyReportBody">
-                  <tr><td colspan="7">Selecciona una fecha y carga el reporte.</td></tr>
+                  <tr><td colspan="8">Selecciona una fecha y carga el reporte.</td></tr>
                 </tbody>
               </table>
             </div>
@@ -5256,7 +5249,6 @@
   async function loadDailyReport(){
     const date=$("dailyReportDate").value || localISO().slice(0,10);
     $("dailyReportDate").value=date;
-    const proc=$("dailyReportProcess").value;
 
     try{
       // Garantiza que la categoría y su meta se resuelvan desde los maestros activos.
@@ -5275,7 +5267,6 @@
       );
 
       let rows=snap.docs.map(d=>({id:d.id,...d.data()}));
-      rows=rows.filter(x=>proc==='todos'||(x.proceso||'etiquetado')===proc);
 
       rows.sort((a,b)=>{
         const na=String(a.operario||'').localeCompare(String(b.operario||''),'es');
@@ -5297,6 +5288,7 @@
       $("dailyReportBody").innerHTML=dailyReportRows.length
         ? dailyReportRows.map(x=>`<tr>
             <td>${x.operario||''}</td>
+            <td>${processName(x.proceso)}</td>
             <td>${x.codigo||''}</td>
             <td>${x.categoria_reporte||'OTROS'}</td>
             <td>${x.meta_categoria_u_h?fmtInt(x.meta_categoria_u_h):'—'}</td>
@@ -5304,25 +5296,25 @@
             <td>${hhmm(x.inicio_local)}</td>
             <td>${hhmm(x.fin_local)}</td>
           </tr>`).join('')
-        : '<tr><td colspan="7">Sin registros para esa fecha y proceso.</td></tr>';
+        : '<tr><td colspan="8">Sin registros para esa fecha.</td></tr>';
     }catch(e){
       dailyReportRows=[];
       $("dailyReportCategories").textContent='—';
-      $("dailyReportBody").innerHTML=`<tr><td colspan="7">${e.message}</td></tr>`;
+      $("dailyReportBody").innerHTML=`<tr><td colspan="8">${e.message}</td></tr>`;
     }
   }
 
   $("loadDailyReport").onclick=loadDailyReport;
   $("dailyReportDate").value=localISO().slice(0,10);
-  $("dailyReportProcess").addEventListener('change',loadDailyReport);
 
   $("copyDailyReport").onclick=async()=>{
     if(!dailyReportRows.length) return toast('⚠️ No hay datos para copiar');
 
     const lines=[
-      ['Nombre','Código','Categoría','Meta categoría u/h','Total unidades','H. Inicio','H. Fin'],
+      ['Nombre','Proceso','Código','Categoría','Meta categoría u/h','Total unidades','H. Inicio','H. Fin'],
       ...dailyReportRows.map(x=>[
         x.operario||'',
+        processName(x.proceso),
         x.codigo||'',
         x.categoria_reporte||'OTROS',
         x.meta_categoria_u_h||'',
@@ -5346,6 +5338,7 @@
 
     const data=dailyReportRows.map(x=>({
       'Nombre':x.operario||'',
+      'Proceso':processName(x.proceso),
       'Código':x.codigo||'',
       'Categoría':x.categoria_reporte||'OTROS',
       'Meta categoría u/h':x.meta_categoria_u_h||'',
@@ -5354,9 +5347,10 @@
       'H. Fin':hhmm(x.fin_local)
     }));
 
-    const ws=XLSX.utils.json_to_sheet(data,{header:['Nombre','Código','Categoría','Meta categoría u/h','Total unidades','H. Inicio','H. Fin']});
+    const ws=XLSX.utils.json_to_sheet(data,{header:['Nombre','Proceso','Código','Categoría','Meta categoría u/h','Total unidades','H. Inicio','H. Fin']});
     ws['!cols']=[
       {wch:28},
+      {wch:14},
       {wch:12},
       {wch:24},
       {wch:20},
@@ -5369,8 +5363,7 @@
     XLSX.utils.book_append_sheet(wb,ws,'Reporte diario');
 
     const date=$("dailyReportDate").value || localISO().slice(0,10);
-    const proc=$("dailyReportProcess").value;
-    XLSX.writeFile(wb,`Reporte_${proc}_${date}.xlsx`);
+    XLSX.writeFile(wb,`Reporte_Diario_${date}.xlsx`);
   };
 
   async function saveProductRows(validRows, skipped=0, sourceLabel='datos pegados') {
