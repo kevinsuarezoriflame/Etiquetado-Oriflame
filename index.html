@@ -462,6 +462,7 @@
       gap:10px;
       margin-bottom:12px;
     }
+    #view-reporte table{min-width:1280px}
     @media(max-width:760px){
       .dailyReportToolbar{grid-template-columns:1fr 1fr}
       .dailyReportActions{grid-column:1/-1;justify-content:flex-start}
@@ -1631,15 +1632,17 @@
                     <th>Nombre</th>
                     <th>Proceso</th>
                     <th>Código</th>
+                    <th>Descripción</th>
                     <th>Categoría</th>
                     <th>Meta categoría u/h</th>
                     <th>Total unidades</th>
                     <th>H. Inicio</th>
                     <th>H. Fin</th>
+                    <th>Comentario</th>
                   </tr>
                 </thead>
                 <tbody id="dailyReportBody">
-                  <tr><td colspan="8">Selecciona una fecha y carga el reporte.</td></tr>
+                  <tr><td colspan="10">Selecciona una fecha y carga el reporte.</td></tr>
                 </tbody>
               </table>
             </div>
@@ -5275,9 +5278,14 @@
       });
 
       dailyReportRows=rows.map(x=>{
+        const proceso=(x.proceso||'etiquetado')==='armado'?'armado':'etiquetado';
         const categoria=recordCategory(x);
-        const metaCategoria=Number(categoryTargetByName.get(categoria)?.target_u_h||0);
-        return {...x,categoria_reporte:categoria,meta_categoria_u_h:metaCategoria||''};
+        // La meta por categoría corresponde al análisis de Etiquetado.
+        // En Armado se deja vacía para no mezclar ambos procesos.
+        const metaCategoria=proceso==='etiquetado'
+          ? Number(categoryTargetByName.get(categoria)?.target_u_h||0)
+          : 0;
+        return {...x,proceso_reporte:proceso,categoria_reporte:categoria,meta_categoria_u_h:metaCategoria||''};
       });
 
       $("dailyReportCount").textContent=fmtInt(dailyReportRows.length);
@@ -5290,17 +5298,19 @@
             <td>${x.operario||''}</td>
             <td>${processName(x.proceso)}</td>
             <td>${x.codigo||''}</td>
+            <td>${x.descripcion||'—'}</td>
             <td>${x.categoria_reporte||'OTROS'}</td>
             <td>${x.meta_categoria_u_h?fmtInt(x.meta_categoria_u_h):'—'}</td>
             <td>${fmtInt(x.unidades)}</td>
             <td>${hhmm(x.inicio_local)}</td>
             <td>${hhmm(x.fin_local)}</td>
+            <td>${x.proceso_reporte==='armado'?(x.comentario||'—'):'—'}</td>
           </tr>`).join('')
-        : '<tr><td colspan="8">Sin registros para esa fecha.</td></tr>';
+        : '<tr><td colspan="10">Sin registros para esa fecha.</td></tr>';
     }catch(e){
       dailyReportRows=[];
       $("dailyReportCategories").textContent='—';
-      $("dailyReportBody").innerHTML=`<tr><td colspan="8">${e.message}</td></tr>`;
+      $("dailyReportBody").innerHTML=`<tr><td colspan="10">${e.message}</td></tr>`;
     }
   }
 
@@ -5311,16 +5321,18 @@
     if(!dailyReportRows.length) return toast('⚠️ No hay datos para copiar');
 
     const lines=[
-      ['Nombre','Proceso','Código','Categoría','Meta categoría u/h','Total unidades','H. Inicio','H. Fin'],
+      ['Nombre','Proceso','Código','Descripción','Categoría','Meta categoría u/h','Total unidades','H. Inicio','H. Fin','Comentario'],
       ...dailyReportRows.map(x=>[
         x.operario||'',
         processName(x.proceso),
         x.codigo||'',
+        x.descripcion||'',
         x.categoria_reporte||'OTROS',
         x.meta_categoria_u_h||'',
         Number(x.unidades||0),
         hhmm(x.inicio_local),
-        hhmm(x.fin_local)
+        hhmm(x.fin_local),
+        x.proceso_reporte==='armado'?(x.comentario||''):''
       ])
     ];
 
@@ -5340,23 +5352,27 @@
       'Nombre':x.operario||'',
       'Proceso':processName(x.proceso),
       'Código':x.codigo||'',
+      'Descripción':x.descripcion||'',
       'Categoría':x.categoria_reporte||'OTROS',
       'Meta categoría u/h':x.meta_categoria_u_h||'',
       'Total unidades':Number(x.unidades||0),
       'H. Inicio':hhmm(x.inicio_local),
-      'H. Fin':hhmm(x.fin_local)
+      'H. Fin':hhmm(x.fin_local),
+      'Comentario':x.proceso_reporte==='armado'?(x.comentario||''):''
     }));
 
-    const ws=XLSX.utils.json_to_sheet(data,{header:['Nombre','Proceso','Código','Categoría','Meta categoría u/h','Total unidades','H. Inicio','H. Fin']});
+    const ws=XLSX.utils.json_to_sheet(data,{header:['Nombre','Proceso','Código','Descripción','Categoría','Meta categoría u/h','Total unidades','H. Inicio','H. Fin','Comentario']});
     ws['!cols']=[
       {wch:28},
       {wch:14},
       {wch:12},
+      {wch:34},
       {wch:24},
       {wch:20},
       {wch:16},
       {wch:12},
-      {wch:12}
+      {wch:12},
+      {wch:38}
     ];
 
     const wb=XLSX.utils.book_new();
