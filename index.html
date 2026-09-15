@@ -296,6 +296,66 @@
       font-weight:900;
       font-size:15px;
     }
+
+    /* ===== Transición entre códigos: aviso sutil para operario ===== */
+    .timerCard.compactTimer.transitionIdleCard{
+      position:relative;
+      min-height:190px;
+      overflow:hidden;
+    }
+    .transitionWatermark{
+      position:absolute;
+      top:10px;
+      right:12px;
+      display:flex;
+      align-items:center;
+      gap:6px;
+      color:#6f8179;
+      opacity:.62;
+      font-size:10px;
+      font-weight:800;
+      letter-spacing:.2px;
+      pointer-events:none;
+      user-select:none;
+    }
+    .transitionWatermark #timer{
+      font-variant-numeric:tabular-nums;
+      font-size:12px;
+      font-weight:900;
+      letter-spacing:.3px;
+    }
+    .transitionIdleContent{
+      width:100%;
+      display:grid;
+      place-items:center;
+      gap:8px;
+      padding:28px 10px 6px;
+      text-align:center;
+    }
+    .transitionSoftAlert{
+      display:inline-flex;
+      align-items:center;
+      gap:7px;
+      max-width:100%;
+      padding:7px 10px;
+      border:1px solid #ead9a8;
+      border-radius:999px;
+      background:#fffaf0;
+      color:#725b16;
+      font-size:11px;
+      font-weight:800;
+      line-height:1.2;
+    }
+    .transitionSoftAlert .mark{
+      font-size:13px;
+      line-height:1;
+    }
+    .transitionIdleHint{
+      color:var(--muted);
+      font-size:11px;
+    }
+    .transitionIdleCard .timerBtns{margin-top:7px}
+    .transitionIdleCard .timerQuickStatus{margin-top:4px}
     @media(max-width:900px){
       .workGrid.compactWork{grid-template-columns:1fr}
       .compactProductMeta{grid-template-columns:1fr 1fr}
@@ -2397,9 +2457,19 @@
     session.previousCode=x.codigo_anterior||null;
     session.previousProcess=x.proceso_anterior||session.proceso||null;
     session.previousRecordId=x.registro_anterior_id||null;
-    if(session.state==='idle_paused' && !session.transitionPauseStart){
+    // Compatibilidad con versiones anteriores: ya no existe "Pausar disponible".
+    // Si quedó una sesión antigua en idle_paused, se reactiva automáticamente como Disponible.
+    if(session.state==='idle_paused'){
+      const now=Date.now();
       const openPause=[...session.transitionPauses].reverse().find(p=>p&&p.inicio_ms&&!p.fin_ms);
-      session.transitionPauseStart=openPause?Number(openPause.inicio_ms):null;
+      if(openPause){
+        openPause.fin_ms=now;
+        openPause.fin_local=new Date(now).toLocaleString('sv-SE').replace(' ','T');
+        openPause.duracion_ms=Math.max(0,now-Number(openPause.inicio_ms||now));
+        session.transitionPauseTotal+=openPause.duracion_ms;
+      }
+      session.transitionPauseStart=null;
+      session.state='idle';
     }
     return session;
   }
@@ -2803,7 +2873,7 @@
     openOps.forEach((s,id)=>{
       const b=document.createElement('button');
       b.className='opTab '+(id===activeOpId?'active':'');
-      const st=s.state==='running'?'🟢 TRABAJANDO':s.state==='paused'?'🟡 PAUSA':s.state==='finishing'?'🔵 FINALIZANDO':s.state==='idle_paused'?'🟡 PAUSA DISP.':s.transitionStartMs?'⚪ DISPONIBLE':'⚪ LISTO';
+      const st=s.state==='running'?'🟢 TRABAJANDO':s.state==='paused'?'🟡 PAUSA':s.state==='finishing'?'🔵 FINALIZANDO':s.state==='idle_paused'?'⚪ DISPONIBLE':s.transitionStartMs?'⚪ DISPONIBLE':'⚪ LISTO';
       const proc=s.proceso?(s.proceso==='armado'?'📦 ARMADO':'🏷️ ETIQUETADO'):'⚙️ SIN PROCESO';
       const activeMark=id===activeOpId?'<div class="activeBadge"><span class="activeDot"></span>Perfil activo</div>':'';
       b.innerHTML=`<span class="nameWrap"><b>${s.operator.nombre}</b>${activeMark}<div class="processMini">${proc}</div><div class="miniStatus">${st}</div></span>`;
@@ -2861,7 +2931,7 @@
     }
 
     const proceso=s.proceso;
-    const stateLabel=s.state==='running'?'Trabajando':s.state==='paused'?'Pausado':s.state==='finishing'?'Finalizando':s.state==='idle_paused'?'Pausa en transición':s.transitionStartMs?'Disponible':'Listo';
+    const stateLabel=s.state==='running'?'Trabajando':s.state==='paused'?'Pausado':s.state==='finishing'?'Finalizando':s.transitionStartMs?'Disponible':'Listo';
     const pauseMs=s.pauseTotal+(s.state==='paused'&&s.pauseStart?Date.now()-s.pauseStart:0);
     const transitionActive=['idle','idle_paused'].includes(s.state)&&!!s.transitionStartMs;
     const transitionPauseMs=s.transitionPauseTotal+(s.state==='idle_paused'&&s.transitionPauseStart?Date.now()-s.transitionPauseStart:0);
@@ -2883,23 +2953,26 @@
 
       </div>
 
-      <div class="card timerCard compactTimer">
+      <div class="card timerCard compactTimer ${transitionActive?'transitionIdleCard':''}">
         <div style="width:100%;text-align:center">
-          <div class="timerLabel">${transitionActive?'🔄 Tiempo disponible / transición':'⏱️ Tiempo productivo'}</div>
-          <div id="timer" class="timer">${fmtTimer(timerValue)}</div>
-
-          <div class="timerQuickStatus">
-            <span class="statusPill ${s.state==='paused'||s.state==='idle_paused'?'warn':s.state==='finishing'?'ok':'ok'}">${stateLabel}</span>
-            ${transitionActive
-              ? `<span class="statusPill">Pausas transición: ${s.transitionPauses.length}</span>${transitionPauseMs>0?`<span class="statusPill">Pausa: ${fmtTimer(transitionPauseMs)}</span>`:''}`
-              : `<span class="statusPill">Pausas: ${s.pauses.length}</span>${pauseMs>0?`<span class="statusPill">Pausa: ${fmtTimer(pauseMs)}</span>`:''}`
-            }
-          </div>
+          ${transitionActive?`
+            <div class="transitionWatermark"><span>Disponible</span><span id="timer">${fmtTimer(timerValue)}</span></div>
+            <div class="transitionIdleContent">
+              <div class="transitionSoftAlert"><span class="mark">⚠️</span><span>Tiempo entre códigos en curso</span></div>
+              <div class="transitionIdleHint">Valida el siguiente código cuando estés listo.</div>
+              <div class="timerQuickStatus"><span class="statusPill">⚪ Disponible</span></div>
+            </div>
+          `:`
+            <div class="timerLabel">⏱️ Tiempo productivo</div>
+            <div id="timer" class="timer">${fmtTimer(timerValue)}</div>
+            <div class="timerQuickStatus">
+              <span class="statusPill ${s.state==='paused'?'warn':s.state==='finishing'?'ok':'ok'}">${stateLabel}</span>
+              <span class="statusPill">Pausas: ${s.pauses.length}</span>${pauseMs>0?`<span class="statusPill">Pausa: ${fmtTimer(pauseMs)}</span>`:''}
+            </div>
+          `}
 
           <div class="timerBtns">
             ${s.state==='idle'?'<button id="startBtn" class="btn primary big" '+(!s.product?'disabled':'')+'>▶️ INICIAR</button>':''}
-            ${s.state==='idle'&&s.transitionStartMs?'<button id="pauseTransitionBtn" class="btn warn big">⏸️ PAUSAR DISP.</button>':''}
-            ${s.state==='idle_paused'?'<button id="resumeTransitionBtn" class="btn primary big">▶️ REANUDAR DISP.</button>':''}
             ${s.state==='running'?'<button id="pauseBtn" class="btn warn big">⏸️ PAUSAR</button><button id="finishBtn" class="btn danger big">⏹️ TERMINAR</button>':''}
             ${s.state==='paused'?'<button id="resumeBtn" class="btn primary big">▶️ REANUDAR</button><button id="finishBtn" class="btn danger big">⏹️ TERMINAR</button>':''}
           </div>
@@ -3019,8 +3092,6 @@
     $("validateCode")?.addEventListener('click',()=>validateProduct(s));
     $("codeInput")?.addEventListener('keydown',e=>{if(e.key==='Enter')validateProduct(s)});
     $("startBtn")?.addEventListener('click',()=>startWork(s));
-    $("pauseTransitionBtn")?.addEventListener('click',()=>pauseAvailableTransition(s));
-    $("resumeTransitionBtn")?.addEventListener('click',()=>resumeAvailableTransition(s));
     $("pauseBtn")?.addEventListener('click',()=>pauseWork(s));
     $("resumeBtn")?.addEventListener('click',()=>resumeWork(s));
     $("finishBtn")?.addEventListener('click',()=>openFinishConfirmModal(s));
@@ -4181,7 +4252,7 @@
       if(x.estado==='running')return ['ok','▶️ Trabajando'];
       if(x.estado==='paused')return ['warn','⏸️ Pausa'];
       if(x.estado==='finishing')return ['ok','🔵 Finalizando'];
-      if(x.estado==='idle_paused')return ['warn','⏸️ Pausa transición'];
+      if(x.estado==='idle_paused')return ['','⚪ Disponible'];
       if(x.estado==='idle'&&x.disponible_desde_ms)return ['','⚪ Disponible'];
       if(x.estado==='idle')return ['','⚪ Listo'];
       return ['','⚫ Sin sesión'];
