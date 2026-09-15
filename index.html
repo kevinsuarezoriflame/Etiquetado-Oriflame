@@ -1094,6 +1094,10 @@
     .historyItem strong{font-size:14px}.historyMeta{font-size:11px;color:var(--muted)}
     .historyChanges{display:grid;gap:4px;font-size:12px}
     .historyChange{padding:5px 7px;border-radius:8px;background:#f3f7f5}
+    .transitionTime{font-variant-numeric:tabular-nums;font-weight:900;white-space:nowrap}
+    .transitionTime.review{color:#946200}
+    .transitionTime.critical{color:#b42318}
+    .transitionLive{font-variant-numeric:tabular-nums;font-weight:900;color:#0e6e5b}
     .managementPill{display:inline-flex;align-items:center;border-radius:999px;padding:4px 8px;font-size:11px;font-weight:850;border:1px solid var(--border)}
     .managementPill.pending{background:#fff8e7;border-color:#efd18b;color:#7d5b00}.managementPill.done{background:#eaf8f3;border-color:#a9ddcf;color:#126b58}
 
@@ -1315,7 +1319,7 @@
             <button type="button" class="btn secondary supGroupBtn">📊 Dashboard <span>⌄</span></button>
             <div class="supGroupChildren">
               <button class="btn secondary supNavBtn active" data-view="dashboard">Operación en vivo</button>
-              <button class="btn secondary supNavBtn" data-view="supervision">Control de pausas</button>
+              <button class="btn secondary supNavBtn" data-view="supervision">Pausas y transición</button>
             </div>
           </div>
 
@@ -1725,7 +1729,8 @@
           </div>
 
           <div id="view-supervision" class="supView card">
-            <div class="sectionTitle"><h2>⏸️ Control de pausas</h2><button id="refreshSupervision" class="btn ghost">🔄 Actualizar</button></div>
+            <div class="sectionTitle"><h2>⏱️ Pausas y transiciones</h2><button id="refreshSupervision" class="btn ghost">🔄 Actualizar</button></div>
+            <div class="small" style="margin:-5px 0 12px">La transición se mide desde que termina un código hasta que inicia el siguiente. Las pausas registradas dentro de ese intervalo se descuentan del tiempo de transición.</div>
             <div class="filterGrid auditFilters">
               <div class="field"><label>Desde</label><input id="auditFrom" type="date"></div>
               <div class="field"><label>Hasta</label><input id="auditTo" type="date"></div>
@@ -1734,10 +1739,19 @@
             <div class="miniKpis">
               <div class="miniKpi"><span>Registros con pausa</span><strong id="auditReviewed">—</strong></div>
               <div class="miniKpi"><span>Total pausas</span><strong id="auditAlerts">—</strong></div>
-              <div class="miniKpi"><span>Tiempo total pausa</span><strong id="auditPauses">—</strong></div>
+              <div class="miniKpi"><span>Tiempo pausa productiva</span><strong id="auditPauses">—</strong></div>
               <div class="miniKpi"><span>Pausas ≥ 60 min</span><strong id="auditLong">—</strong></div>
+              <div class="miniKpi"><span>Transiciones registradas</span><strong id="auditTransitions">—</strong></div>
+              <div class="miniKpi"><span>Tiempo total transición</span><strong id="auditTransitionTime">—</strong></div>
+              <div class="miniKpi"><span>Promedio transición</span><strong id="auditTransitionAvg">—</strong></div>
+              <div class="miniKpi"><span>Transiciones ≥ 10 min</span><strong id="auditTransitionLong">—</strong></div>
             </div>
+
+            <div class="familyRefTitle"><h3>⏸️ Pausas durante el proceso</h3><span class="familyTag">Tiempo productivo detenido</span></div>
             <div class="tableWrap"><table><thead><tr><th>Fecha</th><th>Operario</th><th>Proceso</th><th>Código</th><th>Tiempo neto</th><th>Tiempo pausa</th><th>Motivo(s)</th><th># pausas</th></tr></thead><tbody id="auditBody"><tr><td colspan="8">Sin cargar</td></tr></tbody></table></div>
+
+            <div class="familyRefTitle"><h3>🔄 Transición entre códigos</h3><span class="familyTag">Fin anterior → inicio siguiente</span></div>
+            <div class="tableWrap"><table style="min-width:1120px"><thead><tr><th>Fecha</th><th>Operario</th><th>Código anterior</th><th>Código siguiente</th><th>Fin anterior</th><th>Inicio siguiente / cierre</th><th>Transición</th><th>Pausa en transición</th><th>Estado</th></tr></thead><tbody id="transitionAuditBody"><tr><td colspan="9">Sin cargar</td></tr></tbody></table></div>
           </div>
 
           <div id="view-data" class="supView card">
@@ -2308,6 +2322,14 @@
       pauseStart:null,
       pauseTotal:0,
       pauses:[],
+      transitionStartMs:null,
+      transitionStartLocal:null,
+      transitionPauseStart:null,
+      transitionPauseTotal:0,
+      transitionPauses:[],
+      previousCode:null,
+      previousProcess:null,
+      previousRecordId:null,
       qtyMode:'total',
       qtyTotal:'',
       qtyBoxes:'',
@@ -2366,8 +2388,68 @@
     }
   }
 
+  function hydrateIdleTransition(session,x={}){
+    session.transitionStartMs=Number(x.disponible_desde_ms||0)||null;
+    session.transitionStartLocal=x.disponible_desde_local||null;
+    session.transitionPauseStart=Number(x.pausa_transicion_inicio_ms||0)||null;
+    session.transitionPauseTotal=Number(x.pausa_transicion_total_ms||0);
+    session.transitionPauses=Array.isArray(x.pausas_transicion)?x.pausas_transicion:[];
+    session.previousCode=x.codigo_anterior||null;
+    session.previousProcess=x.proceso_anterior||session.proceso||null;
+    session.previousRecordId=x.registro_anterior_id||null;
+    if(session.state==='idle_paused' && !session.transitionPauseStart){
+      const openPause=[...session.transitionPauses].reverse().find(p=>p&&p.inicio_ms&&!p.fin_ms);
+      session.transitionPauseStart=openPause?Number(openPause.inicio_ms):null;
+    }
+    return session;
+  }
+
+  function currentTransitionElapsed(s){
+    if(!s?.transitionStartMs) return 0;
+    const end=s.state==='idle_paused'&&s.transitionPauseStart?s.transitionPauseStart:Date.now();
+    return Math.max(0,end-s.transitionStartMs-Number(s.transitionPauseTotal||0));
+  }
+
+  function transitionCloseData(s,endMs,nextCode=null,nextProcess=null,closure='siguiente_codigo'){
+    const pauseMs=Number(s.transitionPauseTotal||0);
+    const gross=Math.max(0,endMs-Number(s.transitionStartMs||endMs));
+    return {
+      transicion_fin_local:new Date(endMs).toLocaleString('sv-SE').replace(' ','T'),
+      transicion_fin_ms:endMs,
+      tiempo_transicion_bruto_ms:gross,
+      tiempo_transicion_pausa_ms:pauseMs,
+      tiempo_transicion_ms:Math.max(0,gross-pauseMs),
+      pausas_transicion:Array.isArray(s.transitionPauses)?s.transitionPauses:[],
+      codigo_siguiente:nextCode||null,
+      proceso_siguiente:nextProcess||null,
+      transicion_cierre:closure,
+      transicion_actualizada_en:serverTimestamp()
+    };
+  }
+
+  async function closeIdleTransition(s,endMs,nextCode=null,nextProcess=null,closure='siguiente_codigo'){
+    if(!s?.transitionStartMs || !s?.previousRecordId) return null;
+
+    if(s.state==='idle_paused' && s.transitionPauseStart){
+      const p=s.transitionPauses[s.transitionPauses.length-1];
+      if(p&&!p.fin_ms){
+        p.fin_ms=endMs;
+        p.fin_local=new Date(endMs).toLocaleString('sv-SE').replace(' ','T');
+        p.duracion_ms=Math.max(0,endMs-Number(p.inicio_ms||endMs));
+        s.transitionPauseTotal+=p.duracion_ms;
+      }
+      s.transitionPauseStart=null;
+      s.state='idle';
+    }
+
+    const payload=transitionCloseData(s,endMs,nextCode,nextProcess,closure);
+    await updateDoc(doc(db,'registros_etiquetado',s.previousRecordId),payload);
+    invalidateRecordCaches();
+    return payload;
+  }
+
   async function syncIdleSession(s){
-    if(!s?.operator?.id || s.state!=='idle') return;
+    if(!s?.operator?.id || !['idle','idle_paused'].includes(s.state)) return;
     try{
       await setDoc(doc(db,'sesiones_activas',s.operator.id),{
         operarioId:s.operator.id,
@@ -2377,12 +2459,20 @@
         proceso:s.proceso||null,
         codigo:null,
         descripcion:null,
-        estado:'idle',
+        estado:s.state,
         sesion_abierta:true,
         inicio_ms:null,
         fin_ms:null,
         pausas:[],
         pausa_total_ms:0,
+        disponible_desde_ms:s.transitionStartMs||null,
+        disponible_desde_local:s.transitionStartLocal||null,
+        codigo_anterior:s.previousCode||null,
+        proceso_anterior:s.previousProcess||null,
+        registro_anterior_id:s.previousRecordId||null,
+        pausas_transicion:Array.isArray(s.transitionPauses)?s.transitionPauses:[],
+        pausa_transicion_total_ms:Number(s.transitionPauseTotal||0),
+        pausa_transicion_inicio_ms:s.transitionPauseStart||null,
         ultima_actualizacion_local:localISO()
       },{merge:true});
     }catch(e){console.warn('No se pudo sincronizar sesión disponible',e)}
@@ -2431,7 +2521,10 @@
           const x=snap.data()||{};
 
           // Una sesión activa solo se reconstruye en el mismo celular que la inició.
-          if(x.deviceId===deviceId && ['running','paused','finishing'].includes(x.estado)){
+          if(x.deviceId===deviceId && ['idle','idle_paused'].includes(x.estado)){
+            session=hydrateIdleTransition(buildIdleSession(op,x.proceso||savedOp.proceso||null),x);
+            session.state=x.estado;
+          }else if(x.deviceId===deviceId && ['running','paused','finishing'].includes(x.estado)){
             session={
               operator:op,
               proceso:x.proceso||savedOp.proceso||'etiquetado',
@@ -2444,6 +2537,14 @@
               pauseStart:null,
               pauseTotal:Number(x.pausa_total_ms||0),
               pauses:Array.isArray(x.pausas)?x.pausas:[],
+              transitionStartMs:null,
+              transitionStartLocal:null,
+              transitionPauseStart:null,
+              transitionPauseTotal:0,
+              transitionPauses:[],
+              previousCode:null,
+              previousProcess:null,
+              previousRecordId:null,
               qtyMode:'total',
               qtyTotal:'',
               qtyBoxes:'',
@@ -2603,11 +2704,12 @@
       if(snap.exists()){
         const x=snap.data()||{};
 
-        if(['idle','running','paused','finishing'].includes(x.estado)){
+        if(['idle','idle_paused','running','paused','finishing'].includes(x.estado)){
           // Si la sesión fue creada por este mismo celular, recuperarla.
           if(x.deviceId===deviceId){
-            if(x.estado==='idle'){
-              const idle=buildIdleSession(o,x.proceso||null);
+            if(['idle','idle_paused'].includes(x.estado)){
+              const idle=hydrateIdleTransition(buildIdleSession(o,x.proceso||null),x);
+              idle.state=x.estado;
               openOps.set(o.id,idle);
               attachActiveSessionListener(o.id);
               activeOpId=o.id;
@@ -2628,6 +2730,14 @@
               pauseStart:null,
               pauseTotal:Number(x.pausa_total_ms||0),
               pauses:Array.isArray(x.pausas)?x.pausas:[],
+              transitionStartMs:null,
+              transitionStartLocal:null,
+              transitionPauseStart:null,
+              transitionPauseTotal:0,
+              transitionPauses:[],
+              previousCode:null,
+              previousProcess:null,
+              previousRecordId:null,
               qtyMode:'total',
               interval:null
             };
@@ -2669,6 +2779,16 @@
     const x=openOps.get(id);
     if(x?.state==='running'||x?.state==='paused'||x?.state==='finishing'){toast('⚠️ Guarda el trabajo antes de cerrar la sesión');return;}
     if(!confirm(`¿Cerrar la sesión del día de ${x?.operator?.nombre||'este operario'}?`)) return;
+
+    try{
+      if(x?.transitionStartMs&&x?.previousRecordId){
+        await closeIdleTransition(x,Date.now(),null,null,'cierre_sesion');
+      }
+    }catch(e){
+      toast('❌ No se pudo cerrar el tiempo de transición: '+e.message);
+      return;
+    }
+
     detachActiveSessionListener(id);
     try{await deleteDoc(doc(db,'sesiones_activas',id));}catch{}
     openOps.delete(id);
@@ -2683,7 +2803,7 @@
     openOps.forEach((s,id)=>{
       const b=document.createElement('button');
       b.className='opTab '+(id===activeOpId?'active':'');
-      const st=s.state==='running'?'🟢 TRABAJANDO':s.state==='paused'?'🟡 PAUSA':s.state==='finishing'?'🔵 FINALIZANDO':'⚪ LISTO';
+      const st=s.state==='running'?'🟢 TRABAJANDO':s.state==='paused'?'🟡 PAUSA':s.state==='finishing'?'🔵 FINALIZANDO':s.state==='idle_paused'?'🟡 PAUSA DISP.':s.transitionStartMs?'⚪ DISPONIBLE':'⚪ LISTO';
       const proc=s.proceso?(s.proceso==='armado'?'📦 ARMADO':'🏷️ ETIQUETADO'):'⚙️ SIN PROCESO';
       const activeMark=id===activeOpId?'<div class="activeBadge"><span class="activeDot"></span>Perfil activo</div>':'';
       b.innerHTML=`<span class="nameWrap"><b>${s.operator.nombre}</b>${activeMark}<div class="processMini">${proc}</div><div class="miniStatus">${st}</div></span>`;
@@ -2741,8 +2861,11 @@
     }
 
     const proceso=s.proceso;
-    const stateLabel=s.state==='running'?'Trabajando':s.state==='paused'?'Pausado':s.state==='finishing'?'Finalizando':'Listo';
+    const stateLabel=s.state==='running'?'Trabajando':s.state==='paused'?'Pausado':s.state==='finishing'?'Finalizando':s.state==='idle_paused'?'Pausa en transición':s.transitionStartMs?'Disponible':'Listo';
     const pauseMs=s.pauseTotal+(s.state==='paused'&&s.pauseStart?Date.now()-s.pauseStart:0);
+    const transitionActive=['idle','idle_paused'].includes(s.state)&&!!s.transitionStartMs;
+    const transitionPauseMs=s.transitionPauseTotal+(s.state==='idle_paused'&&s.transitionPauseStart?Date.now()-s.transitionPauseStart:0);
+    const timerValue=transitionActive?currentTransitionElapsed(s):currentElapsed(s);
 
     root.innerHTML=`${activeBanner}<div class="workGrid compactWork">
       <div class="card productCard compactProductCard">
@@ -2762,17 +2885,21 @@
 
       <div class="card timerCard compactTimer">
         <div style="width:100%;text-align:center">
-          <div class="timerLabel">⏱️ Tiempo productivo</div>
-          <div id="timer" class="timer">${fmtTimer(currentElapsed(s))}</div>
+          <div class="timerLabel">${transitionActive?'🔄 Tiempo disponible / transición':'⏱️ Tiempo productivo'}</div>
+          <div id="timer" class="timer">${fmtTimer(timerValue)}</div>
 
           <div class="timerQuickStatus">
-            <span class="statusPill ${s.state==='paused'?'warn':s.state==='finishing'?'ok':'ok'}">${stateLabel}</span>
-            <span class="statusPill">Pausas: ${s.pauses.length}</span>
-            ${pauseMs>0?`<span class="statusPill">Pausa: ${fmtTimer(pauseMs)}</span>`:''}
+            <span class="statusPill ${s.state==='paused'||s.state==='idle_paused'?'warn':s.state==='finishing'?'ok':'ok'}">${stateLabel}</span>
+            ${transitionActive
+              ? `<span class="statusPill">Pausas transición: ${s.transitionPauses.length}</span>${transitionPauseMs>0?`<span class="statusPill">Pausa: ${fmtTimer(transitionPauseMs)}</span>`:''}`
+              : `<span class="statusPill">Pausas: ${s.pauses.length}</span>${pauseMs>0?`<span class="statusPill">Pausa: ${fmtTimer(pauseMs)}</span>`:''}`
+            }
           </div>
 
           <div class="timerBtns">
             ${s.state==='idle'?'<button id="startBtn" class="btn primary big" '+(!s.product?'disabled':'')+'>▶️ INICIAR</button>':''}
+            ${s.state==='idle'&&s.transitionStartMs?'<button id="pauseTransitionBtn" class="btn warn big">⏸️ PAUSAR DISP.</button>':''}
+            ${s.state==='idle_paused'?'<button id="resumeTransitionBtn" class="btn primary big">▶️ REANUDAR DISP.</button>':''}
             ${s.state==='running'?'<button id="pauseBtn" class="btn warn big">⏸️ PAUSAR</button><button id="finishBtn" class="btn danger big">⏹️ TERMINAR</button>':''}
             ${s.state==='paused'?'<button id="resumeBtn" class="btn primary big">▶️ REANUDAR</button><button id="finishBtn" class="btn danger big">⏹️ TERMINAR</button>':''}
           </div>
@@ -2870,7 +2997,7 @@
         </div>
       </div>
     </div>
-    ${s.state==='idle'?`
+    ${['idle','idle_paused'].includes(s.state)?`
       <div class="operatorSessionFooter">
         <button id="closeDaySession" class="btn ghost">🚪 Cerrar sesión del día</button>
       </div>`:''}`;
@@ -2892,6 +3019,8 @@
     $("validateCode")?.addEventListener('click',()=>validateProduct(s));
     $("codeInput")?.addEventListener('keydown',e=>{if(e.key==='Enter')validateProduct(s)});
     $("startBtn")?.addEventListener('click',()=>startWork(s));
+    $("pauseTransitionBtn")?.addEventListener('click',()=>pauseAvailableTransition(s));
+    $("resumeTransitionBtn")?.addEventListener('click',()=>resumeAvailableTransition(s));
     $("pauseBtn")?.addEventListener('click',()=>pauseWork(s));
     $("resumeBtn")?.addEventListener('click',()=>resumeWork(s));
     $("finishBtn")?.addEventListener('click',()=>openFinishConfirmModal(s));
@@ -3105,7 +3234,7 @@
     try{
       const activeRef=doc(db,'sesiones_activas',s.operator.id);
       const existing=await getDoc(activeRef);
-      if(existing.exists()&&['running','paused','finishing'].includes(existing.data().estado)){
+      if(existing.exists()&&['idle','idle_paused','running','paused','finishing'].includes(existing.data().estado)){
         const ex=existing.data();
         if(ex.deviceId!==deviceId){
           if(btn){btn.disabled=false;btn.textContent='▶️ INICIAR';}
@@ -3113,16 +3242,59 @@
         }
       }
       const startMs=Date.now();
-      await setDoc(activeRef,{operarioId:s.operator.id,operario:s.operator.nombre,deviceId,proceso:s.proceso||'etiquetado',codigo:s.code,descripcion:s.product.descripcion||'',categoria:s.product.categoria||'',meta_u_h:s.meta?.meta_u_h||null,estado:'running',inicio_local:localISO(),inicio_ms:startMs,dispositivo:navigator.userAgent.slice(0,180)});
+
+      // Cierra y guarda la transición del código anterior justo antes de iniciar el nuevo.
+      if(s.transitionStartMs&&s.previousRecordId){
+        await closeIdleTransition(s,startMs,s.code,s.proceso||'etiquetado','siguiente_codigo');
+      }
+
+      await setDoc(activeRef,{operarioId:s.operator.id,operario:s.operator.nombre,deviceId,proceso:s.proceso||'etiquetado',codigo:s.code,descripcion:s.product.descripcion||'',categoria:s.product.categoria||'',meta_u_h:s.meta?.meta_u_h||null,estado:'running',inicio_local:new Date(startMs).toLocaleString('sv-SE').replace(' ','T'),inicio_ms:startMs,dispositivo:navigator.userAgent.slice(0,180)});
       s.startMs=startMs;s.finishMs=null;s.state='running';s.pauseTotal=0;s.pauses=[];s.pauseStart=null;
+      s.transitionStartMs=null;s.transitionStartLocal=null;s.transitionPauseStart=null;s.transitionPauseTotal=0;s.transitionPauses=[];s.previousCode=null;s.previousProcess=null;s.previousRecordId=null;
       renderOpTabs();renderWorkspace();
       toast('▶️ Proceso iniciado');
     }catch(e){
-      s.startMs=null;s.finishMs=null;s.state='idle';s.pauseTotal=0;s.pauses=[];s.pauseStart=null;
+      s.startMs=null;s.finishMs=null;
+      if(!['idle','idle_paused'].includes(s.state))s.state='idle';
+      s.pauseTotal=0;s.pauses=[];s.pauseStart=null;
       renderOpTabs();renderWorkspace();
       toast('❌ No se pudo iniciar: '+e.message);
     }
   }
+
+  async function pauseAvailableTransition(s){
+    if(!s?.transitionStartMs || s.state!=='idle') return;
+    const motivo=prompt(`Motivo de pausa durante la transición:
+- Break
+- Falta de producto
+- Falta de etiquetas
+- Cambio operativo
+- Calidad
+- Otro`,'Cambio operativo');
+    if(!motivo)return;
+    s.transitionPauseStart=Date.now();
+    s.state='idle_paused';
+    s.transitionPauses.push({motivo,inicio_local:localISO(),inicio_ms:s.transitionPauseStart,fin_local:null,fin_ms:null,duracion_ms:null});
+    try{await syncIdleSession(s);}catch(e){toast('⚠️ '+e.message)}
+    renderOpTabs();renderWorkspace();
+  }
+
+  async function resumeAvailableTransition(s){
+    if(s?.state!=='idle_paused') return;
+    const now=Date.now();
+    const p=s.transitionPauses[s.transitionPauses.length-1];
+    if(p&&!p.fin_ms){
+      p.fin_ms=now;
+      p.fin_local=new Date(now).toLocaleString('sv-SE').replace(' ','T');
+      p.duracion_ms=Math.max(0,now-Number(p.inicio_ms||now));
+      s.transitionPauseTotal+=p.duracion_ms;
+    }
+    s.transitionPauseStart=null;
+    s.state='idle';
+    try{await syncIdleSession(s);}catch(e){toast('⚠️ '+e.message)}
+    renderOpTabs();renderWorkspace();
+  }
+
   async function pauseWork(s){
     const motivo=prompt('Motivo de pausa:\n- Falta de etiquetas\n- Falta de producto\n- Break\n- Calidad\n- Reproceso\n- Cambio operativo\n- Otro','Falta de etiquetas'); if(!motivo)return;
     s.pauseStart=Date.now();s.state='paused';s.pauses.push({motivo,inicio_local:localISO(),inicio_ms:s.pauseStart,fin_local:null,fin_ms:null,duracion_ms:null});
@@ -3244,16 +3416,29 @@
     }
     const now=s.finishMs||Date.now();
     const netMs=Math.max(0,now-s.startMs-s.pauseTotal); const hours=netMs/3600000; const uph=hours>0?Math.round(qty/hours):0; const meta=s.meta?.meta_u_h||null; const compliance=meta?Math.round((uph/meta)*1000)/10:null;
-    const data={fecha_local:new Date(now).toLocaleDateString('sv-SE'),fin_local:new Date(now).toLocaleString('sv-SE').replace(' ','T'),inicio_local:new Date(s.startMs).toLocaleString('sv-SE').replace(' ','T'),operarioId:s.operator.id,operario:s.operator.nombre,tipo_personal:s.operator.tipo||'',proceso:s.proceso||'etiquetado',codigo:s.code,descripcion:s.product.descripcion||'',categoria:s.product.categoria||'',unidades:qty,modo_registro_unidades:(s.qtyMode||'total'),cajas,unidades_por_caja:unidadesPorCaja,caducidad_tipo:expiryMode==='none'?'no_caduca':'fecha',caducidad_mes:expiryMonth,caducidad_anio:expiryYear?Number(expiryYear):null,novedad_tipo:noveltyType,novedad_cantidad:noveltyQty,comentario:(s.comment||$("finishComment")?.value||'').trim(),tiempo_neto_ms:netMs,tiempo_pausa_ms:s.pauseTotal,productividad_u_h:uph,meta_u_h:meta,cumplimiento_pct:compliance,pausas:s.pauses,creado_en:serverTimestamp()};
+    const data={fecha_local:new Date(now).toLocaleDateString('sv-SE'),fin_local:new Date(now).toLocaleString('sv-SE').replace(' ','T'),fin_ms:now,inicio_local:new Date(s.startMs).toLocaleString('sv-SE').replace(' ','T'),inicio_ms:s.startMs,operarioId:s.operator.id,operario:s.operator.nombre,tipo_personal:s.operator.tipo||'',proceso:s.proceso||'etiquetado',codigo:s.code,descripcion:s.product.descripcion||'',categoria:s.product.categoria||'',unidades:qty,modo_registro_unidades:(s.qtyMode||'total'),cajas,unidades_por_caja:unidadesPorCaja,caducidad_tipo:expiryMode==='none'?'no_caduca':'fecha',caducidad_mes:expiryMonth,caducidad_anio:expiryYear?Number(expiryYear):null,novedad_tipo:noveltyType,novedad_cantidad:noveltyQty,comentario:(s.comment||$("finishComment")?.value||'').trim(),tiempo_neto_ms:netMs,tiempo_pausa_ms:s.pauseTotal,productividad_u_h:uph,meta_u_h:meta,cumplimiento_pct:compliance,pausas:s.pauses,creado_en:serverTimestamp()};
     try{
-      await addDoc(collection(db,'registros_etiquetado'),data);
-    invalidateRecordCaches();
+      const recordRef=await addDoc(collection(db,'registros_etiquetado'),data);
+      invalidateRecordCaches();
       await setDoc(doc(db,'sesiones_activas',s.operator.id),{...data,deviceId,estado:'finalizada'});
       toast(`✅ Guardado: ${uph.toLocaleString('es-EC')} u/h`);
-      clearInterval(s.interval);openOps.set(s.operator.id,buildIdleSession(s.operator,s.proceso));saveDeviceOpenOps();await syncIdleSession(openOps.get(s.operator.id));renderOpTabs();renderWorkspace();
+
+      clearInterval(s.interval);
+      const idle=buildIdleSession(s.operator,s.proceso);
+      // La transición empieza en el momento real en que se presionó TERMINAR,
+      // no cuando se termina de completar el formulario de cierre.
+      idle.transitionStartMs=now;
+      idle.transitionStartLocal=new Date(now).toLocaleString('sv-SE').replace(' ','T');
+      idle.previousCode=s.code;
+      idle.previousProcess=s.proceso||'etiquetado';
+      idle.previousRecordId=recordRef.id;
+      openOps.set(s.operator.id,idle);
+      saveDeviceOpenOps();
+      await syncIdleSession(idle);
+      renderOpTabs();renderWorkspace();
     }catch(e){toast('❌ No se pudo guardar: '+e.message)}
   }
-  function startTimerLoop(s){if(s.interval)clearInterval(s.interval);s.interval=setInterval(()=>{if(activeOpId!==s.operator.id)return;const el=$("timer");if(el)el.textContent=fmtTimer(currentElapsed(s));},500)}
+  function startTimerLoop(s){if(s.interval)clearInterval(s.interval);s.interval=setInterval(()=>{if(activeOpId!==s.operator.id)return;const el=$("timer");if(el){const useTransition=['idle','idle_paused'].includes(s.state)&&!!s.transitionStartMs;el.textContent=fmtTimer(useTransition?currentTransitionElapsed(s):currentElapsed(s));}},500)}
 
 
   // Opciones ocultas: Ctrl + Shift + O
@@ -3888,6 +4073,22 @@
     return Math.max(0,Date.now()-start-closedPause);
   }
 
+  function activeAvailableElapsed(x){
+    const start=Number(x.disponible_desde_ms||0);
+    if(!start) return 0;
+    const pauses=Array.isArray(x.pausas_transicion)?x.pausas_transicion:[];
+    let closedPause=0;
+    let ongoingPauseStart=null;
+
+    pauses.forEach(p=>{
+      if(Number(p.duracion_ms)>0) closedPause+=Number(p.duracion_ms);
+      else if(p.inicio_ms&&!p.fin_ms) ongoingPauseStart=Number(p.inicio_ms);
+    });
+
+    const end=x.estado==='idle_paused'&&ongoingPauseStart?ongoingPauseStart:Date.now();
+    return Math.max(0,end-start-closedPause);
+  }
+
   function startDashboardLiveClock(sessions){
     dashboardLiveSessions=sessions||[];
     if(dashboardLiveInterval) clearInterval(dashboardLiveInterval);
@@ -3895,7 +4096,10 @@
     const tick=()=>{
       dashboardLiveSessions.forEach((x,i)=>{
         const el=document.querySelector(`[data-live-index="${i}"]`);
-        if(el) el.textContent=fmtTimer(activeSessionElapsed(x));
+        if(el){
+          const ms=['idle','idle_paused'].includes(x.estado)?activeAvailableElapsed(x):activeSessionElapsed(x);
+          el.textContent=fmtTimer(ms);
+        }
       });
     };
     tick();
@@ -3909,6 +4113,17 @@
     if(!confirm(`¿Cerrar la sesión activa de ${label}?\n\nEl operario verá que la sesión fue cerrada por Supervisor.`)) return;
 
     try{
+      if(s?.disponible_desde_ms&&s?.registro_anterior_id){
+        const temp={
+          state:s.estado,
+          transitionStartMs:Number(s.disponible_desde_ms),
+          transitionPauseStart:Number(s.pausa_transicion_inicio_ms||0)||null,
+          transitionPauseTotal:Number(s.pausa_transicion_total_ms||0),
+          transitionPauses:Array.isArray(s.pausas_transicion)?s.pausas_transicion:[],
+          previousRecordId:s.registro_anterior_id
+        };
+        await closeIdleTransition(temp,Date.now(),null,null,'cierre_supervisor');
+      }
       await updateDoc(doc(db,'sesiones_activas',operatorId),{
         estado:'cerrada_supervisor',
         cierre_supervisor_local:localISO(),
@@ -3947,12 +4162,12 @@
 
   function renderDashboardActivity(activeOperators,sessionRows){
     const sessionMap=new Map((sessionRows||[]).map(x=>[x.operarioId,x]));
-    const openStates=new Set(['idle','running','paused','finishing']);
+    const openStates=new Set(['idle','idle_paused','running','paused','finishing']);
     const openSessions=[...sessionMap.values()].filter(x=>openStates.has(x.estado));
 
     $("kpiSesiones").textContent=fmtInt(openSessions.length);
 
-    const statusOrder={running:0,paused:1,finishing:2,idle:3,no_session:4};
+    const statusOrder={running:0,paused:1,finishing:2,idle_paused:3,idle:4,no_session:5};
     const rows=(activeOperators||[]).map(op=>{
       const ss=sessionMap.get(op.id);
       const isOpen=ss&&openStates.has(ss.estado);
@@ -3966,15 +4181,19 @@
       if(x.estado==='running')return ['ok','▶️ Trabajando'];
       if(x.estado==='paused')return ['warn','⏸️ Pausa'];
       if(x.estado==='finishing')return ['ok','🔵 Finalizando'];
-      if(x.estado==='idle')return ['','⚪ Disponible'];
+      if(x.estado==='idle_paused')return ['warn','⏸️ Pausa transición'];
+      if(x.estado==='idle'&&x.disponible_desde_ms)return ['','⚪ Disponible'];
+      if(x.estado==='idle')return ['','⚪ Listo'];
       return ['','⚫ Sin sesión'];
     };
 
     $("dashActiveSessions").innerHTML=rows.length?`<div class="tableWrap"><table style="min-width:940px"><thead><tr><th>Operario</th><th>Estado</th><th>Proceso</th><th>Código</th><th>⏱️ Tiempo</th><th>Dispositivo</th><th>Acción</th></tr></thead><tbody>${rows.map((x,i)=>{
       const [klass,label]=statusInfo(x);
       const action=x.isOpen?`<div class="sessionActionBtns"><button class="sessionCloseBtn" data-id="${x.operarioId}">🔒 Cerrar</button><button class="sessionDeleteBtn" data-id="${x.operarioId}">🗑️ Eliminar</button></div>`:'—';
-      const time=['running','paused','finishing'].includes(x.estado)?`<span class="liveTimer" data-live-index="${i}">00:00:00</span>`:'—';
-      return `<tr><td><b>${x.operario}</b></td><td><span class="statusPill ${klass}">${label}</span></td><td>${x.isOpen&&x.proceso?processName(x.proceso):'—'}</td><td>${['running','paused','finishing'].includes(x.estado)?(x.codigo||'—'):'—'}</td><td>${time}</td><td><span class="small">${x.isOpen&&x.deviceId?String(x.deviceId).slice(-8):'—'}</span></td><td>${action}</td></tr>`;
+      const hasLiveTime=['running','paused','finishing'].includes(x.estado)||(['idle','idle_paused'].includes(x.estado)&&!!x.disponible_desde_ms);
+      const time=hasLiveTime?`<span class="liveTimer ${['idle','idle_paused'].includes(x.estado)?'transitionLive':''}" data-live-index="${i}">00:00:00</span>`:'—';
+      const code=['running','paused','finishing'].includes(x.estado)?(x.codigo||'—'):(x.disponible_desde_ms?(x.codigo_anterior?`${x.codigo_anterior} → …`:'—'):'—');
+      return `<tr><td><b>${x.operario}</b></td><td><span class="statusPill ${klass}">${label}</span></td><td>${x.isOpen&&x.proceso?processName(x.proceso):'—'}</td><td>${code}</td><td>${time}</td><td><span class="small">${x.isOpen&&x.deviceId?String(x.deviceId).slice(-8):'—'}</span></td><td>${action}</td></tr>`;
     }).join('')}</tbody></table></div>`:'<div class="emptyState">Sin operarios activos configurados.</div>';
 
     startDashboardLiveClock(rows);
@@ -4370,6 +4589,15 @@
     return reasons.length?reasons.join(' · '):'—';
   }
 
+  function transitionStatusBadge(x){
+    const ms=Number(x.tiempo_transicion_ms||0);
+    if(x.transicion_cierre==='cierre_sesion')return '<span class="statusPill">🚪 Cierre de sesión</span>';
+    if(x.transicion_cierre==='cierre_supervisor')return '<span class="statusPill warn">🔒 Cierre supervisor</span>';
+    if(ms>=10*60000)return '<span class="recordAlertBadge critical">🔴 ≥ 10 min</span>';
+    if(ms>=5*60000)return '<span class="recordAlertBadge review">🟡 5–10 min</span>';
+    return '<span class="recordAlertBadge ok">🟢 Normal</span>';
+  }
+
   async function loadSupervision(force=false){
     try{
       const today=localISO().slice(0,10);
@@ -4384,7 +4612,9 @@
       if(ops.includes(cur))sel.value=cur;
 
       const op=sel.value;
-      const records=all.filter(x=>(!op||x.operario===op)&&Number(x.tiempo_pausa_ms||0)>0);
+      const scoped=all.filter(x=>!op||x.operario===op);
+      const records=scoped.filter(x=>Number(x.tiempo_pausa_ms||0)>0);
+      const transitions=scoped.filter(x=>x.transicion_cierre&&x.tiempo_transicion_ms!==undefined&&x.tiempo_transicion_ms!==null);
 
       let totalPauseMs=0,totalPauses=0,highPause=0;
       records.forEach(x=>{
@@ -4394,10 +4624,18 @@
         if(Number(x.tiempo_pausa_ms||0)>=60*60000)highPause++;
       });
 
+      const totalTransitionMs=transitions.reduce((a,x)=>a+Number(x.tiempo_transicion_ms||0),0);
+      const avgTransitionMs=transitions.length?Math.round(totalTransitionMs/transitions.length):0;
+      const longTransitions=transitions.filter(x=>Number(x.tiempo_transicion_ms||0)>=10*60000).length;
+
       $("auditReviewed").textContent=fmtInt(records.length);
       $("auditAlerts").textContent=fmtInt(totalPauses);
       $("auditPauses").textContent=fmtTimer(totalPauseMs);
       $("auditLong").textContent=fmtInt(highPause);
+      $("auditTransitions").textContent=fmtInt(transitions.length);
+      $("auditTransitionTime").textContent=fmtTimer(totalTransitionMs);
+      $("auditTransitionAvg").textContent=transitions.length?fmtTimer(avgTransitionMs):'—';
+      $("auditTransitionLong").textContent=fmtInt(longTransitions);
 
       $("auditBody").innerHTML=records.length?records
         .sort((a,b)=>String(a.fecha_local||'').localeCompare(String(b.fecha_local||''))||String(a.inicio_local||'').localeCompare(String(b.inicio_local||'')))
@@ -4415,8 +4653,28 @@
           </tr>`;
         }).join('')
         :'<tr><td colspan="8"><div class="emptyState">Sin pausas para los filtros seleccionados.</div></td></tr>';
+
+      $("transitionAuditBody").innerHTML=transitions.length?transitions
+        .sort((a,b)=>String(a.fecha_local||'').localeCompare(String(b.fecha_local||''))||String(a.fin_local||'').localeCompare(String(b.fin_local||'')))
+        .map(x=>{
+          const ms=Number(x.tiempo_transicion_ms||0);
+          const cls=ms>=10*60000?'critical':ms>=5*60000?'review':'';
+          return `<tr class="${ms>=10*60000?'recordCritical':ms>=5*60000?'recordReview':''}">
+            <td>${x.fecha_local||'—'}</td>
+            <td><b>${x.operario||'—'}</b></td>
+            <td>${x.codigo||'—'}</td>
+            <td>${x.codigo_siguiente||'—'}</td>
+            <td>${String(x.fin_local||'—').replace('T',' ')}</td>
+            <td>${String(x.transicion_fin_local||'—').replace('T',' ')}</td>
+            <td><span class="transitionTime ${cls}">${fmtTimer(ms)}</span></td>
+            <td>${fmtTimer(Number(x.tiempo_transicion_pausa_ms||0))}</td>
+            <td>${transitionStatusBadge(x)}</td>
+          </tr>`;
+        }).join('')
+        :'<tr><td colspan="9"><div class="emptyState">Aún no hay transiciones registradas para los filtros seleccionados.</div></td></tr>';
     }catch(e){
       $("auditBody").innerHTML=`<tr><td colspan="8">${e.message}</td></tr>`;
+      $("transitionAuditBody").innerHTML=`<tr><td colspan="9">${e.message}</td></tr>`;
     }
   }
   const auditToday=localISO().slice(0,10);$("auditFrom").value=auditToday;$("auditTo").value=auditToday;
@@ -5041,7 +5299,7 @@
   }
   async function deleteOperator(id,name){
     try{
-      const ss=await getDoc(doc(db,'sesiones_activas',id));if(ss.exists()&&['idle','running','paused','finishing'].includes(ss.data().estado))return toast('⚠️ Cierra primero la sesión de este operario');
+      const ss=await getDoc(doc(db,'sesiones_activas',id));if(ss.exists()&&['idle','idle_paused','running','paused','finishing'].includes(ss.data().estado))return toast('⚠️ Cierra primero la sesión de este operario');
       if(!confirm(`¿Eliminar definitivamente a ${name}?\n\nSus registros históricos no se borrarán.`))return;
       await logAudit({accion:'Operario eliminado',entidad:'operario',entidadId:id,detalle:name});await deleteDoc(doc(db,'operarios',id));toast('🗑️ Operario eliminado');await loadUsersTable();await loadOperators();
     }catch(e){toast('❌ '+e.message)}
