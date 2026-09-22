@@ -1330,6 +1330,58 @@
       .comparisonFilterGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
     }
 
+
+    /* ===== Gestión de accesos Supervisor ===== */
+    .supervisorAccessGrid{
+      display:grid;
+      grid-template-columns:minmax(220px,1fr) minmax(180px,.75fr) minmax(180px,.75fr) minmax(180px,.75fr);
+      gap:10px;
+      align-items:end;
+      margin:12px 0 8px;
+    }
+    .supervisorAccessActions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
+      margin-bottom:14px;
+    }
+    .supervisorAccessNote{
+      margin:0 0 12px;
+      padding:10px 12px;
+      border:1px solid #cfe7df;
+      border-radius:12px;
+      background:#f7fcfa;
+      color:#45665a;
+      font-size:12px;
+      line-height:1.45;
+    }
+    .supervisorAccessUser{
+      font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+      font-weight:900;
+      color:#0e6e5b;
+    }
+    .supervisorAccessSelf{
+      display:inline-flex;
+      align-items:center;
+      gap:4px;
+      margin-left:6px;
+      padding:2px 6px;
+      border-radius:999px;
+      background:#eaf8f4;
+      border:1px solid #bfe5d8;
+      color:#126b58;
+      font-size:10px;
+      font-weight:900;
+    }
+    @media(max-width:1050px){
+      .supervisorAccessGrid{grid-template-columns:1fr 1fr}
+    }
+    @media(max-width:620px){
+      .supervisorAccessGrid{grid-template-columns:1fr}
+      .supervisorAccessActions .btn{width:100%}
+    }
+
   </style>
 </head>
 <body>
@@ -1408,6 +1460,7 @@
             <button type="button" class="btn secondary supGroupBtn">⚙️ Configuración <span>›</span></button>
             <div class="supGroupChildren">
               <button class="btn secondary supNavBtn" data-view="operarios">Operarios</button>
+              <button class="btn secondary supNavBtn" data-view="supervisores">Accesos Supervisor</button>
               <button class="btn secondary supNavBtn" data-view="data">Data de productos</button>
               <button class="btn secondary supNavBtn" data-view="categorydata" style="display:none">Categorías por código</button>
             </div>
@@ -1899,6 +1952,65 @@
             <div style="height:12px"></div>
             <div class="tableWrap"><table><thead><tr><th>Nombre</th><th>Tipo</th><th>Estado</th><th>Acción</th></tr></thead><tbody id="usersBody"><tr><td colspan="4">Sin cargar</td></tr></tbody></table></div>
           </div>
+
+          <div id="view-supervisores" class="supView card">
+            <div class="sectionTitle">
+              <div>
+                <h2>🔐 Accesos de Supervisores</h2>
+                <div class="small">Crea y administra quién puede ingresar al módulo Supervisor.</div>
+              </div>
+              <button id="refreshSupervisorAccess" class="btn ghost">🔄 Actualizar</button>
+            </div>
+
+            <div class="supervisorAccessNote">
+              <b>Control de acceso:</b> los usuarios nuevos se guardan en Firebase. La contraseña no se almacena en texto visible;
+              se guarda una verificación derivada con PBKDF2. Los accesos iniciales actuales se migran automáticamente al nuevo esquema
+              cuando la colección está vacía.
+            </div>
+
+            <div class="supervisorAccessGrid">
+              <div class="field">
+                <label>Nombre del supervisor</label>
+                <input id="newSupervisorName" autocomplete="off" placeholder="Ej. Kevin Mendoza">
+              </div>
+              <div class="field">
+                <label>Usuario</label>
+                <input id="newSupervisorUser" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Ej. kevin.m">
+              </div>
+              <div class="field">
+                <label>Contraseña</label>
+                <input id="newSupervisorPassword" type="password" autocomplete="new-password" placeholder="Mínimo 6 caracteres">
+              </div>
+              <div class="field">
+                <label>Confirmar contraseña</label>
+                <input id="newSupervisorPassword2" type="password" autocomplete="new-password" placeholder="Repetir contraseña">
+              </div>
+            </div>
+
+            <div class="supervisorAccessActions">
+              <button id="addSupervisorAccess" class="btn primary">➕ Crear acceso</button>
+              <span class="small">Usuarios permitidos: letras, números, punto, guion y guion bajo.</span>
+            </div>
+            <div id="supervisorAccessMsg"></div>
+
+            <div class="tableWrap">
+              <table style="min-width:900px">
+                <thead>
+                  <tr>
+                    <th>Nombre</th>
+                    <th>Usuario</th>
+                    <th>Estado</th>
+                    <th>Creado por</th>
+                    <th>Último ingreso</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="supervisorAccessBody">
+                  <tr><td colspan="6">Sin cargar</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
         </section>
       </div>
     </div>
@@ -2266,12 +2378,131 @@
     stopDashboardRealtime();
   };
 
-  // Acceso interno del Supervisor.
-  const SUPERVISOR_USERS={carlos:'123',hugo:'123',kevin:'123'};
+  // Acceso del Supervisor administrado desde Firebase.
+  // Los tres accesos históricos se conservan solo como bootstrap para no bloquear la web.
+  const LEGACY_SUPERVISOR_USERS={carlos:'123',hugo:'123',kevin:'123'};
+  const SUPERVISOR_ACCESS_COLLECTION='supervisor_accesos';
+  const SUPERVISOR_PBKDF2_ITERATIONS=120000;
+
   let supervisorUnlocked=sessionStorage.getItem('supervisorUnlocked')==='1';
   let supervisorUser=sessionStorage.getItem('supervisorUser')||'';
+  let supervisorKey=sessionStorage.getItem('supervisorKey')||'';
 
   function currentSupervisorUser(){return supervisorUser||'Supervisor'}
+
+  function normalizeSupervisorUser(value){
+    return norm(value)
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g,'')
+      .replace(/\s+/g,'');
+  }
+
+  function validSupervisorUser(value){
+    return /^[a-z0-9._-]{3,30}$/.test(value);
+  }
+
+  function bytesToBase64(bytes){
+    let binary='';
+    bytes.forEach(b=>binary+=String.fromCharCode(b));
+    return btoa(binary);
+  }
+
+  function base64ToBytes(value){
+    const binary=atob(value);
+    return Uint8Array.from(binary,c=>c.charCodeAt(0));
+  }
+
+  function randomSupervisorSalt(){
+    const bytes=new Uint8Array(16);
+    crypto.getRandomValues(bytes);
+    return bytesToBase64(bytes);
+  }
+
+  async function deriveSupervisorPassword(password,salt,iterations=SUPERVISOR_PBKDF2_ITERATIONS){
+    const enc=new TextEncoder();
+    const material=await crypto.subtle.importKey(
+      'raw',
+      enc.encode(password),
+      'PBKDF2',
+      false,
+      ['deriveBits']
+    );
+    const bits=await crypto.subtle.deriveBits(
+      {name:'PBKDF2',salt:base64ToBytes(salt),iterations:Number(iterations)||SUPERVISOR_PBKDF2_ITERATIONS,hash:'SHA-256'},
+      material,
+      256
+    );
+    return bytesToBase64(new Uint8Array(bits));
+  }
+
+  async function makeSupervisorPassword(password){
+    const salt=randomSupervisorSalt();
+    const hash=await deriveSupervisorPassword(password,salt,SUPERVISOR_PBKDF2_ITERATIONS);
+    return {
+      password_hash:hash,
+      password_salt:salt,
+      password_iterations:SUPERVISOR_PBKDF2_ITERATIONS,
+      password_alg:'PBKDF2-SHA256'
+    };
+  }
+
+  async function verifySupervisorPassword(password,data){
+    if(!data?.password_hash||!data?.password_salt)return false;
+    const candidate=await deriveSupervisorPassword(password,data.password_salt,data.password_iterations);
+    return candidate===data.password_hash;
+  }
+
+  async function bootstrapLegacySupervisorUsers(){
+    const first=await getDocs(query(collection(db,SUPERVISOR_ACCESS_COLLECTION),limit(1)));
+    if(!first.empty)return false;
+
+    const batch=writeBatch(db);
+    for(const [usuario,password] of Object.entries(LEGACY_SUPERVISOR_USERS)){
+      const secure=await makeSupervisorPassword(password);
+      const nombre=usuario.charAt(0).toUpperCase()+usuario.slice(1);
+      batch.set(doc(db,SUPERVISOR_ACCESS_COLLECTION,usuario),{
+        usuario,nombre,activo:true,
+        ...secure,
+        origen:'acceso_inicial',
+        creado_por:'Sistema inicial',
+        creado_local:localISO(),
+        creado_en:serverTimestamp()
+      });
+    }
+    await batch.commit();
+    return true;
+  }
+
+  async function authenticateSupervisor(rawUser,password){
+    const key=normalizeSupervisorUser(rawUser);
+    if(!validSupervisorUser(key)||!password)return {ok:false};
+
+    try{
+      await bootstrapLegacySupervisorUsers();
+      const ref=doc(db,SUPERVISOR_ACCESS_COLLECTION,key);
+      const snap=await getDoc(ref);
+      if(!snap.exists())return {ok:false};
+
+      const data=snap.data();
+      if(data.activo===false)return {ok:false,inactive:true};
+      if(!(await verifySupervisorPassword(password,data)))return {ok:false};
+
+      const nombre=norm(data.nombre)||key;
+      updateDoc(ref,{
+        ultimo_ingreso_local:localISO(),
+        ultimo_ingreso_en:serverTimestamp()
+      }).catch(()=>{});
+      return {ok:true,key,nombre};
+    }catch(e){
+      console.warn('Accesos Supervisor Firebase:',e);
+      // Respaldo únicamente si Firebase no permite leer/escribir la colección.
+      if(LEGACY_SUPERVISOR_USERS[key]===password){
+        return {ok:true,key,nombre:key.charAt(0).toUpperCase()+key.slice(1),legacyFallback:true};
+      }
+      throw e;
+    }
+  }
 
   async function ensureFirebaseSession(){
     if(auth.currentUser) return auth.currentUser;
@@ -2293,24 +2524,51 @@
   }
 
   $("supLoginBtn").onclick=async()=>{
-    const raw=norm($("supUser").value),key=raw.toLowerCase();
+    const raw=norm($("supUser").value);
     const pass=$("supPassword").value;
-    if(SUPERVISOR_USERS[key]&&SUPERVISOR_USERS[key]===pass){
-      supervisorUnlocked=true;
-      supervisorUser=key.charAt(0).toUpperCase()+key.slice(1);
-      sessionStorage.setItem('supervisorUnlocked','1');
-      sessionStorage.setItem('supervisorUser',supervisorUser);
-      $("supPassword").value='';
-      $("supAuthMsg").innerHTML=`<div class="message ok">✅ Bienvenido, ${supervisorUser}.</div>`;
-      renderSupervisorAccess();
-    }else{
-      $("supAuthMsg").innerHTML='<div class="message err">❌ Usuario o contraseña incorrectos.</div>';
+    const btn=$("supLoginBtn");
+    btn.disabled=true;
+    btn.textContent='Validando…';
+    $("supAuthMsg").innerHTML='';
+
+    try{
+      const result=await authenticateSupervisor(raw,pass);
+      if(result.ok){
+        supervisorUnlocked=true;
+        supervisorUser=result.nombre;
+        supervisorKey=result.key;
+        sessionStorage.setItem('supervisorUnlocked','1');
+        sessionStorage.setItem('supervisorUser',supervisorUser);
+        sessionStorage.setItem('supervisorKey',supervisorKey);
+        $("supPassword").value='';
+        $("supAuthMsg").innerHTML=`<div class="message ok">✅ Bienvenido, ${supervisorUser}.</div>`;
+        renderSupervisorAccess();
+        if(result.legacyFallback)toast('⚠️ Firebase no permitió usar la nueva colección; acceso inicial activo como respaldo');
+      }else if(result.inactive){
+        $("supAuthMsg").innerHTML='<div class="message warn">⏸️ Este acceso está desactivado.</div>';
+      }else{
+        $("supAuthMsg").innerHTML='<div class="message err">❌ Usuario o contraseña incorrectos.</div>';
+      }
+    }catch(e){
+      $("supAuthMsg").innerHTML=`<div class="message err">❌ No se pudo validar el acceso: ${e.message}</div>`;
+    }finally{
+      btn.disabled=false;
+      btn.textContent='👨‍💼 Ingresar';
     }
   };
 
+  $("supPassword").addEventListener('keydown',e=>{
+    if(e.key==='Enter'){
+      e.preventDefault();
+      $("supLoginBtn").click();
+    }
+  });
+
   $("supLogout").onclick=()=>{stopDashboardRealtime();
-    supervisorUnlocked=false;supervisorUser='';
-    sessionStorage.removeItem('supervisorUnlocked');sessionStorage.removeItem('supervisorUser');
+    supervisorUnlocked=false;supervisorUser='';supervisorKey='';
+    sessionStorage.removeItem('supervisorUnlocked');
+    sessionStorage.removeItem('supervisorUser');
+    sessionStorage.removeItem('supervisorKey');
     renderSupervisorAccess();
   };
 
@@ -3901,6 +4159,7 @@
     if(categoryViews.has(b.dataset.view)) await loadOfficialCategoriesAll();
 
     if(b.dataset.view==='operarios') await loadUsersTable();
+    if(b.dataset.view==='supervisores') await loadSupervisorAccessTable();
     if(b.dataset.view==='registros') await loadRecords();
     if(b.dataset.view==='novedades') await loadNoveltyReport();
     if(b.dataset.view==='caducidad') await loadExpiryReport();
@@ -5382,6 +5641,176 @@
       document.querySelectorAll('.operatorDeactivateBtn').forEach(b=>b.onclick=()=>setOperatorActive(b.dataset.id,false));document.querySelectorAll('.operatorReactivateBtn').forEach(b=>b.onclick=()=>setOperatorActive(b.dataset.id,true));document.querySelectorAll('.operatorDeleteBtn').forEach(b=>b.onclick=()=>deleteOperator(b.dataset.id,b.dataset.name));document.querySelectorAll('.operatorHistoryBtn').forEach(b=>b.onclick=()=>openHistory('operario',b.dataset.id,b.dataset.name));
     }catch(e){$("usersBody").innerHTML=`<tr><td colspan="4">${e.message}</td></tr>`}
   }
+
+
+  // ---------- ACCESOS SUPERVISOR ----------
+  function clearSupervisorAccessForm(){
+    $("newSupervisorName").value='';
+    $("newSupervisorUser").value='';
+    $("newSupervisorPassword").value='';
+    $("newSupervisorPassword2").value='';
+  }
+
+  async function createSupervisorAccess(){
+    const nombre=norm($("newSupervisorName").value);
+    const usuario=normalizeSupervisorUser($("newSupervisorUser").value);
+    const password=$("newSupervisorPassword").value;
+    const password2=$("newSupervisorPassword2").value;
+    const msg=$("supervisorAccessMsg");
+
+    msg.innerHTML='';
+    if(!nombre)return msg.innerHTML='<div class="message warn">⚠️ Ingresa el nombre del supervisor.</div>';
+    if(!validSupervisorUser(usuario))return msg.innerHTML='<div class="message warn">⚠️ El usuario debe tener entre 3 y 30 caracteres y usar solo letras, números, punto, guion o guion bajo.</div>';
+    if(password.length<6)return msg.innerHTML='<div class="message warn">⚠️ La contraseña debe tener mínimo 6 caracteres.</div>';
+    if(password!==password2)return msg.innerHTML='<div class="message warn">⚠️ Las contraseñas no coinciden.</div>';
+
+    const btn=$("addSupervisorAccess");
+    btn.disabled=true;
+    btn.textContent='Creando…';
+
+    try{
+      const ref=doc(db,SUPERVISOR_ACCESS_COLLECTION,usuario);
+      const prev=await getDoc(ref);
+      if(prev.exists()){
+        msg.innerHTML='<div class="message warn">⚠️ Ese usuario ya existe. Puedes cambiar su clave desde la tabla.</div>';
+        return;
+      }
+
+      const secure=await makeSupervisorPassword(password);
+      await setDoc(ref,{
+        usuario,nombre,activo:true,
+        ...secure,
+        creado_por:currentSupervisorUser(),
+        creado_por_usuario:supervisorKey||'',
+        creado_local:localISO(),
+        creado_en:serverTimestamp()
+      });
+      await logAudit({
+        accion:'Acceso Supervisor creado',
+        entidad:'supervisor_acceso',
+        entidadId:usuario,
+        detalle:`${nombre} (${usuario})`,
+        cambios:[{campo:'Estado',anterior:'',nuevo:'Activo'}]
+      });
+      msg.innerHTML=`<div class="message ok">✅ Acceso creado para <b>${nombre}</b> (${usuario}).</div>`;
+      clearSupervisorAccessForm();
+      await loadSupervisorAccessTable();
+    }catch(e){
+      msg.innerHTML=`<div class="message err">❌ ${e.message}</div>`;
+    }finally{
+      btn.disabled=false;
+      btn.textContent='➕ Crear acceso';
+    }
+  }
+
+  async function setSupervisorAccessActive(usuario,active){
+    if(usuario===supervisorKey&&!active){
+      return toast('⚠️ No puedes desactivar el acceso con el que estás conectado');
+    }
+    try{
+      const ref=doc(db,SUPERVISOR_ACCESS_COLLECTION,usuario);
+      const snap=await getDoc(ref);
+      if(!snap.exists())return toast('⚠️ El acceso ya no existe');
+      const old=snap.data().activo!==false;
+      await updateDoc(ref,{
+        activo:active,
+        actualizado_por:currentSupervisorUser(),
+        actualizado_local:localISO(),
+        actualizado_en:serverTimestamp()
+      });
+      await logAudit({
+        accion:active?'Acceso Supervisor reactivado':'Acceso Supervisor desactivado',
+        entidad:'supervisor_acceso',
+        entidadId:usuario,
+        detalle:snap.data().nombre||usuario,
+        cambios:[{campo:'Activo',anterior:old,nuevo:active}]
+      });
+      toast(active?'✅ Acceso reactivado':'⏸️ Acceso desactivado');
+      await loadSupervisorAccessTable();
+    }catch(e){toast('❌ '+e.message)}
+  }
+
+  async function resetSupervisorPassword(usuario,nombre){
+    const password=prompt(`Nueva contraseña para ${nombre||usuario}:\n\nMínimo 6 caracteres.`);
+    if(password===null)return;
+    if(password.length<6)return toast('⚠️ La contraseña debe tener mínimo 6 caracteres');
+    const confirmPassword=prompt('Repite la nueva contraseña:');
+    if(confirmPassword===null)return;
+    if(password!==confirmPassword)return toast('⚠️ Las contraseñas no coinciden');
+
+    try{
+      const secure=await makeSupervisorPassword(password);
+      await updateDoc(doc(db,SUPERVISOR_ACCESS_COLLECTION,usuario),{
+        ...secure,
+        clave_actualizada_por:currentSupervisorUser(),
+        clave_actualizada_local:localISO(),
+        actualizado_en:serverTimestamp()
+      });
+      await logAudit({
+        accion:'Clave de Supervisor actualizada',
+        entidad:'supervisor_acceso',
+        entidadId:usuario,
+        detalle:nombre||usuario
+      });
+      toast('🔑 Contraseña actualizada');
+      await loadSupervisorAccessTable();
+    }catch(e){toast('❌ '+e.message)}
+  }
+
+  async function loadSupervisorAccessTable(){
+    const body=$("supervisorAccessBody");
+    if(!body)return;
+    body.innerHTML='<tr><td colspan="6">Cargando…</td></tr>';
+
+    try{
+      await bootstrapLegacySupervisorUsers();
+      const snap=await getDocs(collection(db,SUPERVISOR_ACCESS_COLLECTION));
+      const arr=snap.docs
+        .map(d=>({id:d.id,...d.data()}))
+        .sort((a,b)=>norm(a.nombre||a.usuario).localeCompare(norm(b.nombre||b.usuario),'es'));
+
+      body.innerHTML=arr.length?arr.map(x=>{
+        const usuario=x.usuario||x.id;
+        const isSelf=usuario===supervisorKey;
+        const status=x.activo!==false
+          ?'<span class="statusPill ok">Activo</span>'
+          :'<span class="statusPill bad">Desactivado</span>';
+        const last=x.ultimo_ingreso_local?String(x.ultimo_ingreso_local).replace('T',' '):'—';
+        const createdBy=x.creado_por||'—';
+        return `<tr>
+          <td><b>${x.nombre||'—'}</b>${isSelf?'<span class="supervisorAccessSelf">TU SESIÓN</span>':''}</td>
+          <td><span class="supervisorAccessUser">${usuario}</span></td>
+          <td>${status}</td>
+          <td>${createdBy}</td>
+          <td>${last}</td>
+          <td>
+            <div class="rowActions">
+              ${x.activo!==false
+                ?`<button class="operatorDeactivateBtn supervisorDeactivateBtn" data-user="${usuario}" ${isSelf?'disabled title="No puedes desactivar tu propia sesión"':''}>⏸️ Desactivar</button>`
+                :`<button class="operatorReactivateBtn supervisorReactivateBtn" data-user="${usuario}">▶️ Reactivar</button>`}
+              <button class="miniBtn supervisorPasswordBtn" data-user="${usuario}" data-name="${String(x.nombre||usuario).replace(/"/g,'&quot;')}">🔑 Cambiar clave</button>
+            </div>
+          </td>
+        </tr>`;
+      }).join(''):'<tr><td colspan="6">Sin accesos creados</td></tr>';
+
+      document.querySelectorAll('.supervisorDeactivateBtn').forEach(b=>b.onclick=()=>setSupervisorAccessActive(b.dataset.user,false));
+      document.querySelectorAll('.supervisorReactivateBtn').forEach(b=>b.onclick=()=>setSupervisorAccessActive(b.dataset.user,true));
+      document.querySelectorAll('.supervisorPasswordBtn').forEach(b=>b.onclick=()=>resetSupervisorPassword(b.dataset.user,b.dataset.name));
+    }catch(e){
+      body.innerHTML=`<tr><td colspan="6">❌ ${e.message}</td></tr>`;
+      $("supervisorAccessMsg").innerHTML='<div class="message err">No se pudo leer <b>supervisor_accesos</b>. Revisa las reglas de Firestore para usuarios autenticados anónimamente.</div>';
+    }
+  }
+
+  $("addSupervisorAccess").onclick=createSupervisorAccess;
+  $("refreshSupervisorAccess").onclick=loadSupervisorAccessTable;
+  $("newSupervisorPassword2").addEventListener('keydown',e=>{
+    if(e.key==='Enter'){
+      e.preventDefault();
+      createSupervisorAccess();
+    }
+  });
 
   $("saveMeta").onclick=async()=>{
     const code=norm($("metaCode").value),meta=Math.floor(safeNum($("metaValue").value)),reason=norm($("metaReason").value);if(!code||meta<=0)return;
